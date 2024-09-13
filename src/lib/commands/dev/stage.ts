@@ -128,7 +128,7 @@ export const stage: Command.Command = {
   description:
     'Prepare a cdb file with selected cards from the Greenlight repo.',
   syntax: 'stage <cdb-name>',
-  aliases: ['stage'],
+  aliases: ['prepdb'],
   devOnly: true,
   execute: (parameters, message) => {
     const name = parameters.join(' ').trim();
