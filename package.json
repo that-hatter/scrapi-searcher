@@ -1,0 +1,48 @@
+{
+  "name": "scrapi-searcher",
+  "version": "0.1.0",
+  "description": "Discord bot for EDOPro's Card Scripting API.",
+  "main": "index.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "edopro",
+    "scrapi",
+    "card-scripting",
+    "project-ignis",
+    "yu-gi-oh",
+    "yugioh",
+    "lua",
+    "discord",
+    "discordeno",
+    "discord-bot"
+  ],
+  "author": "that-hatter",
+  "license": "AGPL-3.0-or-later",
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.11",
+    "@types/node": "^20.2.1",
+    "@types/node-fetch": "^2.6.11",
+    "@typescript-eslint/eslint-plugin": "^5.26.0",
+    "@typescript-eslint/parser": "^5.50.0",
+    "@typescript-eslint/type-utils": "^5.50.0",
+    "@typescript-eslint/utils": "^5.50.0",
+    "eslint": "^8.33.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-functional": "^5.0.0",
+    "prettier": "^2.6.2",
+    "typescript": "^5.1.6"
+  },
+  "dependencies": {
+    "@octokit/rest": "^19.0.7",
+    "@that-hatter/scrapi-factory": "^0.3.1",
+    "better-sqlite3": "^11.2.1",
+    "discordeno": "^18.0.1",
+    "fp-ts": "^2.13.1",
+    "io-ts": "^2.2.21",
+    "minisearch": "^7.1.0",
+    "node-fetch": "^2.7.0",
+    "simple-git": "^3.25.0"
+  }
+}
