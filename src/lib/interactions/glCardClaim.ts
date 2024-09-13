@@ -1,6 +1,6 @@
 import { pipe, RA, RTE, TE } from '@that-hatter/scrapi-factory/fp';
 import { Greenlight } from '../../ygo';
-import { currentPageIds, Ids, pageByIds } from '../commands/dev/claim';
+import { createPageFromIds, currentPageIds, Ids } from '../commands/dev/claim';
 import { Ctx, dd, Err, Interaction, Menu, Op, str } from '../modules';
 
 const splitOn = (lines: ReadonlyArray<string>, start: string, incl: string) =>
@@ -72,7 +72,9 @@ export const glCardClaim = Menu.interaction({
         pipe(
           getClaimer(interaction.user),
           RTE.flatMap(processClaim(ids, card)),
-          RTE.flatMap(() => pageByIds(statuses)(ids))
+          RTE.flatMap(() =>
+            createPageFromIds(statuses)(interaction.message)(ids)
+          )
         )
       ),
       RTE.flatMap(Interaction.sendUpdate(interaction))

@@ -1,12 +1,4 @@
-import {
-  flow,
-  O,
-  pipe,
-  RA,
-  RNEA,
-  RTE,
-  TE,
-} from '@that-hatter/scrapi-factory/fp';
+import { flow, O, pipe, RA, RNEA, RTE } from '@that-hatter/scrapi-factory/fp';
 import { Greenlight } from '../../../ygo';
 import { COLORS } from '../../constants';
 import { Command, dd, Err, Interaction, Menu, Op, str } from '../../modules';
@@ -24,33 +16,40 @@ export type Section = {
   readonly issue: Greenlight.Issue;
 };
 
-const sectionFromIds = (ids: Partial<Ids>): Op.Op<Section> =>
-  flow(
-    Greenlight.getIssues,
-    TE.flatMap((issues) => {
-      if (!RA.isNonEmpty(issues))
-        return TE.left(Err.forAll('No open issues in the repository'));
+const sectionFromIds =
+  (message: dd.Message) =>
+  (newIds: Partial<Ids>): Op.Op<Section> =>
+    pipe(
+      RTE.Do,
+      RTE.bind('issues', () => Greenlight.getIssues),
+      RTE.bind('currentIds', () => currentPageIds(message)),
+      RTE.flatMap(({ issues, currentIds }) => {
+        if (!RA.isNonEmpty(issues))
+          return RTE.left(Err.forAll('No open issues in the repository'));
 
-      const issue = ids.issue
-        ? issues.find((is) => is.id === ids.issue)
-        : RNEA.head(issues);
-      if (!issue)
-        return TE.left(Err.forAll('Could not find issue: ' + ids.issue));
+        const actualIssueId = newIds.issue ?? currentIds.issue;
+        const issue = issues.find((is) => is.id === actualIssueId);
+        if (!issue)
+          return RTE.left(Err.forAll('Could not find issue: ' + newIds.issue));
 
-      const pack = ids.pack
-        ? issue.packs.find((p) => p.name === ids.pack)
-        : RNEA.head(issue.packs);
-      if (!pack) return TE.left(Err.forAll('Could not find pack: ' + ids.pack));
+        const actualPackId = newIds.pack ?? currentIds.pack;
+        const pack = newIds.issue
+          ? RNEA.head(issue.packs)
+          : issue.packs.find((p) => p.name === actualPackId);
+        if (!pack)
+          return RTE.left(Err.forAll('Could not find pack: ' + newIds.pack));
 
-      const theme = ids.theme
-        ? pack.themes.find((th) => th.name === ids.theme)
-        : RNEA.head(pack.themes);
-      if (!theme)
-        return TE.left(Err.forAll('Could not find theme: ' + ids.theme));
+        const actualThemeId = newIds.theme ?? currentIds.theme;
+        const theme =
+          newIds.issue || newIds.pack
+            ? RNEA.head(pack.themes)
+            : pack.themes.find((th) => th.name === actualThemeId);
+        if (!theme)
+          return RTE.left(Err.forAll('Could not find theme: ' + newIds.theme));
 
-      return TE.right({ theme, pack, issue, issues });
-    })
-  );
+        return RTE.right({ theme, pack, issue, issues });
+      })
+    );
 
 const issueMenu = (
   current: Greenlight.Issue,
@@ -160,12 +159,13 @@ const page =
     return { embeds: [{ color, title, description }], components };
   };
 
-export const pageByIds = (statuses: Greenlight.StatusSteps) =>
-  flow(sectionFromIds, RTE.map(page(statuses)));
+export const createPageFromIds =
+  (statuses: Greenlight.StatusSteps) => (message: dd.Message) =>
+    flow(sectionFromIds(message), RTE.map(page(statuses)));
 
 export const switchSection = (ixn: Interaction.Updateable) =>
   flow(
-    sectionFromIds,
+    sectionFromIds(ixn.message),
     RTE.map(page(Greenlight.pageStatuses(ixn.message))),
     RTE.flatMap(Interaction.sendUpdate(ixn))
   );
@@ -204,7 +204,7 @@ export const filterStatus =
   (statuses: Greenlight.StatusSteps) => (ixn: Interaction.Updateable) =>
     pipe(
       currentPageIds(ixn.message),
-      RTE.flatMap(pageByIds(statuses)),
+      RTE.flatMap(createPageFromIds(statuses)(ixn.message)),
       RTE.flatMap(Interaction.sendUpdate(ixn))
     );
 
