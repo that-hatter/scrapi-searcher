@@ -11,8 +11,12 @@ export const messageCreate: Event.Event<'messageCreate'> = {
     if (message.isFromBot) return Op.noop;
 
     if (!message.content.startsWith(ctx.prefix)) {
-      if (message.mentionedUserIds.includes(ctx.bot.id))
+      if (
+        message.mentionedUserIds.includes(ctx.bot.id) &&
+        message.content.trim() === str.mention(ctx.bot.id)
+      )
         return about.execute([], message)(ctx);
+
       return pipe(
         cardBracketSearch(message)(ctx),
         TE.mapError(Err.reason(message))
