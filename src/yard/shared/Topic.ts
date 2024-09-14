@@ -22,7 +22,10 @@ export const mainUrl = (doc: sf.Topic): string =>
     doc.filepath,
     // slice to remove the '.yml' extension
     O.map(
-      (fp) => '/' + path.join('api', fp.slice(0, -4)).replaceAll('\\', '/')
+      (fp) =>
+        URLS.SCRAPI_BOOK +
+        '/' +
+        path.join('api', fp.slice(0, -4)).replaceAll('\\', '/')
     ),
     O.getOrElse(() => '#')
   );
