@@ -31,10 +31,9 @@ export const mainUrl = (doc: sf.Topic): string =>
   );
 
 export const url = (doc: sf.Topic): string =>
-  URLS.SCRAPI_BOOK +
-  ('source' in doc && isAliasCopy(doc)
-    ? '/api/' + doc.doctype + 's/' + aliasPath(doc)
-    : mainUrl(doc));
+  'source' in doc && isAliasCopy(doc)
+    ? URLS.SCRAPI_BOOK + '/api/' + doc.doctype + 's/' + aliasPath(doc)
+    : mainUrl(doc);
 
 export const linkify =
   (linkName: string) =>
