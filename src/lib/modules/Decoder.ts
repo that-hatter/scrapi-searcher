@@ -9,7 +9,10 @@ export const option = <A>(
   value: Decoder.Decoder<unknown, A>
 ): Decoder.Decoder<unknown, O.Option<A>> =>
   Decoder.union(
-    Decoder.struct({ _tag: Decoder.literal('None') }),
+    pipe(
+      Decoder.struct({ _tag: Decoder.literal('None') }),
+      Decoder.map(() => O.none)
+    ),
     Decoder.struct({ _tag: Decoder.literal('Some'), value })
   );
 
