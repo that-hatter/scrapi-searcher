@@ -32,10 +32,19 @@ export const searchCommand = <T>(opts: Options<T>): Command.Command => ({
     const filterFn = opts.customFilter
       ? opts.customFilter(parameters)
       : (t: T) => opts.itemName(t).toLowerCase().includes(query);
+
     return pipe(
       opts.itemCollection,
       RTE.mapError(Err.forDev),
-      RTE.map(({ array }) => array.filter(filterFn)),
+      RTE.map(({ array }) => {
+        const res = array.filter(filterFn);
+        if (opts.customFilter || parameters.length > 1) return res;
+        return res.sort((a, b) => {
+          const a_ = opts.itemName(a).toLowerCase().startsWith(query);
+          const b_ = opts.itemName(b).toLowerCase().startsWith(query);
+          return a_ && !b_ ? -1 : b_ && !a_ ? 1 : 0;
+        });
+      }),
       RTE.flatMapOption(RNEA.fromReadonlyArray, () =>
         Err.forUser('No matches found for ' + str.inlineCode(query))
       ),
