@@ -173,9 +173,9 @@ export const limit = (indicator: string, max: number) => (s: string) =>
 export const rightPaddedCode =
   (max: number) =>
   (s: string): string =>
-    inlineCode(s + ' '.repeat(max - s.length));
+    inlineCode(s + ' '.repeat(Math.max(max - s.length, 0)));
 
 export const leftPaddedCode =
   (max: number) =>
   (s: string): string =>
-    inlineCode(' '.repeat(max - s.length) + s);
+    inlineCode(' '.repeat(Math.max(max - s.length, 0)) + s);
