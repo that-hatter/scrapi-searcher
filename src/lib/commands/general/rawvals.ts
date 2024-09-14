@@ -1,51 +1,53 @@
 import { flow, O, pipe, R, RA, RTE, TE } from '@that-hatter/scrapi-factory/fp';
-import { Babel, Card } from '../../../ygo';
-import { Command, Err, Menu, Op, str } from '../../modules';
+import { Babel, BitNames, Card } from '../../../ygo';
+import { Command, Ctx, Err, Menu, Op, str } from '../../modules';
 
-const plainField = (name: string, n: number) => ({
-  name,
-  value: str.inlineCode(n.toString()),
-  inline: true,
-});
+const plainVal = (name: string, n: number | bigint) =>
+  str.joinWords([str.bold(name) + ':', str.inlineCode(n.toString())]);
 
-const fieldWithHex = (name: string, n: bigint) => ({
-  name,
-  value:
-    str.inlineCode(n.toString()) +
-    ' ' +
+const valWithHex = (name: string, n: bigint) =>
+  str.joinWords([
+    str.bold(name) + ':',
+    str.inlineCode(n.toString()),
     str.parenthesized(str.inlineCode('0x' + n.toString(16))),
-  inline: true,
-});
+  ]);
 
-export const rawDataEmbed = (c: Babel.Card) =>
-  pipe(
-    Card.frameColor(c),
-    R.map((color) => ({
-      color,
-      title: str.inlineCode(c.id.toString()) + ' ' + str.bold(c.name),
-      fields: [
-        plainField('id', c.id),
-        fieldWithHex('ot', c.ot),
-        plainField('alias', c.alias),
-        fieldWithHex('setcode', c.setcode),
-        fieldWithHex('type', c.type),
-        fieldWithHex('atk', c.atk),
-        fieldWithHex('def', c.def),
-        fieldWithHex('level', c.level),
-        fieldWithHex('race', c.race),
-        fieldWithHex('attribute', c.attribute),
-        fieldWithHex('category', c.category),
-      ],
-      footer: { text: c.cdb },
-    }))
-  );
+const title = (c: Babel.Card) =>
+  str.inlineCode(c.id.toString()) + ' ' + str.bold(c.name);
+
+export const rawDataEmbed = (c: Babel.Card) => (ctx: Ctx.Ctx) => {
+  const color = Card.frameColor(c)(ctx);
+  const ctypes = BitNames.types(c.type)(ctx.bitNames);
+  return {
+    color,
+    title: title(c),
+    description: str.joinParagraphs([
+      plainVal('id', c.id),
+      valWithHex('ot', c.ot),
+      plainVal('alias', c.alias),
+      valWithHex('setcode', c.setcode),
+      valWithHex('type', c.type),
+      plainVal('atk', c.atk),
+      ctypes.includes('Link')
+        ? valWithHex('def', c.def)
+        : plainVal('def', c.def),
+      ctypes.includes('Pendulum')
+        ? valWithHex('level', c.level)
+        : plainVal('level', c.level),
+      valWithHex('race', c.race),
+      valWithHex('attribute', c.attribute),
+      valWithHex('category', c.category),
+    ]),
+    footer: { text: c.cdb },
+  };
+};
 
 export const rawDescEmbed = (c: Babel.Card) =>
   pipe(
     Card.frameColor(c),
     R.map((color) => ({
       color,
-      title: str.inlineCode(c.id.toString()) + ' ' + str.bold(c.name),
+      title: title(c),
       description: c.desc,
       footer: { text: c.cdb },
     }))
@@ -56,7 +58,7 @@ export const rawStringsEmbed = (c: Babel.Card) =>
     Card.frameColor(c),
     R.map((color) => ({
       color,
-      title: str.inlineCode(c.id.toString()) + ' ' + str.bold(c.name),
+      title: title(c),
       description: pipe(
         c,
         Card.getCdbStrings,
