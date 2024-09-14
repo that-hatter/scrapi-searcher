@@ -219,7 +219,7 @@ const urlsSection = (
     str.link(
       'Konami DB',
       (scopes.includes('Rush') ? URLS.KONAMI_DB_RUSH : URLS.KONAMI_DB_MASTER) +
-        '/card_search.action?ope=2&request_locale=en&cid=' +
+        '/card_search.action?ope=2&request_locale=ja&cid=' +
         kid,
       'Official card data and rulings (JP)'
     )
