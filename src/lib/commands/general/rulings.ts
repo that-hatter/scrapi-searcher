@@ -27,7 +27,7 @@ const msgContent = (c: Babel.Card) => (ctx: Ctx.Ctx) => {
   const officialDb =
     '🇯🇵 Konami DB: <' +
     (scopes.includes('Rush') ? URLS.KONAMI_DB_RUSH : URLS.KONAMI_DB_MASTER) +
-    '/faq_search.action?ope=2&request_locale=en&cid=' +
+    '/faq_search.action?ope=2&request_locale=ja&cid=' +
     kid.value +
     '>';
 
