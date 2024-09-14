@@ -36,12 +36,25 @@ const enumLink =
       O.map((en) => Topic.linkify(en.name + ' constants')(en))
     );
 
+const githubSearchLink = (ct: sf.Constant) =>
+  str.link(
+    'Sample usage',
+    'https://github.com/search?q=repo%3AProjectIgnis%2FCardScripts+' +
+      encodeURIComponent(ct.name) +
+      '&type=code'
+  );
+
 const quickLinksSection = (ct: sf.Constant) =>
   pipe(
     enumLink(ct),
     R.map((enLink) =>
       pipe(
-        [BindingInfo.sourceLink(ct), enLink, Topic.editLink(ct)],
+        [
+          BindingInfo.sourceLink(ct),
+          githubSearchLink(ct),
+          enLink,
+          Topic.editLink(ct),
+        ],
         str.join(' | '),
         str.unempty,
         O.map(str.subtext)
@@ -109,7 +122,7 @@ export const itemListDescription: Nav.Nav<sf.Constant>['itemListDescription'] =
 
     return pipe(
       [
-        Topic.linkify(paddedName(item.name))(item),
+        paddedName(item.name),
         paddedDec(item.value.toString()),
         hexVal.length > 0 ? paddedHex(hexVal) : O.none,
       ],

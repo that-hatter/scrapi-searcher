@@ -68,12 +68,25 @@ const namespaceLink = (fn: sf.Function) =>
     )
   );
 
+const githubSearchLink = (fn: sf.Function) =>
+  str.link(
+    'Sample usage',
+    'https://github.com/search?q=repo%3AProjectIgnis%2FCardScripts' +
+      encodeURIComponent(fn.partialName) +
+      '&type=code'
+  );
+
 const quickLinksSection = (fn: sf.Function) =>
   pipe(
     namespaceLink(fn),
     R.map((ns) =>
       pipe(
-        [BindingInfo.sourceLink(fn), ns, Topic.editLink(fn)],
+        [
+          BindingInfo.sourceLink(fn),
+          githubSearchLink(fn),
+          ns,
+          Topic.editLink(fn),
+        ],
         str.join(' | '),
         str.unempty,
         O.map(str.subtext)
@@ -136,7 +149,7 @@ const itemEmbed = (fn: sf.Function) =>
 const itemComponents = components(0);
 
 const itemListDescription = () => (fn: sf.Function) =>
-  RTE.right(Topic.linkedNameCode(fn) + SignatureInfo.combinedComps(fn));
+  RTE.right(str.inlineCode(fn.name) + SignatureInfo.combinedComps(fn));
 
 export const cmd = SearchCommand.searchCommand<sf.Function>({
   name: 'function',
