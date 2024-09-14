@@ -159,21 +159,27 @@ const scriptFolder = (
 
 const scriptUrl_ = (
   c: Card,
+  aliases: ReadonlyArray<Card>,
   mainType: O.Option<string>,
   ctypes: ReadonlyArray<string>,
   scopes: ReadonlyArray<string>
 ): O.Option<string> => {
+  const main = aliases.find((a) => a.alias === 0 && c.ot === a.ot) ?? c;
   if (ctypes.includes('Normal') && !ctypes.includes('Pendulum')) return O.none;
-  const folder = scriptFolder(c, mainType, scopes);
+  const folder = scriptFolder(main, mainType, scopes);
   return O.some(
-    URLS.CARDSCRIPTS + 'blob/master/' + folder + '/c' + c.id + '.lua'
+    URLS.CARDSCRIPTS + 'blob/master/' + folder + '/c' + main.id + '.lua'
   );
 };
 
 export const scriptUrl = (c: Card) => (ctx: Ctx.Ctx) => {
+  const aliases = ctx.babel.array.filter(
+    (a) => a.id !== c.id && (c.alias === a.id || a.alias === c.id)
+  );
   const ctypes = BitNames.types(c.type)(ctx.bitNames);
   return scriptUrl_(
     c,
+    aliases,
     mainType(ctypes),
     ctypes,
     BitNames.scopes(c.ot)(ctx.bitNames)
@@ -205,13 +211,14 @@ const pediaURL = (c: Card, kid: O.Option<number>) => {
 
 const urlsSection = (
   c: Card,
+  aliases: ReadonlyArray<Card>,
   konamiId: O.Option<number>,
   mainType: O.Option<string>,
   ctypes: ReadonlyArray<string>,
   scopes: ReadonlyArray<string>
 ) => {
   const script = pipe(
-    scriptUrl_(c, mainType, ctypes, scopes),
+    scriptUrl_(c, aliases, mainType, ctypes, scopes),
     O.map((s) => str.link('Script', s, 'EDOPro card script'))
   );
 
@@ -268,10 +275,8 @@ const limitsSection =
     );
   };
 
-const passcodesFooter = (c: Card, kid: O.Option<number>) => (ctx: Ctx.Ctx) =>
-  pipe(
-    ctx.babel.array,
-    RA.filter((bc) => bc !== c && (bc.alias === c.id || c.alias === bc.id)),
+const passcodesFooter = (c: Card, kid: O.Option<number>) =>
+  flow(
     RA.prepend(c),
     RNEA.map((c) => c.id.toString()),
     RA.appendW(
@@ -294,7 +299,10 @@ export const itemEmbed =
     const mtype = mainType(ctypes);
 
     const scopes = BitNames.scopes(c.ot)(bns);
-    const archs = BitNames.archetypes(c.setcode)(bns);
+    const archs = pipe(
+      BitNames.archetypes(c.setcode)(bns),
+      RA.map(str.doubleQuoted)
+    );
 
     // embed commons
     const title = c.name;
@@ -307,10 +315,13 @@ export const itemEmbed =
       O.flatMap((pc) => pc.konamiId)
     );
 
-    const footer = passcodesFooter(c, kid)(ctx);
+    const aliases = ctx.babel.array.filter(
+      (a) => a.id !== c.id && (a.alias === c.id || c.id === a.alias)
+    );
+    const footer = passcodesFooter(c, kid)(aliases);
 
     const commonDesc = str.joinParagraphs([
-      urlsSection(c, kid, mtype, ctypes, scopes),
+      urlsSection(c, aliases, kid, mtype, ctypes, scopes),
       limitsSection(c, scopes)(ctx),
       labeledList('Archetype')(archs),
       labeledList('Card Type')(ctypes),
