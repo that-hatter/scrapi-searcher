@@ -42,14 +42,6 @@ export const reason =
     reason: O.some(reason),
   });
 
-const log = (preMsg: string) => (err: Err) => {
-  console.log('-'.repeat(80));
-  console.log(preMsg);
-  console.log(utils.stringify(err));
-  console.log('-'.repeat(80));
-  return err;
-};
-
 const reasonLink = (reason: Reason) => {
   const msg = 'token' in reason ? reason.message : reason;
   if (!msg) return O.none;
@@ -96,6 +88,18 @@ const formatDevAlert =
     };
   };
 
+const logSendingErr =
+  (originalErr: Err, target: string) => (sendingErr: Err) => {
+    console.log('-'.repeat(80));
+    console.log('FAILED TO SEND ERROR MESSAGE TO ' + target);
+    if (O.isSome(sendingErr.devAlert))
+      console.log(utils.stringify(sendingErr.devAlert) + '\n');
+
+    console.log(utils.stringify(originalErr));
+    console.log('-'.repeat(80));
+    return sendingErr;
+  };
+
 export const sendAlerts = (error: Err): Op.Op<ReadonlyArray<dd.Message>> =>
   pipe(
     RTE.ask<Ctx.Ctx>(),
@@ -104,7 +108,7 @@ export const sendAlerts = (error: Err): Op.Op<ReadonlyArray<dd.Message>> =>
         error.devAlert,
         O.map(formatDevAlert(error.reason)),
         O.map(Op.sendMessage(dev.logs)),
-        O.map(RTE.mapError(log('Failed to send error message to devs')))
+        O.map(RTE.mapError(logSendingErr(error, 'DEVS')))
       );
 
       const sendToUser = pipe(
@@ -114,7 +118,7 @@ export const sendAlerts = (error: Err): Op.Op<ReadonlyArray<dd.Message>> =>
           if (!message) return O.none;
           return pipe(error.userAlert, O.map(Op.sendReply(message)));
         }),
-        O.map(RTE.mapError(log('Failed to send error message to user')))
+        O.map(RTE.mapError(logSendingErr(error, 'USER')))
       );
 
       return pipe([sendToDev, sendToUser], RA.compact, RTE.sequenceArray);
