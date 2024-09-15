@@ -1,5 +1,3 @@
----
-
 ## Definitions
 
 **Query**: The search term used to find results by name or value. This can be a partial or complete match depending on the command.
@@ -149,7 +147,7 @@ Show which archetypes make up an integer value or search archetype strings (set 
 ### Aliases
 
 - `;arch`
-- `;set`;
+- `;set`
 
 ## `;counter`
 
@@ -164,5 +162,3 @@ Search counters by name or value. Name and value matches are case-insensitive an
 ### Aliases
 
 - None
-
----
