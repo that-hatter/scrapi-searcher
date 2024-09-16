@@ -6,6 +6,7 @@
    - [script](#script)
    - [strfind](#strfind)
    - [strings](#strings)
+   - [systrings](#systrings)
    - [constant](#constant)
    - [enum](#enum)
    - [function](#function)
@@ -16,6 +17,8 @@
    - [enumbits](#enumbits)
    - [archetype](#archetype)
    - [counter](#counter)
+
+---
 
 ### cdb
 
@@ -114,6 +117,8 @@ Show a card's database strings.
 ;strings Sky Striker Ace - Raye
 ```
 This will display the database strings for "Sky Striker Ace - Raye".
+
+---
 
 ### constant
 
@@ -299,8 +304,8 @@ Show which archetypes make up an integer value or search archetype strings (set 
 
 #### Parameters
 
-| Name    | Required | Description                                                        | Type        |
-|---------|----------|--------------------------------------------------------------------|-------------|
+| Name    | Required | Description                                                           | Type        |
+|---------|----------|-----------------------------------------------------------------------|-------------|
 | `query` | Yes      | Search term or integer value (decimal, hex, or binary) for archetypes | text/number |
 
 #### Examples
@@ -320,7 +325,7 @@ This will search for archetype strings containing "sky striker".
 
 ### counter
 
-Search counters by name or value. When searching by value, the input can be in decimal, hexadecimal (0x prefix), or binary (0b prefix) format. Name and value matches are case-insensitive and can be partial.
+Search counters by name or value. When searching by value, the input can be in decimal, hexadecimal (0x prefix), or binary (0b prefix) format. Name matches are case-insensitive and can be partial.
 
 #### Parameters
 
@@ -340,3 +345,51 @@ This will search for counters with "spell" in their name.
 ;counter 0b1101 # Binary
 ```
 These examples will search for counters with a value of 13 (in decimal, hexadecimal, and binary representations respectively).
+
+---
+
+### victory
+
+Search victory strings (alternate win conditions) by name or value. When searching by value, the input can be in decimal, hexadecimal (0x prefix), or binary (0b prefix) format. Name matches are case-insensitive and can be partial.
+
+#### Parameters
+
+| Name    | Required | Description                                                             | Type        |
+|---------|----------|-------------------------------------------------------------------------|-------------|
+| `query` | Yes      | Search term or value (decimal, hex, or binary) for the victory string   | text/number |
+
+#### Example
+```
+;victory EXODIA
+```
+This will search for victory strings with "EXODIA" in their name.
+
+```
+;victory 16      # Decimal
+;victory 0x10    # Hexadecimal
+;victory 0b10000 # Binary
+```
+These examples will search for victory strings with a value of 16 (in decimal, hexadecimal, and binary representations respectively).
+
+---
+
+### systrings
+
+Search system strings by name or value. Name matches are case-insensitive and can be partial.
+
+#### Parameters
+
+| Name    | Required | Description                           | Type        |
+|---------|----------|---------------------------------------|-------------|
+| `query` | Yes      | Search term or value for the sysstring   | text/number |
+
+#### Example
+```
+;systrings end
+```
+This will search for systrings with "end" in their description.
+
+```
+;systring 1001
+```
+This will search for systrings with a value of 1001.
