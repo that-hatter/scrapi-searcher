@@ -2,6 +2,11 @@
 
 ## Table of Contents
 1. [Commands](#commands)
+   - [cdb](#cdb)
+   - [rawvals](#rawvals)
+   - [script](#script)
+   - [strfind](#strfind)
+   - [strings](#strings)
    - [constant](#constant)
    - [enum](#enum)
    - [function](#function)
@@ -14,6 +19,110 @@
    - [counter](#counter)
 
 ## Commands
+
+### cdb
+
+Link to a card's database file in the BabelCDB repo.
+
+#### Aliases
+- `;db`
+- `;dbfind`
+
+#### Parameters
+
+| Name    | Required | Description                   | Type |
+|---------|----------|-------------------------------|------|
+| `query` | Yes      | Search term for the card name | text |
+
+#### Example
+```
+;cdb Sky Striker Ace - Raye
+```
+This will provide a link to the database file for "Sky Striker Ace - Raye" in the BabelCDB repo.
+
+---
+
+### rawvals
+
+Display a card's raw values from the database.
+
+#### Aliases
+- `;raws`
+
+#### Parameters
+
+| Name    | Required | Description                   | Type |
+|---------|----------|-------------------------------|------|
+| `query` | Yes      | Search term for the card name | text |
+
+#### Example
+```
+;rawvals Sky Striker Ace - Raye
+```
+This will display the raw database values for "Sky Striker Ace - Raye".
+
+---
+
+### script
+
+Link to a card's script file in the CardScript repo.
+
+#### Aliases
+- None
+
+#### Parameters
+
+| Name    | Required | Description                   | Type |
+|---------|----------|-------------------------------|------|
+| `query` | Yes      | Search term for the card name | text |
+
+#### Example
+```
+;script Sky Striker Ace - Raye
+```
+This will provide a link to the script file for "Sky Striker Ace - Raye" in the CardScript repo.
+
+---
+
+### strfind
+
+Search card database strings. Matches are case-insensitive and can be partial.
+
+#### Aliases
+- None
+
+#### Parameters
+
+| Name    | Required | Description                             | Type |
+|---------|----------|-----------------------------------------|------|
+| `query` | Yes      | Search term for card database strings   | text |
+
+#### Example
+```
+;strfind negate
+```
+This will search for all card database strings containing "negate".
+
+---
+
+### strings
+
+Show a card's database strings.
+
+#### Aliases
+- `;strs`
+
+#### Parameters
+
+| Name    | Required | Description                   | Type |
+|---------|----------|-------------------------------|------|
+| `query` | Yes      | Search term for the card name | text |
+
+#### Example
+```
+;strings Sky Striker Ace - Raye
+```
+This will display the database strings for "Sky Striker Ace - Raye".
 
 ### constant
 
