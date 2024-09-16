@@ -1,6 +1,6 @@
 # Scripter Commands Documentation
 
-[Commands](#commands)
+## Commands
    - [cdb](#cdb)
    - [rawvals](#rawvals)
    - [script](#script)
