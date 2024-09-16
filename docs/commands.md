@@ -11,6 +11,8 @@
    - [about](#about)
    - [ping](#ping)
 
+---
+
 ### card
 
 Search cards by name. Matches can be fuzzy.
