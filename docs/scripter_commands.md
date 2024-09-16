@@ -1,7 +1,6 @@
 # Scripter Commands Documentation
 
-## Table of Contents
-1. [Commands](#commands)
+[Commands](#commands)
    - [cdb](#cdb)
    - [rawvals](#rawvals)
    - [script](#script)
@@ -17,8 +16,6 @@
    - [enumbits](#enumbits)
    - [archetype](#archetype)
    - [counter](#counter)
-
-## Commands
 
 ### cdb
 
