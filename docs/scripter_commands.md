@@ -64,9 +64,6 @@ This will display the raw database values for "Sky Striker Ace - Raye".
 
 Link to a card's script file in the CardScript repo.
 
-#### Aliases
-- None
-
 #### Parameters
 
 | Name    | Required | Description                   | Type |
@@ -84,9 +81,6 @@ This will provide a link to the script file for "Sky Striker Ace - Raye" in the 
 ### strfind
 
 Search card database strings. Matches are case-insensitive and can be partial.
-
-#### Aliases
-- None
 
 #### Parameters
 
