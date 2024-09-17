@@ -1,4 +1,5 @@
 import {
+  E,
   flow,
   identity,
   O,
@@ -11,6 +12,7 @@ import {
   TE,
 } from '@that-hatter/scrapi-factory/fp';
 import { Babel, Card } from '../../ygo';
+import { EMOJI, LIMITS } from '../constants';
 import { Ctx, dd, Err, Interaction, Menu, Op, str } from '../modules';
 
 const MALISS: RR.ReadonlyRecord<string, string> = {
@@ -75,25 +77,60 @@ const initMessage =
       )
     );
 
-export const cardBracketSearch = (msg: dd.Message): Op.Op<dd.Message> =>
-  pipe(
-    msg.content,
-    str.getTextParts,
+const handleQuery = (query: string) => {
+  const q = query.substring(1, query.length - 1);
+  return pipe(q, str.trim, Card.bestMatch, R.map(E.fromOption(() => q)));
+};
+
+const sendFoundCards = (
+  msg: dd.Message,
+  cards: ReadonlyArray<Babel.Card>
+): Op.Op<unknown> => {
+  if (!RA.isNonEmpty(cards)) return Op.noopReader;
+  const head = RNEA.head(cards);
+  return pipe(
+    head,
+    initMessage(cards),
+    RTE.flatMap(Op.sendReply(msg)),
+    head.id === 92901944 ? RTE.tap(Op.react(EMOJI.SEARCHER)) : identity
+  );
+};
+
+const sendNoMatches = (
+  msg: dd.Message,
+  queries: ReadonlyArray<string>
+): Op.Op<unknown> => {
+  if (!RA.isNonEmpty(queries)) return Op.noopReader;
+  const lineLimit = Math.floor(LIMITS.MESSAGE_CONTENT - 200 / queries.length);
+  return pipe(
+    queries,
+    RA.map(str.limit('...', lineLimit)),
+    RA.map(str.inlineCode),
+    str.unorderedList,
+    str.prepend('No matches found for:\n'),
+    str.limit('', LIMITS.MESSAGE_CONTENT),
+    Op.sendReply(msg)
+  );
+};
+
+export const cardBracketSearch = (msg: dd.Message): Op.Op<unknown> => {
+  const texts = str.getTextParts(msg.content);
+  if (!RA.isNonEmpty(texts)) return Op.noopReader;
+  return pipe(
+    texts,
     RA.flatMap((s) => s.match(/\{(.*?)\}/g) ?? []),
-    RA.map((s) => s.substring(1, s.length - 1).trim()),
-    RA.map(Card.bestMatch),
+    RA.map(handleQuery),
     R.sequenceArray,
-    R.map(flow(RA.compact, RNEA.fromReadonlyArray, TE.fromOption(Err.ignore))),
-    RTE.flatMap((cs) =>
+    R.map(RA.separate),
+    RTE.fromReader,
+    RTE.flatMap(({ left: errs, right: cards }) =>
       pipe(
-        initMessage(cs)(cs[0]),
-        RTE.flatMap(Op.sendReply(msg)),
-        cs[0].id === 92901944
-          ? RTE.tap(Op.react('<:searcher:1283971880885162130>'))
-          : identity
+        sendFoundCards(msg, cards),
+        RTE.tap(() => sendNoMatches(msg, errs))
       )
     )
   );
+};
 
 const findCard = (id: string) => (ctx: Ctx.Ctx) =>
   pipe(
