@@ -138,10 +138,10 @@ export const scopes = toNames('scopes');
 export const archetypes = (setcode: bigint) => (bns: BitNames) =>
   pipe(
     [
-      setcode & 0xffffn,
+      (setcode >> 48n) & 0xffffn,
+      (setcode >> 32n) & 0xffffn,
       (setcode >> 16n) & 0xffffn,
-      (setcode >> 32n) & 0xffffn,
-      (setcode >> 32n) & 0xffffn,
+      setcode & 0xffffn,
     ],
     RA.filter((b) => b > 0n),
     RA.map((b) => bns.archetypes.get(b) ?? '???')

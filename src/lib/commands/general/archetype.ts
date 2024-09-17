@@ -68,10 +68,10 @@ const hexBreakDownEmbed =
 
     const comps = pipe(
       [
-        val & 0xffffn,
+        (val >> 48n) & 0xffffn,
+        (val >> 32n) & 0xffffn,
         (val >> 16n) & 0xffffn,
-        (val >> 32n) & 0xffffn,
-        (val >> 32n) & 0xffffn,
+        val & 0xffffn,
       ],
       RA.filter((c) => c > 0n)
     );
