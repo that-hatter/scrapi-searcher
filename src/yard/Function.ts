@@ -71,7 +71,7 @@ const namespaceLink = (fn: sf.Function) =>
 const githubSearchLink = (fn: sf.Function) =>
   str.link(
     'Sample usage',
-    'https://github.com/search?q=repo%3AProjectIgnis%2FCardScripts' +
+    'https://github.com/search?q=repo%3AProjectIgnis%2FCardScripts+' +
       encodeURIComponent(fn.partialName) +
       '&type=code'
   );
