@@ -9,7 +9,7 @@ export type Params = CanBeReadonly<Omit<Menu, 'type'>>;
 export type Row = dd.ActionRow;
 
 const safeOptions = flow(
-  RA.uniq<dd.SelectOption>({ equals: (a, b) => a.label === b.label }),
+  RA.uniq<dd.SelectOption>({ equals: (a, b) => a.value === b.value }),
   RA.takeLeft(25),
   RA.map((opt): dd.SelectOption => {
     const desc = opt.description;
