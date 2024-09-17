@@ -104,12 +104,16 @@ export const enumbits: Command.Command = {
   aliases: ['ebits'],
   execute: (parameters, message) => {
     if (!RA.isNonEmpty(parameters))
-      return RTE.left(Err.forUser('You must specify an integer value.'));
+      return RTE.left(
+        Err.forUser('You must specify a positive integer value.')
+      );
 
     const [val_, name_] = RNEA.unprepend(parameters);
     const value = utils.safeBigInt(val_);
-    if (value === 0n && +val_ !== 0)
-      RTE.left(Err.forUser('You must specify an integer value.'));
+    if (value <= 0n)
+      return RTE.left(
+        Err.forUser('You must specify a positive integer value.')
+      );
 
     const nameQuery = name_.join(' ');
     return pipe(
