@@ -5,6 +5,7 @@ import { Menu } from '../modules';
 
 export const glStatusSelect = Menu.interaction({
   name: 'glStatusSelect',
+  devOnly: true,
   execute: (_, interaction, statuses) => {
     const ss = Greenlight.asStatusSteps(statuses);
     if (interaction.message.embeds[0]?.title?.startsWith('Staging cards for '))

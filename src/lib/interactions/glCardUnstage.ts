@@ -8,6 +8,7 @@ const response = (state: State, ids: ReadonlyArray<string>) =>
 
 export const glCardUnstage = Menu.interaction({
   name: 'glCardUnstage',
+  devOnly: true,
   execute: (_, interaction, ids) =>
     pipe(
       interaction.message,

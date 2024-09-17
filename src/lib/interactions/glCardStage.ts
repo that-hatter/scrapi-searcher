@@ -14,6 +14,7 @@ const response =
 
 export const glCardStage = Menu.interaction({
   name: 'glCardStage',
+  devOnly: true,
   execute: (_, interaction, ids) =>
     pipe(
       interaction.message,

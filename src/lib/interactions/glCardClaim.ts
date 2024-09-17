@@ -64,6 +64,7 @@ const getClaimer = (user: dd.User) => (ctx: Ctx.Ctx) =>
 
 export const glCardClaim = Menu.interaction({
   name: 'glCardClaim',
+  devOnly: true,
   execute: (_, interaction, [card]) => {
     const statuses = Greenlight.pageStatuses(interaction.message);
     return pipe(

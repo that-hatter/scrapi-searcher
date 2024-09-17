@@ -4,6 +4,7 @@ import { Err, Interaction, Menu } from '../modules';
 
 export const update = Menu.interaction({
   name: 'update',
+  devOnly: true,
   execute: (_, interaction, params) => {
     const keys = parseKeys(params);
 

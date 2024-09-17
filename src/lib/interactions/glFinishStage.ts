@@ -361,6 +361,7 @@ const fetchAndValidate = (idx: number, names: ReadonlyArray<string>) =>
 
 export const glFinishStage = Button.interaction({
   name: 'glFinishStage',
+  devOnly: true,
   execute: (_, interaction) =>
     pipe(
       interaction.message,
