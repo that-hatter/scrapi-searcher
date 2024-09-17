@@ -21,7 +21,7 @@ export const commands: Command.Command = {
   name: 'commands',
   description: 'Show a list of commands.',
   syntax: 'commands',
-  aliases: ['help', 'cmds'],
+  aliases: ['cmds'],
   execute: (_, message) =>
     pipe(
       list,
