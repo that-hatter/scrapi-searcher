@@ -1,5 +1,5 @@
 import { pipe, RNEA, RTE } from '@that-hatter/scrapi-factory/fp';
-import { Collection, Command, dd, Err, Nav, Op, str } from '.';
+import { Collection, Command, Err, Nav, Op, str } from '.';
 
 export type Options<T> = {
   readonly name: string;
@@ -16,11 +16,15 @@ export const title = (amt: number, name: string, query: string) => {
   return str.limit('...', 100)(s);
 };
 
-export const noMatches = (
-  message: dd.Message,
-  query: string
-): Op.Op<dd.Message> =>
-  Op.sendReply(message)('No matches found for ' + str.inlineCode(query));
+export const noMatches = (query: string): Err.Err =>
+  pipe(
+    query,
+    str.limit('...', 200),
+    str.inlineCode,
+    str.append('.'),
+    str.prepend('No matches found for '),
+    Err.forUser
+  );
 
 export const searchCommand = <T>(opts: Options<T>): Command.Command => ({
   name: opts.name,
@@ -45,9 +49,7 @@ export const searchCommand = <T>(opts: Options<T>): Command.Command => ({
           return a_ && !b_ ? -1 : b_ && !a_ ? 1 : 0;
         });
       }),
-      RTE.flatMapOption(RNEA.fromReadonlyArray, () =>
-        Err.forUser('No matches found for ' + str.inlineCode(query))
-      ),
+      RTE.flatMapOption(RNEA.fromReadonlyArray, () => noMatches(query)),
       RTE.map(
         (items): Nav.Nav<T> => ({
           title: title(items.length, opts.name, query),

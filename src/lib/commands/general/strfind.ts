@@ -8,7 +8,7 @@ import {
   TE,
 } from '@that-hatter/scrapi-factory/fp';
 import { Card } from '../../../ygo';
-import { Command, Ctx, Err, Nav, SearchCommand, str } from '../../modules';
+import { Command, Ctx, Nav, SearchCommand, str } from '../../modules';
 import { stringsEmbed } from './strings';
 
 const getMatches = (query: string) => (ctx: Ctx.Ctx) =>
@@ -30,9 +30,7 @@ export const strfind: Command.Command = {
       getMatches(query),
       R.map(RNEA.fromReadonlyArray),
       RTE.fromReader,
-      RTE.flatMapOption(identity, () =>
-        Err.forUser('No matches found for ' + str.inlineCode(query))
-      ),
+      RTE.flatMapOption(identity, () => SearchCommand.noMatches(query)),
       RTE.map(
         (items): Nav.Nav<Readonly<[number, number, string]>> => ({
           title: SearchCommand.title(items.length, 'strings', query),

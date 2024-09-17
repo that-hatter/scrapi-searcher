@@ -156,9 +156,7 @@ export const archetype: Command.Command = {
       Systrings.findMatches('setname')(query),
       R.map(RNEA.fromReadonlyArray),
       RTE.fromReader,
-      RTE.flatMapOption(identity, () =>
-        Err.forUser('No matches found for ' + str.inlineCode(query))
-      ),
+      RTE.flatMapOption(identity, () => SearchCommand.noMatches(query)),
       RTE.map(
         (items): Nav.Nav<Systrings.Systring> => ({
           title: SearchCommand.title(items.length, 'setname', query),

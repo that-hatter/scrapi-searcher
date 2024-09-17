@@ -1,6 +1,6 @@
 import { identity, pipe, R, RNEA, RTE } from '@that-hatter/scrapi-factory/fp';
 import { Systrings } from '../../../ygo';
-import { Command, Err, Nav, SearchCommand, str } from '../../modules';
+import { Command, Nav, SearchCommand } from '../../modules';
 
 export const victory: Command.Command = {
   name: 'victory',
@@ -15,9 +15,7 @@ export const victory: Command.Command = {
       Systrings.findMatches('victory')(query),
       R.map(RNEA.fromReadonlyArray),
       RTE.fromReader,
-      RTE.flatMapOption(identity, () =>
-        Err.forUser('No matches found for ' + str.inlineCode(query))
-      ),
+      RTE.flatMapOption(identity, () => SearchCommand.noMatches(query)),
       RTE.map(
         (items): Nav.Nav<Systrings.Systring> => ({
           title: SearchCommand.title(items.length, 'victory string', query),

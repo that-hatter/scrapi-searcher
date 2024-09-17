@@ -1,6 +1,6 @@
 import { identity, pipe, R, RNEA, RTE } from '@that-hatter/scrapi-factory/fp';
 import { Babel, Card } from '../../../ygo';
-import { Command, Ctx, Err, Nav, SearchCommand, str } from '../../modules';
+import { Command, Ctx, Nav, SearchCommand } from '../../modules';
 
 const getMatches = (query: string) => (ctx: Ctx.Ctx) =>
   ctx.babel.array.filter(
@@ -21,9 +21,7 @@ export const search: Command.Command = {
       getMatches(query),
       R.map(RNEA.fromReadonlyArray),
       RTE.fromReader,
-      RTE.flatMapOption(identity, () =>
-        Err.forUser('No matches found for ' + str.inlineCode(query))
-      ),
+      RTE.flatMapOption(identity, () => SearchCommand.noMatches(query)),
       RTE.map(
         (items): Nav.Nav<Babel.Card> => ({
           title: SearchCommand.title(items.length, 'card', query),

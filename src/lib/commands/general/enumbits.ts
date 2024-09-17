@@ -1,7 +1,7 @@
 import type * as sf from '@that-hatter/scrapi-factory';
 import { O, pipe, RA, RNEA, RTE, TE } from '@that-hatter/scrapi-factory/fp';
 import { Topic } from '../../../yard/shared';
-import { Command, Ctx, Err, Nav, str } from '../../modules';
+import { Command, Ctx, Err, Nav, SearchCommand, str } from '../../modules';
 import { utils } from '../../utils';
 
 const getEnumsWithName = (nameQuery: string) => (ctx: Ctx.Ctx) =>
@@ -14,9 +14,7 @@ const getEnumsWithName = (nameQuery: string) => (ctx: Ctx.Ctx) =>
         en.name.toLowerCase().includes(nameQuery)
     ),
     RNEA.fromReadonlyArray,
-    TE.fromOption(() =>
-      Err.forUser('No matches found for ' + str.inlineCode(nameQuery))
-    )
+    TE.fromOption(() => SearchCommand.noMatches(nameQuery))
   );
 
 const itemEmbedFn =
