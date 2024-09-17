@@ -117,11 +117,9 @@ const expandLinks = <T extends md.Child<md.Root>>(block: T): T => {
 
 const compileRoot = (root: md.Root) =>
   md
-    .compile({
-      ...root,
-      children: root.children.map(expandLinks),
-    })
-    .replaceAll('\\', '');
+    .compile({ ...root, children: root.children.map(expandLinks) })
+    .replaceAll('\\', '')
+    .replace('\n', ' ');
 
 export const fromAST = (
   ast: md.Root | md.Children<md.Root> | md.Child<md.Root>
