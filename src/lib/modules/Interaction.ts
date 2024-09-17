@@ -43,9 +43,9 @@ export const sendUpdate = (ixn: dd.Interaction) =>
 export const devCheck =
   (ixn: dd.Interaction) =>
   ({ dev }: Ctx.Ctx) => {
-    if (dev.admin === ixn.user.toString()) return true;
+    if (dev.admin === ixn.user.id.toString()) return true;
     if (dev.guild.toString() === ixn.guildId?.toString()) return true;
-    return !!dev.users[ixn.user.toString()];
+    return !!dev.users[ixn.user.id.toString()];
   };
 
 export const err =
