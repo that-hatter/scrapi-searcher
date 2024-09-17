@@ -27,3 +27,10 @@ export const URLS = {
   KONAMI_DB_MASTER: 'https://www.db.yugioh-card.com/yugiohdb',
   KONAMI_DB_RUSH: 'https://www.db.yugioh-card.com/rushdb',
 } as const;
+
+export const EMOJI = {
+  FACTORY: '<:factory:1283971929769902131>',
+  SEARCHER: '<:searcher:1283971880885162130>',
+  MIND_READER: '<:mindreader:1283972011256975390>',
+  YARD: '<:yard:1283971971310293032>',
+};
