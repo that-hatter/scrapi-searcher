@@ -199,6 +199,8 @@ const pediaURL = (c: Card, kid: O.Option<number>) => {
   if (O.isSome(kid)) return O.some(URLS.YUGIPEDIA_WIKI + kid.value);
 
   if (
+    c.type === 0n ||
+    c.ot >= 0x800n || // Illegal/Non-card/Custom
     c.name.endsWith(' (Goat)') ||
     c.name.endsWith(' (Pre-Errata)') ||
     c.name.endsWith(' (DM)') ||
