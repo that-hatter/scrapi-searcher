@@ -182,7 +182,7 @@ const scriptUrl_ = (
 
 export const scriptUrl = (c: Card) => (ctx: Ctx.Ctx) => {
   const aliases = ctx.babel.array.filter(
-    (a) => a.id !== c.id && (c.alias === a.id || a.alias === c.id)
+    (a) => c.alias === a.id || a.alias === c.id
   );
   const ctypes = BitNames.types(c.type)(ctx.bitNames);
   return scriptUrl_(
@@ -324,7 +324,7 @@ export const itemEmbed =
     );
 
     const aliases = ctx.babel.array.filter(
-      (a) => a.id !== c.id && (a.alias === c.id || c.id === a.alias)
+      (a) => a.alias === c.id || c.alias === a.id
     );
     const footer = passcodesFooter(c, kid)(aliases);
 
