@@ -158,13 +158,21 @@ export const findMaster =
       )
     );
 
+const rushName = (name: string) =>
+  name
+    .replace(' (Rush)', ' (Rush Duel)')
+    .replace(' [L]', ' (L)')
+    .replace(' [R]', ' (R)');
+
 export const findRush =
   (name: string) =>
-  ({ pedia }: Ctx.Ctx): O.Option<Ids> =>
-    pipe(
+  ({ pedia }: Ctx.Ctx): O.Option<Ids> => {
+    const rname = rushName(name);
+    return pipe(
       pedia.rush,
-      RA.findFirst((c) => c.name === name.replace(' (Rush)', ' (Rush Duel)'))
+      RA.findFirst((c) => c.name === rname || c.name === name + ' (Rush Duel)')
     );
+  };
 
 export const find = (id: number, name: string) => (ctx: Ctx.Ctx) =>
   pipe(
@@ -189,7 +197,8 @@ export const toBabelCard = (c: Ids) => (ctx: Ctx.Ctx) =>
       pipe(
         ctx.babel.array,
         RA.findFirst(
-          (bc) => bc.name.replace(' (Rush Duel)', ' (Rush)') === c.name
+          (bc) =>
+            rushName(bc.name) === c.name || bc.name + ' (Rush Duel)' === c.name
         )
       )
     )
