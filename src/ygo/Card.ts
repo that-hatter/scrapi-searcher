@@ -207,6 +207,7 @@ const pediaURL = (c: Card, kid: O.Option<number>) => {
     return O.none;
 
   const pname = c.name
+    .replace(' (Anime)', ' (anime)')
     .replace(' (Rush)', ' (Rush Duel)')
     .replace(' (Skill)', ' (anime Skill)')
     // there's no way to link to specific VG card pages, since yugipedia
