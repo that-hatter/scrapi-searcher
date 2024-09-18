@@ -165,8 +165,10 @@ export const archetype: Command.Command = {
           messageId: message.id,
           channelId: message.channelId,
           bulletList: true,
-          itemId: (ct) => ct.name,
+          itemId: (ct) => ct.value.toString(),
+          itemName: (ct) => RTE.right(ct.name),
           itemListDescription: Systrings.itemListDescription,
+          itemMenuDescription: Systrings.itemMenuDescription,
           itemEmbed: singleArchEmbed,
         })
       ),

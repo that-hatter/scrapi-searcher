@@ -114,6 +114,15 @@ export const itemListDescription: Nav.Nav<Systring>['itemListDescription'] =
     );
   };
 
+export const itemMenuDescription: Nav.Nav<Systring>['itemMenuDescription'] = (
+  item
+) =>
+  pipe(
+    item.kind === 'system' ? '' : ' | 0x' + item.value.toString(16),
+    str.prepend(item.value.toString()),
+    RTE.right
+  );
+
 export const url = (s: Systring) =>
   'https://github.com/ProjectIgnis/' +
   s.repo +

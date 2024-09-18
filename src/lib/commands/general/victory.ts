@@ -24,8 +24,10 @@ export const victory: Command.Command = {
           bulletList: true,
           messageId: message.id,
           channelId: message.channelId,
-          itemId: (ct) => ct.name,
+          itemId: (ct) => ct.value.toString(),
+          itemName: (ct) => RTE.right(ct.name),
           itemListDescription: Systrings.itemListDescription,
+          itemMenuDescription: Systrings.itemMenuDescription,
           itemEmbed: Systrings.itemEmbed,
         })
       ),
