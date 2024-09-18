@@ -1,7 +1,15 @@
-import { flow, O, pipe, RA, RNEA, TE } from '@that-hatter/scrapi-factory/fp';
+import {
+  flow,
+  O,
+  pipe,
+  RA,
+  RNEA,
+  RTE,
+  TE,
+} from '@that-hatter/scrapi-factory/fp';
 import { Babel, Banlist, Pedia } from '.';
 import { COLORS, LIMITS, URLS } from '../lib/constants';
-import { Ctx, dd, Op, str } from '../lib/modules';
+import { Ctx, dd, Nav, Op, str } from '../lib/modules';
 import { Card } from './Babel';
 import * as BitNames from './BitNames';
 
@@ -435,12 +443,8 @@ export const fuzzyMatches = (query: string) => (ctx: Ctx.Ctx) => {
   const results = ctx.babel.minisearch.search(query, { fuzzy: true });
   return pipe(
     results,
-    RA.filterMap(({ id }) => {
-      const c = ctx.babel.record[id.toString()];
-      if (!c) return O.none;
-      return O.some(c);
-    })
-  );
+    RA.filterMap(({ id }) => O.fromNullable(ctx.babel.record[id.toString()]))
+  ).toSorted((a, b) => (b.alias === a.id ? -1 : a.alias === b.id ? 1 : 0));
 };
 
 export const bestMatch =
@@ -493,3 +497,20 @@ export const getCdbStrings = (c: Card) =>
       )
     )
   );
+
+export const nav = (
+  title: string,
+  items: ReadonlyArray<Card>,
+  msg: dd.Message
+): Nav.Nav<Card> => ({
+  title,
+  items,
+  messageId: msg.id,
+  channelId: msg.channelId,
+  selectHint: 'Select card to display',
+  itemId: (c: Card) => c.id.toString(),
+  itemName: (c: Card) => RTE.right(c.name),
+  itemListDescription: () => (c: Card) => RTE.right(c.name),
+  itemMenuDescription: (c: Card) => RTE.right(c.id.toString()),
+  itemEmbed,
+});
