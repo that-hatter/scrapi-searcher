@@ -147,13 +147,15 @@ const initMinisearch = (cards: ReadonlyArray<Card>): MiniSearch<Card> => {
   const added: { [name: string]: Card } = {};
   cards.forEach((c) => {
     const alreadyAdded = added[c.name];
-    if (alreadyAdded) {
-      if (alreadyAdded.alias !== c.id) return;
-      minisearch.remove(alreadyAdded);
+    if (
+      !alreadyAdded ||
+      c.alias !== alreadyAdded.id ||
+      c.ot !== alreadyAdded.ot ||
+      c.desc !== alreadyAdded.desc
+    ) {
+      minisearch.add(c);
+      added[c.name] = c;
     }
-
-    minisearch.add(c);
-    added[c.name] = c;
   });
 
   return minisearch;
