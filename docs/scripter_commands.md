@@ -262,9 +262,9 @@ Search constants by value. Number values can be in decimal, hexadecimal (0x pref
 
 #### Examples
 ```
-;constantval 255        # Decimal
-;constantval 0xFF       # Hexadecimal
-;constantval 0b11111111 # Binary
+;constantval 255            # Value in decimal
+;constantval 0xFF           # Value in hexadecimal
+;constantval 0b11111111     # Value in binary
 ```
 These examples will search for constants with the value 255 (in decimal, hexadecimal, and binary representations respectively).
 
@@ -286,9 +286,9 @@ Show which constants in a bit enum (except Archetype) make up an integer value. 
 
 #### Examples
 ```
-;enumbits 3    Type # Decimal
-;enumbits 0x3  Type # Hexadecimal
-;enumbits 0b11 Type # Binary
+;enumbits 3    Type     # Value in decimal
+;enumbits 0x3  Type     # Value in hexadecimal
+;enumbits 0b11 Type     # Value in binary
 ```
 These examples will show which constants in the Type enum make up the value 3 (in decimal, hexadecimal, and binary representations respectively).
 
@@ -310,9 +310,9 @@ Show which archetypes make up an integer value or search archetype strings (set 
 
 #### Examples
 ```
-;archetype 7     # Decimal
-;archetype 0x7   # Hexadecimal
-;archetype 0b111 # Binary
+;archetype 7         # Value in decimal
+;archetype 0x7       # Value in hexadecimal
+;archetype 0b111     # Value in binary
 ```
 These examples will show which archetypes make up the value 7 (in decimal, hexadecimal, and binary representations respectively).
 
@@ -340,9 +340,9 @@ Search counters by name or value. When searching by value, the input can be in d
 This will search for counters with "spell" in their name.
 
 ```
-;counter 13     # Decimal
-;counter 0xd    # Hexadecimal
-;counter 0b1101 # Binary
+;counter 13         # Value in decimal
+;counter 0xd        # Value in hexadecimal
+;counter 0b1101     # Value in binary
 ```
 These examples will search for counters with a value of 13 (in decimal, hexadecimal, and binary representations respectively).
 
@@ -365,9 +365,9 @@ Search victory strings (alternate win conditions) by name or value. When searchi
 This will search for victory strings with "EXODIA" in their name.
 
 ```
-;victory 16      # Decimal
-;victory 0x10    # Hexadecimal
-;victory 0b10000 # Binary
+;victory 16          # Value in decimal
+;victory 0x10        # Value in hexadecimal
+;victory 0b10000     # Value in binary
 ```
 These examples will search for victory strings with a value of 16 (in decimal, hexadecimal, and binary representations respectively).
 
