@@ -136,7 +136,7 @@ export const cmd = SearchCommand.searchCommand<sf.Constant>({
   name: 'constant',
   aliases: ['c', 'const'],
   itemCollection: (ctx) => TE.right(ctx.yard.api.constants),
-  itemName: ({ name }) => name,
+  itemId: ({ name }) => name,
 
   itemListDescription,
   itemMenuDescription: Topic.defaultMenuDescription,

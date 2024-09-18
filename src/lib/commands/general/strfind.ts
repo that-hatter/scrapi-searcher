@@ -39,7 +39,7 @@ export const strfind: Command.Command = {
           messageId: message.id,
           channelId: message.channelId,
           bulletList: true,
-          itemName: ([id, i]) => id + ',' + i,
+          itemId: ([id, i]) => id + ',' + i,
           itemListDescription:
             () =>
             ([id, i, s]) =>

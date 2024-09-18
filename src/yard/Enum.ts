@@ -25,7 +25,7 @@ export const cmd = SearchCommand.searchCommand<sf.Enum>({
   name: 'enum',
   aliases: ['e'],
   itemCollection: (ctx) => TE.right(ctx.yard.api.enums),
-  itemName: ({ name }) => name,
+  itemId: ({ name }) => name,
 
   itemListDescription: Topic.defaultListDescription,
   itemMenuDescription: Topic.defaultMenuDescription,

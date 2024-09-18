@@ -9,7 +9,7 @@ export type Options<T> = {
     parameters: ReadonlyArray<string>
   ) => (item: T) => boolean;
 } & Nav.Formatters<T> &
-  Pick<Nav.Nav<T>, 'itemName'>;
+  Pick<Nav.Nav<T>, 'itemId'>;
 
 export const title = (amt: number, name: string, query: string) => {
   const s = `Found ${amt} ${name}(s) matching ${str.inlineCode(query)}`;
@@ -35,7 +35,7 @@ export const searchCommand = <T>(opts: Options<T>): Command.Command => ({
     const query = parameters.join(' ');
     const filterFn = opts.customFilter
       ? opts.customFilter(parameters)
-      : (t: T) => opts.itemName(t).toLowerCase().includes(query);
+      : (t: T) => opts.itemId(t).toLowerCase().includes(query);
 
     return pipe(
       opts.itemCollection,
@@ -44,8 +44,8 @@ export const searchCommand = <T>(opts: Options<T>): Command.Command => ({
         const res = array.filter(filterFn);
         if (opts.customFilter || parameters.length > 1) return res;
         return res.sort((a, b) => {
-          const a_ = opts.itemName(a).toLowerCase().startsWith(query);
-          const b_ = opts.itemName(b).toLowerCase().startsWith(query);
+          const a_ = opts.itemId(a).toLowerCase().startsWith(query);
+          const b_ = opts.itemId(b).toLowerCase().startsWith(query);
           return a_ && !b_ ? -1 : b_ && !a_ ? 1 : 0;
         });
       }),
@@ -57,7 +57,7 @@ export const searchCommand = <T>(opts: Options<T>): Command.Command => ({
           selectHint: `Select ${opts.name} to display`,
           messageId: message.id,
           channelId: message.channelId,
-          itemName: opts.itemName,
+          itemId: opts.itemId,
 
           itemListDescription: opts.itemListDescription,
           itemMenuDescription: opts.itemMenuDescription,

@@ -155,7 +155,7 @@ export const cmd = SearchCommand.searchCommand<sf.Function>({
   name: 'function',
   aliases: ['f', 'fn', 'func'],
   itemCollection: (ctx) => TE.right(ctx.yard.api.functions),
-  itemName: ({ name }) => name,
+  itemId: ({ name }) => name,
 
   itemListDescription,
   itemMenuDescription: Topic.defaultMenuDescription,

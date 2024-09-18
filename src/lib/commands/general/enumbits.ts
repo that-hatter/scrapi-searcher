@@ -125,7 +125,7 @@ export const enumbits: Command.Command = {
           selectHint: 'Select bit enum to display',
           messageId: message.id,
           channelId: message.channelId,
-          itemName: ({ name }) => name,
+          itemId: ({ name }) => name,
 
           itemListDescription: Topic.defaultListDescription,
           itemMenuDescription: Topic.defaultMenuDescription,

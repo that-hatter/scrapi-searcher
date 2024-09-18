@@ -32,7 +32,7 @@ export const commands: Command.Command = {
           items,
           messageId: message.id,
           channelId: message.channelId,
-          itemName: ({ name }) => name,
+          itemId: ({ name }) => name,
           itemListDescription,
           itemMenuDescription,
           itemEmbed: flow(Command.embed, RTE.fromReader),

@@ -42,7 +42,7 @@ export const cmd = SearchCommand.searchCommand<sf.Type>({
   name: 'type',
   aliases: ['t'],
   itemCollection: (ctx) => TE.right(ctx.yard.api.types),
-  itemName: ({ name }) => name,
+  itemId: ({ name }) => name,
 
   itemListDescription,
   itemMenuDescription: Topic.defaultMenuDescription,

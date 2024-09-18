@@ -24,7 +24,7 @@ export const victory: Command.Command = {
           bulletList: true,
           messageId: message.id,
           channelId: message.channelId,
-          itemName: (ct) => ct.name,
+          itemId: (ct) => ct.name,
           itemListDescription: Systrings.itemListDescription,
           itemEmbed: Systrings.itemEmbed,
         })

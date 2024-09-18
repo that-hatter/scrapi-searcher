@@ -9,7 +9,7 @@ const searchCmd = SearchCommand.searchCommand<sf.Constant>({
   name: 'constantval',
   aliases: ['cval'],
   itemCollection: (ctx) => TE.right(ctx.yard.api.constants),
-  itemName: ({ name }) => name,
+  itemId: ({ name }) => name,
   customFilter: (params) => (ct) => {
     const query = params.join(' ');
     if (typeof ct.value === 'string')

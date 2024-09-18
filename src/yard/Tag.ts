@@ -24,7 +24,7 @@ export const cmd = SearchCommand.searchCommand<sf.Tag>({
   name: 'tag',
   aliases: [],
   itemCollection: (ctx) => TE.right(ctx.yard.api.tags),
-  itemName: ({ name }) => name,
+  itemId: ({ name }) => name,
 
   itemListDescription: Topic.defaultListDescription,
   itemMenuDescription: Topic.defaultMenuDescription,

@@ -10,7 +10,7 @@ export const navSelect = Menu.interaction({
         RTE.bind('item', () =>
           pipe(
             nav.items,
-            RA.findFirst((t) => nav.itemName(t) === name),
+            RA.findFirst((t) => nav.itemId(t) === name),
             RTE.fromOption(() => Err.forDev('Could not find item: ' + name))
           )
         ),
@@ -29,7 +29,7 @@ export const navSelect = Menu.interaction({
           )
         ),
         RTE.flatMap(({ item, comps, embed }) =>
-          Nav.updateDisplay(embed, comps, nav.itemName(item))(interaction)
+          Nav.updateDisplay(embed, comps, nav.itemId(item))(interaction)
         )
       )
     ),

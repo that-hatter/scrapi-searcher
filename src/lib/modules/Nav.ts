@@ -17,6 +17,7 @@ const ITEM_PER_PAGE = 10;
 export type Formatter<T, R> = (item: T) => Op.SubOp<R>;
 
 export type Formatters<T> = {
+  readonly itemName?: Formatter<T, string>;
   readonly itemMenuDescription?: Formatter<T, string>;
   readonly itemEmbed?: Formatter<T, dd.Embed>;
   readonly itemComponents?: Formatter<T, dd.MessageComponents>;
@@ -33,7 +34,7 @@ export type Nav<T> = {
   readonly channelId: dd.BigString;
   readonly bulletList?: boolean;
   // the name is needed for immediate operations, so it shouldn't be an RTE
-  readonly itemName: (item: T) => string;
+  readonly itemId: (item: T) => string;
 } & Formatters<T>;
 
 // -----------------------------------------------------------------------------
@@ -119,15 +120,18 @@ const menuOption =
   (item) =>
     pipe(
       RTE.Do,
-      RTE.let('label', () => nav.itemName(item)),
+      RTE.let('value', () => nav.itemId(item)),
+      RTE.bind('label', ({ value }) =>
+        nav.itemName ? nav.itemName(item) : RTE.right(value)
+      ),
       RTE.bind('description', () =>
         nav.itemMenuDescription
           ? nav.itemMenuDescription(item)
           : RTE.right(undefined)
       ),
-      RTE.map(({ label, description }) => ({
+      RTE.map(({ label, value, description }) => ({
         label,
-        value: label,
+        value,
         description,
       }))
     );
@@ -188,7 +192,7 @@ const listPageContent = <T>(
       RTE.map(str.prepend(str.bold(nav.title) + '\n'))
     );
 
-  const nameRTE = flow(nav.itemName, RTE.right);
+  const nameRTE = nav.itemName ?? flow(nav.itemId, RTE.right);
   return pipe(
     nav.itemListDescription ? nav.itemListDescription(pageItems) : nameRTE,
     listPageContent_,

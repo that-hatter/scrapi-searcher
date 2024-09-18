@@ -165,7 +165,7 @@ export const archetype: Command.Command = {
           messageId: message.id,
           channelId: message.channelId,
           bulletList: true,
-          itemName: (ct) => ct.name,
+          itemId: (ct) => ct.name,
           itemListDescription: Systrings.itemListDescription,
           itemEmbed: singleArchEmbed,
         })

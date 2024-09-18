@@ -42,7 +42,7 @@ export const cmd = SearchCommand.searchCommand<sf.Namespace>({
   name: 'namespace',
   aliases: ['n', 'ns'],
   itemCollection: (ctx) => TE.right(ctx.yard.api.namespaces),
-  itemName: ({ name }) => name,
+  itemId: ({ name }) => name,
 
   itemListDescription: Topic.defaultListDescription,
   itemMenuDescription: Topic.defaultMenuDescription,
