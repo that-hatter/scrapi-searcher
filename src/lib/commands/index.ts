@@ -20,6 +20,7 @@ import { cmd as tag } from '../../yard/Tag';
 import { cmd as type_ } from '../../yard/Type';
 import { constantval } from './general/constantval';
 import { enumbits } from './general/enumbits';
+import { progress } from './general/progress';
 
 import { archetype } from './general/archetype';
 import { counter } from './general/counter';
@@ -56,6 +57,7 @@ const list = [
   type_,
   constantval,
   enumbits,
+  progress,
 
   archetype,
   counter,
