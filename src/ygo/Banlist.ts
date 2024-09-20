@@ -77,7 +77,11 @@ const dateString = (b: Banlist) => {
 export const limitsBreakdown = (c: Babel.Card) => (ctx: Ctx.Ctx) => {
   const scopes = BitNames.scopes(c.ot)(ctx.bitNames);
 
-  const getLimit = scopes.includes('Rush')
+  const rush = scopes.includes('Rush');
+  const ocg = scopes.includes('OCG');
+  const tcg = scopes.includes('TCG');
+
+  const getLimit = rush
     ? flow(
         O.fromPredicate((b: Banlist) => b.name.startsWith('Rush')),
         O.flatMap((b) =>
@@ -93,7 +97,13 @@ export const limitsBreakdown = (c: Babel.Card) => (ctx: Ctx.Ctx) => {
     RA.filterMap((list: Banlist) =>
       pipe(
         list,
-        getLimit,
+        O.fromPredicate(({ name }) => {
+          if (name === 'World') return ocg && tcg;
+          if (name === 'OCG') return ocg;
+          if (name === 'Traditional' || name === 'TCG') return tcg;
+          return true;
+        }),
+        O.flatMap(getLimit),
         O.map((lmt) =>
           str.joinWords([
             str.inlineCode(lmt),
