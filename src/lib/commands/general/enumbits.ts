@@ -1,6 +1,7 @@
 import type * as sf from '@that-hatter/scrapi-factory';
 import { O, pipe, RA, RNEA, RTE, TE } from '@that-hatter/scrapi-factory/fp';
 import { Topic } from '../../../yard/shared';
+import { LIMITS } from '../../constants';
 import { Command, Ctx, Err, Nav, SearchCommand, str } from '../../modules';
 import { utils } from '../../utils';
 
@@ -87,9 +88,12 @@ const itemEmbedFn =
       bits,
       RA.mapWithIndex(bitStr),
       str.joinParagraphs,
-      (description) => ({
+      (desc) => ({
         title,
-        description,
+        description:
+          desc.length > LIMITS.EMBED_DESCRIPTION
+            ? '[Too long to display here]'
+            : desc,
         footer: { text: 'Full DEC: ' + value },
       }),
       TE.right
