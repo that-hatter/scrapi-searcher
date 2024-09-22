@@ -68,9 +68,9 @@ const namespaceLink = (fn: sf.Function) =>
     )
   );
 
-const githubSearchLink = (fn: sf.Function) =>
+const usageExamplesLink = (fn: sf.Function) =>
   str.link(
-    'Sample usage',
+    'Usage Examples',
     'https://github.com/search?q=repo%3AProjectIgnis%2FCardScripts+' +
       encodeURIComponent(fn.partialName) +
       '&type=code'
@@ -83,7 +83,7 @@ const quickLinksSection = (fn: sf.Function) =>
       pipe(
         [
           BindingInfo.sourceLink(fn),
-          githubSearchLink(fn),
+          usageExamplesLink(fn),
           ns,
           Topic.editLink(fn),
         ],

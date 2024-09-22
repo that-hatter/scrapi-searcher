@@ -33,12 +33,12 @@ const enumLink =
     pipe(
       api.enums.record,
       RR.lookup(ct.enum),
-      O.map((en) => Topic.linkify(en.name + ' constants')(en))
+      O.map((en) => Topic.linkify(en.name + ' Constants')(en))
     );
 
-const githubSearchLink = (ct: sf.Constant) =>
+const usageExamplesLink = (ct: sf.Constant) =>
   str.link(
-    'Sample usage',
+    'Usage Examples',
     'https://github.com/search?q=repo%3AProjectIgnis%2FCardScripts+' +
       encodeURIComponent(ct.name) +
       '&type=code'
@@ -51,7 +51,7 @@ const quickLinksSection = (ct: sf.Constant) =>
       pipe(
         [
           BindingInfo.sourceLink(ct),
-          githubSearchLink(ct),
+          usageExamplesLink(ct),
           enLink,
           Topic.editLink(ct),
         ],

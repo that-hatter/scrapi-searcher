@@ -11,9 +11,7 @@ const format = (
     RA.filter(({ tags }) => tags.includes('under-construction')),
     (ct) =>
       `\`${ct.length}\` out of \`${items.length}\` ${name} ` +
-      `(${
-        Math.floor(((items.length - ct.length) / items.length) * 10000) / 100
-      }% done!)`
+      `(${Math.floor((ct.length / items.length) * 10000) / 100}% remaining)`
   );
 
 const footer =
