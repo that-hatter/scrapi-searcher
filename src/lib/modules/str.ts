@@ -138,8 +138,24 @@ const textParts = <T extends md.RootContent>(
   return [];
 };
 
+// discord's code blocks are not commonmark-compliant,
+// they treat triple backticks as the start/end of a code block
+// even if they're not at the start of a line
+const normalizeCodeBlocks = flow(
+  string.split('\n'),
+  RNEA.flatMap((s) => {
+    const split = string.split('```')(s);
+    if (split.length % 2 === 1) return [s];
+    return pipe(split, RNEA.unappend, ([init, last]) => [
+      init.join('```'),
+      '```' + last,
+    ]);
+  }),
+  string.intercalate('\n')
+);
+
 export const getTextParts = (s: string) => {
-  const ast = md.parse(s);
+  const ast = md.parse(normalizeCodeBlocks(s));
   return pipe(ast.children, RA.flatMap(textParts));
 };
 
