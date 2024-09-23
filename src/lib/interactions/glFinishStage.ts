@@ -17,7 +17,7 @@ const stringWithLinks = pipe(
     })
   ),
   // transform html line breaks to newlines
-  Decoder.map((s) => s.replace('<br />', '\n'))
+  Decoder.map((s) => s.replaceAll('<br />', '\n'))
 );
 
 const fulltext = pipe(
