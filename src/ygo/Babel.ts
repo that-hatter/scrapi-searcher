@@ -141,7 +141,10 @@ const getAllCdbPaths = (dir: string) =>
   );
 
 const initMinisearch = (cards: ReadonlyArray<Card>): MiniSearch<Card> => {
-  const minisearch = new MiniSearch<Card>({ fields: ['name'] });
+  const minisearch = new MiniSearch<Card>({
+    fields: ['name'],
+    searchOptions: { fuzzy: true, prefix: true },
+  });
 
   const added: { [name: string]: Card } = {};
   cards.forEach((c) => {

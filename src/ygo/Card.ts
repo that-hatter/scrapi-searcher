@@ -440,11 +440,20 @@ export const itemEmbed =
 
 export const fuzzyMatches = (query: string) => (ctx: Ctx) => {
   const fullQuery = Shortcuts.resolveShortcuts(query)(ctx);
-  const results = ctx.babel.minisearch.search(fullQuery, { fuzzy: true });
+  const results = ctx.babel.minisearch.search(fullQuery);
   return pipe(
     results,
     RA.filterMap(({ id }) => O.fromNullable(ctx.babel.record[id.toString()]))
-  ).toSorted((a, b) => (b.alias === a.id ? -1 : a.alias === b.id ? 1 : 0));
+  ).toSorted((a, b) => {
+    if (a.name === b.name)
+      return b.alias === a.id ? -1 : a.alias === b.id ? 1 : 0;
+    if (a.name.includes(b.name) || b.name.includes(a.name))
+      return (
+        Math.abs(a.name.length - query.length) -
+        Math.abs(b.name.length - query.length)
+      );
+    return 0;
+  });
 };
 
 export const bestMatch =
