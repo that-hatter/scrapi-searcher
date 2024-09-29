@@ -114,7 +114,7 @@ export const getState = (message: dd.Message): Op.Op<State> =>
   );
 
 export const filterStatus =
-  (statuses: Greenlight.StatusSteps) => (ixn: Interaction.Updateable) =>
+  (statuses: Greenlight.StatusSteps) => (ixn: Interaction.WithMsg) =>
     pipe(
       getState(ixn.message),
       RTE.flatMap((state) =>

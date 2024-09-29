@@ -27,6 +27,7 @@ import { counter } from './general/counter';
 import { systrings } from './general/systrings';
 import { victory } from './general/victory';
 
+import { about } from './general/about';
 import { commands } from './general/commands';
 import { help } from './general/help';
 import { ping } from './general/ping';
@@ -35,7 +36,6 @@ import { claim } from './dev/claim';
 import { stage } from './dev/stage';
 
 import { update } from './dev/update';
-import { about } from './general/about';
 
 const list = [
   card,

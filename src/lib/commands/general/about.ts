@@ -1,9 +1,10 @@
 import { pipe, RTE } from '@that-hatter/scrapi-factory/fp';
+import { Ctx } from '../../../Ctx';
 import { EMOJI } from '../../constants';
-import { Command, Ctx, dd, Op, str } from '../../modules';
+import { Command, dd, Op, str } from '../../modules';
 import { helpMessage } from './help';
 
-const description = (message: dd.Message, ctx: Ctx.Ctx) =>
+const description = (message: dd.Message, ctx: Ctx) =>
   str.joinParagraphs([
     str.mention(ctx.bot.id) +
       ' displays scripting library documentation and card information, ' +
@@ -36,7 +37,7 @@ const description = (message: dd.Message, ctx: Ctx.Ctx) =>
 
 const aboutMessage =
   (message: dd.Message) =>
-  (ctx: Ctx.Ctx): dd.CreateMessage => ({
+  (ctx: Ctx): dd.CreateMessage => ({
     embeds: [
       {
         title: 'scrapi-searcher',

@@ -1,13 +1,14 @@
 import { O, pipe, RTE, TE } from '@that-hatter/scrapi-factory/fp';
+import { Ctx } from '../../Ctx';
 import {
   rawDataEmbed,
   rawDescEmbed,
   rawStringsEmbed,
   rawvalModeMenu,
 } from '../commands/general/rawvals';
-import { Ctx, Err, Interaction, Menu, str } from '../modules';
+import { Err, Interaction, Menu, str } from '../modules';
 
-const getUpdate = (id: number, mode: string) => (ctx: Ctx.Ctx) => {
+const getUpdate = (id: number, mode: string) => (ctx: Ctx) => {
   const embedFn =
     mode === 'desc'
       ? rawDescEmbed

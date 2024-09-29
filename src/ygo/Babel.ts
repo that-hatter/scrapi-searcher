@@ -4,8 +4,9 @@ import { ioEither } from 'fp-ts';
 import MiniSearch from 'minisearch';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
-import { simpleGit } from 'simple-git';
-import { Collection, Decoder } from '../lib/modules';
+import { PATHS } from '../lib/constants';
+import type { Data } from '../lib/modules';
+import { Collection, Decoder, Github } from '../lib/modules';
 import { utils } from '../lib/utils';
 
 export type Card = Readonly<
@@ -104,9 +105,7 @@ const cdbDecoder = (cdb: string) =>
 // fetching and loading
 // -----------------------------------------------------------------------------
 
-const GITHUB_URL = 'https://github.com/ProjectIgnis/BabelCDB.git';
-const DATA_PATH = path.join(process.cwd(), 'data');
-const REPO_PATH = path.join(DATA_PATH, 'BabelCDB');
+const REPO_PATH = path.join(PATHS.DATA, 'BabelCDB');
 
 const loadCdb = (name: string) =>
   pipe(
@@ -161,34 +160,39 @@ const initMinisearch = (cards: ReadonlyArray<Card>): MiniSearch<Card> => {
   return minisearch;
 };
 
-const loadBabel = (): TE.TaskEither<string, Babel> =>
-  pipe(
-    getAllCdbPaths(REPO_PATH),
-    TE.map(RA.map(loadCdb)),
-    TE.flatMap(TE.sequenceArray),
-    TE.flatMapOption(RNEA.fromReadonlyArray, () => 'No valid cdbs found.'),
-    TE.map(RNEA.unprepend),
-    TE.map(([head, tail]) =>
-      pipe(
-        tail,
-        RA.reduce(head, (a, b) => ({ ...a, ...b }))
-      )
-    ),
-    TE.map((record): Babel => {
-      const array = RR.values(record).toSorted((a, b) => Number(a.id - b.id));
-      const minisearch = initMinisearch(array);
-      return { array, record, minisearch };
-    })
-  );
+const loadBabel: TE.TaskEither<string, Babel> = pipe(
+  getAllCdbPaths(REPO_PATH),
+  TE.map(RA.map(loadCdb)),
+  TE.flatMap(TE.sequenceArray),
+  TE.flatMapOption(RNEA.fromReadonlyArray, () => 'No valid cdbs found.'),
+  TE.map(RNEA.unprepend),
+  TE.map(([head, tail]) =>
+    pipe(
+      tail,
+      RA.reduce(head, (a, b) => ({ ...a, ...b }))
+    )
+  ),
+  TE.map((record): Babel => {
+    const array = RR.values(record).toSorted((a, b) => Number(a.id - b.id));
+    const minisearch = initMinisearch(array);
+    return { array, record, minisearch };
+  })
+);
 
-const git = simpleGit();
+const update: TE.TaskEither<string, Babel> = pipe(
+  Github.pullOrClone('BabelCDB', 'https://github.com/ProjectIgnis/BabelCDB'),
+  TE.flatMap(() => loadBabel),
+  TE.mapError(utils.stringify)
+);
 
-export const updateBabel = (): TE.TaskEither<string, Babel> =>
-  pipe(
-    utils.taskify(() => git.cwd(REPO_PATH).pull()),
-    TE.orElseW(() => utils.taskify(() => git.cwd(DATA_PATH).clone(GITHUB_URL))),
-    TE.flatMap(loadBabel),
-    TE.mapError(utils.stringify)
-  );
-
-export const initBabel = () => pipe(loadBabel(), TE.orElse(updateBabel));
+export const data: Data.Data<'babel'> = {
+  key: 'babel',
+  description: 'Card databases from BabelCDB.',
+  update,
+  init: pipe(
+    loadBabel,
+    TE.orElse(() => update)
+  ),
+  commitFilter: (repo, files) =>
+    repo === 'BabelCDB' && files.some((f) => f.endsWith('.cdb')),
+};

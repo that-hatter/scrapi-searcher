@@ -8,21 +8,13 @@ import {
   RTE,
   TE,
 } from '@that-hatter/scrapi-factory/fp';
+import { Ctx } from '../../../Ctx';
 import { Topic } from '../../../yard/shared';
 import { Systrings } from '../../../ygo';
-import {
-  Command,
-  Ctx,
-  dd,
-  Err,
-  Nav,
-  Op,
-  SearchCommand,
-  str,
-} from '../../modules';
+import { Command, dd, Err, Nav, Op, SearchCommand, str } from '../../modules';
 import { utils } from '../../utils';
 
-const getConstant = (val: bigint) => (ctx: Ctx.Ctx) =>
+const getConstant = (val: bigint) => (ctx: Ctx) =>
   pipe(
     ctx.yard.api.constants.array,
     RA.findFirst((ct) => ct.enum === 'Archetype' && ct.value === val)
@@ -54,7 +46,7 @@ const singleArchEmbed = (s: Systrings.Systring) =>
 
 const hexBreakDownEmbed =
   (val: bigint): Op.Op<dd.Embed> =>
-  (ctx: Ctx.Ctx) => {
+  (ctx: Ctx) => {
     if (val < 0n) return TE.left(Err.forUser('Value must not be negative.'));
     if (val >> 64n > 0n)
       return TE.left(Err.forUser('Value must not exceed 64 bits.'));

@@ -1,6 +1,7 @@
 import { flow, O, pipe, RA, RNEA, TE } from '@that-hatter/scrapi-factory/fp';
 import { SelectOption } from 'discordeno';
-import { Ctx, dd, Err, Menu, Op, str } from '../lib/modules';
+import { Ctx } from '../Ctx';
+import { dd, Err, Menu, Op, str } from '../lib/modules';
 import { utils } from '../lib/utils';
 
 // -----------------------------------------------------------------------------
@@ -13,9 +14,9 @@ const REPO = {
   state: 'open',
 } as const;
 
-export const fetchRawIssues = (ctx: Ctx.Ctx) =>
+export const fetchRawIssues = (ctx: Ctx) =>
   pipe(
-    utils.taskify(() => ctx.octokit.rest.issues.listForRepo(REPO)),
+    utils.taskify(() => ctx.github.rest.issues.listForRepo(REPO)),
     TE.map(({ data }) => data),
     TE.mapError(Err.forDev)
   );
@@ -36,9 +37,9 @@ export const getIssues: Op.Op<ReadonlyArray<Issue>> = flow(
   )
 );
 
-export const editIssue = (num: number, body: string) => (ctx: Ctx.Ctx) =>
+export const editIssue = (num: number, body: string) => (ctx: Ctx) =>
   utils.taskify(() =>
-    ctx.octokit.issues.update({ ...REPO, issue_number: num, body })
+    ctx.github.rest.issues.update({ ...REPO, issue_number: num, body })
   );
 
 // -----------------------------------------------------------------------------

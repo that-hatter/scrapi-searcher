@@ -1,12 +1,13 @@
 import { flow, RTE, TE } from '@that-hatter/scrapi-factory/fp';
-import { Ctx, dd, Err } from '.';
+import { dd, Err } from '.';
+import { Ctx } from '../../Ctx';
 import { CanBeReadonly, utils } from '../utils';
 
 // ----------------------------------------------------------------------------
 // type aliases
 // ----------------------------------------------------------------------------
 
-type CtxRTE<E, V> = RTE.ReaderTaskEither<Ctx.Ctx, E, V>;
+type CtxRTE<E, V> = RTE.ReaderTaskEither<Ctx, E, V>;
 
 export type Op<V> = CtxRTE<Err.Err, V>;
 
@@ -110,13 +111,18 @@ export const sendInteractionResponse =
 
 export const editBotStatus =
   (status: dd.StatusUpdate) =>
-  ({ bot }: Ctx.Ctx) =>
+  ({ bot }: Ctx) =>
     asOperation(() => bot.helpers.editBotStatus(status));
 
 export const react =
   (reaction: string) =>
   (message: dd.Message) =>
-  ({ bot }: Ctx.Ctx) =>
+  ({ bot }: Ctx) =>
     asOperation(() =>
       bot.helpers.addReaction(message.channelId, message.id, reaction)
     );
+
+export const sendLog =
+  (payload: Payload<dd.CreateMessage>): Op<dd.Message> =>
+  (ctx) =>
+    sendMessage(ctx.dev.logs)(payload)(ctx);

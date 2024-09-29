@@ -1,5 +1,7 @@
 import { O, pipe, R } from '@that-hatter/scrapi-factory/fp';
-import { Ctx, dd, Err, Op, str } from '.';
+import type { Collection } from '.';
+import { dd, Err, Op, str } from '.';
+import { Ctx } from '../../Ctx';
 
 export type Execution = (
   parameters: ReadonlyArray<string>,
@@ -15,10 +17,12 @@ export type Command = {
   readonly execute: Execution;
 };
 
+export type Collection = Collection.Collection<Command>;
+
 // TODO: more valid cases? (specific admin users, debug mode, etc.)
 export const devCheck =
   (message: dd.Message) =>
-  ({ dev }: Ctx.Ctx): boolean => {
+  ({ dev }: Ctx): boolean => {
     if (dev.admin === message.authorId.toString()) return true;
     if (dev.guild.toString() === message.guildId?.toString()) return true;
     return !!dev.users[message.authorId.toString()];
@@ -26,7 +30,7 @@ export const devCheck =
 
 const embedFields =
   (cmd: Command) =>
-  (ctx: Ctx.Ctx): Array<dd.DiscordEmbedField> => {
+  (ctx: Ctx): Array<dd.DiscordEmbedField> => {
     const syntaxField: dd.DiscordEmbedField = {
       name: 'Syntax',
       value: str.inlineCode(ctx.prefix + cmd.syntax),
@@ -41,7 +45,7 @@ const embedFields =
     return [syntaxField, aliasField];
   };
 
-export const embed = (cmd: Command): R.Reader<Ctx.Ctx, dd.Embed> =>
+export const embed = (cmd: Command): R.Reader<Ctx, dd.Embed> =>
   pipe(
     embedFields(cmd),
     R.map((fields) => ({

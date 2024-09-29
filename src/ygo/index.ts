@@ -1,7 +1,10 @@
 export * as Babel from './Babel';
-export * as Banlist from './Banlist';
+export * as Banlists from './Banlists';
+export * as BetaIds from './BetaIds';
 export * as BitNames from './BitNames';
 export * as Card from './Card';
 export * as Greenlight from './Greenlight';
+export * as KonamiIds from './KonamiIds';
 export * as Pedia from './Pedia';
-export * as Systrings from './systrings';
+export * as Shortcuts from './Shortcuts';
+export * as Systrings from './Systrings';

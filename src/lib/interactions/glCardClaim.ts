@@ -1,7 +1,8 @@
 import { pipe, RA, RTE, TE } from '@that-hatter/scrapi-factory/fp';
+import { Ctx } from '../../Ctx';
 import { Greenlight } from '../../ygo';
 import { createPageFromIds, currentPageIds, Ids } from '../commands/dev/claim';
-import { Ctx, dd, Err, Interaction, Menu, Op, str } from '../modules';
+import { dd, Err, Interaction, Menu, Op, str } from '../modules';
 
 const splitOn = (lines: ReadonlyArray<string>, start: string, incl: string) =>
   pipe(
@@ -59,7 +60,7 @@ const processClaim =
       RTE.orElseW(RTE.right) // always return as success even if it fails
     );
 
-const getClaimer = (user: dd.User) => (ctx: Ctx.Ctx) =>
+const getClaimer = (user: dd.User) => (ctx: Ctx) =>
   TE.right(ctx.dev.users[user.id.toString()] ?? user.discriminator);
 
 export const glCardClaim = Menu.interaction({

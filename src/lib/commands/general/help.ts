@@ -1,7 +1,8 @@
 import { pipe, RTE } from '@that-hatter/scrapi-factory/fp';
-import { Command, Ctx, dd, Op, str } from '../../modules';
+import { Ctx } from '../../../Ctx';
+import { Command, dd, Op, str } from '../../modules';
 
-export const helpMessage = (message: dd.Message) => (ctx: Ctx.Ctx) => {
+export const helpMessage = (message: dd.Message) => (ctx: Ctx) => {
   const sample =
     ctx.babel.array[message.timestamp % ctx.babel.array.length]?.name ??
     'Silhouhatte Rabbit';

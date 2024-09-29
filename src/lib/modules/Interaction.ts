@@ -1,5 +1,6 @@
 import { flow, O, pipe } from '@that-hatter/scrapi-factory/fp';
-import { Ctx, dd, Err, Op, str } from '.';
+import { type Collection, dd, Err, Op, str } from '.';
+import { Ctx } from '../../Ctx';
 import { CanBeReadonly } from '../utils';
 
 export type Component = {
@@ -12,9 +13,11 @@ export type Component = {
   ) => Op.Op<unknown>;
 };
 
+export type ComponentCollection = Collection.Collection<Component>;
+
 export type UpdateData = NonNullable<dd.InteractionResponse['data']>;
 
-export type Updateable = Omit<dd.Interaction, 'message'> & {
+export type WithMsg = Omit<dd.Interaction, 'message'> & {
   message: dd.Message;
 };
 
@@ -26,7 +29,7 @@ export const asUpdateResponse = (
 });
 
 export const updateable = O.fromPredicate(
-  (ixn: dd.Interaction): ixn is Updateable => !!ixn.message
+  (ixn: dd.Interaction): ixn is WithMsg => !!ixn.message
 );
 
 export const sendResponse = (ixn: dd.Interaction) =>
@@ -42,7 +45,7 @@ export const sendUpdate = (ixn: dd.Interaction) =>
 
 export const devCheck =
   (ixn: dd.Interaction) =>
-  ({ dev }: Ctx.Ctx) => {
+  ({ dev }: Ctx) => {
     if (dev.admin === ixn.user.id.toString()) return true;
     if (dev.guild.toString() === ixn.guildId?.toString()) return true;
     return !!dev.users[ixn.user.id.toString()];

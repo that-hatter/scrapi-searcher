@@ -7,11 +7,12 @@ import {
   RTE,
   TE,
 } from '@that-hatter/scrapi-factory/fp';
+import { Ctx } from '../../../Ctx';
 import { Card } from '../../../ygo';
-import { Command, Ctx, Nav, SearchCommand, str } from '../../modules';
+import { Command, Nav, SearchCommand, str } from '../../modules';
 import { stringsEmbed } from './strings';
 
-const getMatches = (query: string) => (ctx: Ctx.Ctx) =>
+const getMatches = (query: string) => (ctx: Ctx) =>
   pipe(
     ctx.babel.array,
     RA.flatMap(Card.getCdbStrings),

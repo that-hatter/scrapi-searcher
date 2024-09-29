@@ -31,7 +31,7 @@ export const extractAll = RA.flatMap(extract);
 
 export type Execution = (
   parameters: ReadonlyArray<string>,
-  interaction: Interaction.Updateable
+  interaction: Interaction.WithMsg
 ) => Op.Op<unknown>;
 
 export const interaction = (ev: {

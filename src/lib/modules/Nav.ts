@@ -53,7 +53,7 @@ const registry = Cache.create<ENav>(TIME_TO_LIVE);
 
 const register = Cache.put(registry);
 
-const getRegisteredNav = (ixn: Interaction.Updateable) =>
+const getRegisteredNav = (ixn: Interaction.WithMsg) =>
   pipe(
     ixn.message.id.toString(),
     Cache.get(registry),
@@ -62,7 +62,7 @@ const getRegisteredNav = (ixn: Interaction.Updateable) =>
   );
 
 export const apply = <R>(
-  ixn: Interaction.Updateable,
+  ixn: Interaction.WithMsg,
   fn: <T>(nav: Nav<T>) => Op.Op<R>
 ): Op.Op<R> =>
   pipe(
@@ -281,7 +281,7 @@ const asNavComponent = (select?: string) => (row: dd.ActionRow) =>
 
 export const updateDisplay =
   (embed?: dd.Embed, comps?: dd.MessageComponents, select?: string) =>
-  (ixn: Interaction.Updateable): Op.Op<void> =>
+  (ixn: Interaction.WithMsg): Op.Op<void> =>
     pipe(
       ixn.message.components ?? [],
       ActionRow.rows,

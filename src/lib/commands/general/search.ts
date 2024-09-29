@@ -1,8 +1,9 @@
 import { identity, pipe, R, RNEA, RTE } from '@that-hatter/scrapi-factory/fp';
+import { Ctx } from '../../../Ctx';
 import { Card } from '../../../ygo';
-import { Command, Ctx, Nav, SearchCommand } from '../../modules';
+import { Command, Nav, SearchCommand } from '../../modules';
 
-const getMatches = (query: string) => (ctx: Ctx.Ctx) =>
+const getMatches = (query: string) => (ctx: Ctx) =>
   ctx.babel.array.filter(
     (c) =>
       c.name.toLowerCase().includes(query) ||

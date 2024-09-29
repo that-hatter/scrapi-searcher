@@ -20,13 +20,21 @@ export type Optional<T> = {
     : O.Option<T[K]>;
 };
 
+const replacer = (_: string, value: unknown) => {
+  if (typeof value === 'bigint') return value.toString();
+  if (
+    typeof value === 'object' &&
+    value !== null &&
+    !(value instanceof Array) &&
+    !(value instanceof Date)
+  )
+    return Object.fromEntries(Object.entries(value).sort());
+  return value;
+};
+
 const stringify = (val: unknown): string => {
   try {
-    const s = JSON.stringify(
-      val,
-      (_, v) => (typeof v === 'bigint' ? v.toString() : v),
-      2
-    );
+    const s = JSON.stringify(val, replacer, 2);
     return s ?? str.clamped('<', '>')(typeof val);
   } catch {
     return str.clamped('<', '>')(typeof val);

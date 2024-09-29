@@ -1,0 +1,491 @@
+{
+  "/Assault Mode": [
+    "/am"
+  ],
+  "A Hero Lives": [
+    "ahl"
+  ],
+  "Advanced Chemical Beast": [
+    "achemb",
+    "achb"
+  ],
+  "Advanced Crystal Beast": [
+    "acb"
+  ],
+  "Advanced Ritual Art": [
+    "ara"
+  ],
+  "Allure of Darkness": [
+    "aod"
+  ],
+  "Ally of Justice": [
+    "aoj"
+  ],
+  "Ancient Gear Gadjiltron Dragon": [
+    "aggd"
+  ],
+  "Ancient Gear": [
+    "ag"
+  ],
+  "Assault Blackwing": [
+    "abw"
+  ],
+  "Battlin' Boxer": [
+    "bb",
+    "b'b"
+  ],
+  "Black Luster Soldier": [
+    "bls"
+  ],
+  "Black Rose Dragon": [
+    "brd"
+  ],
+  "Blackwing Tamer": [
+    "bwt"
+  ],
+  "Blackwing": [
+    "bw"
+  ],
+  "Blue-Eyes Ultimate Dragon": [
+    "beud",
+    "b-eud"
+  ],
+  "Blue-Eyes White Dragon": [
+    "bewd",
+    "b-ewd"
+  ],
+  "Blue-Eyes": [
+    "b-e"
+  ],
+  "Book of Eclipse": [
+    "boe"
+  ],
+  "Book of Life": [
+    "bol"
+  ],
+  "Book of Moon": [
+    "bom"
+  ],
+  "Bottomless Trap Hole": [
+    "bth"
+  ],
+  "Brionac, Dragon of the Ice Barrier": [
+    "brio",
+    "bdoftib",
+    "b,dib",
+    "b,doftb"
+  ],
+  "Brotherhood of the Fire First": [
+    "botff",
+    "bhotff",
+    "boff",
+    "bhoff",
+    "bff"
+  ],
+  "Burning Abyss": [
+    "ba"
+  ],
+  "Call of the Haunted": [
+    "coth"
+  ],
+  "Cardcar D": [
+    "ccd"
+  ],
+  "Celtic Guard": [
+    "cg"
+  ],
+  "Chaos Emperor Dragon": [
+    "ced"
+  ],
+  "Chemical Beast": [
+    "chemb",
+    "chb"
+  ],
+  "Compulsory Evacuation Device": [
+    "ced"
+  ],
+  "Constellar Ptolemy M7": [
+    "m7"
+  ],
+  "Crush Card Virus": [
+    "ccv"
+  ],
+  "Crystal Beast": [
+    "cb"
+  ],
+  "Cyber Angel": [
+    "ca"
+  ],
+  "Cyber Dragon Infinity": [
+    "cdi"
+  ],
+  "Cyber Dragon": [
+    "cydra"
+  ],
+  "Cyber End Dragon": [
+    "ced"
+  ],
+  "Dark Armed Dragon": [
+    "dad"
+  ],
+  "Dark Contract": [
+    "dc"
+  ],
+  "Dark Magician Girl": [
+    "dmg"
+  ],
+  "Dark Magician of Chaos": [
+    "dmoc"
+  ],
+  "Dark Magician": [
+    "dm"
+  ],
+  "Dark World Dealings": [
+    "dwd"
+  ],
+  "Dark World": [
+    "dw"
+  ],
+  "Deck Devastation Virus": [
+    "ddv"
+  ],
+  "Destiny Draw": [
+    "d-draw",
+    "ddraw",
+    "destdraw"
+  ],
+  "Destiny HERO": [
+    "d-hero",
+    "dhero"
+  ],
+  "Destiny Hero - Malicious": [
+    "mali"
+  ],
+  "Different Dimension Reincarnation": [
+    "ddr",
+    "d.d.r.",
+    "d.d.r"
+  ],
+  "Dimensional Prison": [
+    "d-prison",
+    "dprison"
+  ],
+  "Dragon Master Knight": [
+    "dmk"
+  ],
+  "Earthbound Immortal": [
+    "ei",
+    "ebi"
+  ],
+  "Earthbound Servant": [
+    "es",
+    "ebs"
+  ],
+  "Elemental HERO Absolute Zero": [
+    "a0",
+    "abz.",
+    "abz"
+  ],
+  "Elemental HERO": [
+    "e-hero",
+    "ehero"
+  ],
+  "Emergency Teleport": [
+    "e-tele",
+    "etele"
+  ],
+  "Emissary of Darkness": [
+    "eod",
+    "ed"
+  ],
+  "Empowered Warrior": [
+    "ew",
+    "emwa"
+  ],
+  "Enemy Controller": [
+    "e-con",
+    "econ"
+  ],
+  "Eradicator Epidemic Virus": [
+    "eev"
+  ],
+  "Evil HERO": [
+    "ev-hero",
+    "evhero"
+  ],
+  "Familiar-Posessed": [
+    "fp",
+    "f-o"
+  ],
+  "Final Countdown": [
+    "fc"
+  ],
+  "Fire Formation": [
+    "ff"
+  ],
+  "Five-Headed Dragon": [
+    "fgd",
+    "fhd"
+  ],
+  "Forbidden Beast": [
+    "fb"
+  ],
+  "Future Fusion": [
+    "fufu"
+  ],
+  "Gaia the Fierce Knight": [
+    "gtfk",
+    "gfk"
+  ],
+  "Galaxy-Eyes Photon Dragon": [
+    "gepd"
+  ],
+  "Gem-Knight": [
+    "gemk",
+    "gem-k",
+    "gemkn"
+  ],
+  "Gladiator Beast": [
+    "gb",
+    "glad"
+  ],
+  "Gravekeeper's": [
+    "gk",
+    "gk's",
+    "gks"
+  ],
+  "Guts Master": [
+    "gm"
+  ],
+  "Hazy Flame": [
+    "hf"
+  ],
+  "Heraldic Beast": [
+    "hb"
+  ],
+  "Heroic Challenger": [
+    "hc"
+  ],
+  "Horus the Black Flame Dragon": [
+    "htbfd",
+    "hbfd"
+  ],
+  "Inferno Reckless Summon": [
+    "irs"
+  ],
+  "Judgment Dragon": [
+    "jd"
+  ],
+  "Light and Darkness Dragon": [
+    "ladd"
+  ],
+  "Light-Imprisoning Mirror": [
+    "lim",
+    "l-im"
+  ],
+  "Lightpulsar Dragon": [
+    "lpd"
+  ],
+  "Lightsworn": [
+    "ls"
+  ],
+  "Lunalight": [
+    "ll"
+  ],
+  "Magnet Warrior": [
+    "mw"
+  ],
+  "Masked HERO": [
+    "m-hero",
+    "mhero"
+  ],
+  "Mecha Phantom Beast": [
+    "mpb"
+  ],
+  "Mystical Space Thyphoon": [
+    "mst"
+  ],
+  "Neo Galaxy-Eyes Photon Dragon": [
+    "neogepd"
+  ],
+  "Odd-Eyes": [
+    "oe",
+    "o-e"
+  ],
+  "Phantom of Chaos": [
+    "poc"
+  ],
+  "Phoenix Wing Wind Blast": [
+    "pwwb"
+  ],
+  "Plaguespreader Zombie": [
+    "psz"
+  ],
+  "Pot of Avarice": [
+    "poa"
+  ],
+  "Pot of Duality": [
+    "pod"
+  ],
+  "Raidraptor": [
+    "rr"
+  ],
+  "Rank-Up-Magic": [
+    "r-u-m",
+    "rum",
+    "r-um",
+    "ru-m"
+  ],
+  "Red Dragon Archfiend": [
+    "rda"
+  ],
+  "Red-Eyes B. Dragon": [
+    "rebd",
+    "r-eb.d",
+    "r-ebd",
+    "reb.d"
+  ],
+  "Red-Eyes Darkness Metal Dragon": [
+    "redmd",
+    "r-edmd"
+  ],
+  "Red-Eyes Flare Metal Dragon": [
+    "refmd",
+    "r-efmd"
+  ],
+  "Red-Eyes": [
+    "re",
+    "r-e"
+  ],
+  "Reinforcement of the Army": [
+    "rota"
+  ],
+  "Ritual Beast Tamer": [
+    "rbt"
+  ],
+  "Ritual Beast": [
+    "rb"
+  ],
+  "Shadow-Imprisoning Mirror": [
+    "sim",
+    "s-im"
+  ],
+  "Six Samurai": [
+    "ss",
+    "sixsam",
+    "6s",
+    "6sam"
+  ],
+  "Skill Drain": [
+    "skd",
+    "sd"
+  ],
+  "Solemn Judgment": [
+    "sj"
+  ],
+  "Solemn Warning": [
+    "sw"
+  ],
+  "Speedroid": [
+    "sr"
+  ],
+  "Spiritual Beast Tamer": [
+    "sbt",
+    "spirbt",
+    "srbt"
+  ],
+  "Spiritual Beast": [
+    "sb",
+    "spirb",
+    "srb"
+  ],
+  "Super Defense Robot": [
+    "sdr"
+  ],
+  "Super Quant": [
+    "sq"
+  ],
+  "Super Quantal": [
+    "sqal"
+  ],
+  "Super Quantum": [
+    "squm"
+  ],
+  "Superheavy Samurai": [
+    "shs",
+    "susa"
+  ],
+  "T.G.": [
+    "tg",
+    "t.g",
+    "tg."
+  ],
+  "The Huge Revolution is Over": [
+    "thrio",
+    "thro"
+  ],
+  "The Phantom Knights": [
+    "pk",
+    "tpk"
+  ],
+  "The Warrior Returning Alive": [
+    "twra",
+    "wra"
+  ],
+  "Theartening Roar": [
+    "t-roar",
+    "troar"
+  ],
+  "Thousand-Eyes Restrict": [
+    "ter",
+    "t-er"
+  ],
+  "Thunder King Rai-Oh": [
+    "tkro",
+    "tkr-o"
+  ],
+  "Torrential Tribute": [
+    "tt",
+    "totr"
+  ],
+  "Tour Guide from the Underworld": [
+    "tgu",
+    "tgftu",
+    "tgfu"
+  ],
+  "Tragoedia": [
+    "trag"
+  ],
+  "Trap Hole": [
+    "th"
+  ],
+  "Trishula, Dragon of the Ice Barrier": [
+    "trish",
+    "tdotib",
+    "t,dotib",
+    "t,dib",
+    "tdib"
+  ],
+  "U.A.": [
+    "ua",
+    "u.a",
+    "ua."
+  ],
+  "Vision HERO": [
+    "v-hero",
+    "vhero"
+  ],
+  "Wind Witch": [
+    "ww"
+  ],
+  "Wind-Up": [
+    "wu",
+    "w-u"
+  ],
+  "Yang Zing": [
+    "yz"
+  ],
+  "of the Forest": [
+    "otf"
+  ]
+}
