@@ -47,7 +47,7 @@ export const pullOrClone = (name: string, repoUrl: string) => {
       .catch(() =>
         fs
           .rm(repoPath, { recursive: true, force: true })
-          .then(() => git.cwd(dataPath).clone(repoUrl))
+          .then(() => git.cwd(dataPath).clone(repoUrl, ['--depth=1']))
       )
   );
 };
