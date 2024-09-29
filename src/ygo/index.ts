@@ -7,4 +7,4 @@ export * as Greenlight from './Greenlight';
 export * as KonamiIds from './KonamiIds';
 export * as Pedia from './Pedia';
 export * as Shortcuts from './Shortcuts';
-export * as Systrings from './Systrings_';
+export * as Systrings from './Systrings';

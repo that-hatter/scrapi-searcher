@@ -2,7 +2,7 @@ import * as sf from '@that-hatter/scrapi-factory';
 import { flow, O, pipe, RA } from '@that-hatter/scrapi-factory/fp';
 import { str } from '../lib/modules';
 import { utils } from '../lib/utils';
-import { Systrings } from './Systrings_';
+import { Systrings } from './Systrings';
 
 export type BitNameMap = ReadonlyMap<bigint, string>;
 
