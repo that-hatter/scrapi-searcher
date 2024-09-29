@@ -1,8 +1,6 @@
 import { pipe, RA, RNEA, RR, TE } from '@that-hatter/scrapi-factory/fp';
-import * as fs from 'node:fs/promises';
-import * as path from 'node:path';
+import fetch from 'node-fetch';
 import { Ctx } from '../Ctx';
-import { PATHS } from '../lib/constants';
 import type { Data } from '../lib/modules';
 import { Decoder, str } from '../lib/modules';
 import { DeepReadonly, utils } from '../lib/utils';
@@ -23,9 +21,7 @@ const URL =
   'scrapi-searcher/master/data/shortcuts.json';
 
 const update = pipe(
-  utils.taskify(() => fs.readFile(path.join(PATHS.DATA, 'shortcuts.json'))),
-  TE.map((buf) => buf.toString()),
-  // utils.taskify(() => fetch(URL).then((response) => response.text())),
+  utils.taskify(() => fetch(URL).then((response) => response.text())),
   TE.flatMapIOEither((s) => utils.fallibleIO(() => JSON.parse(s))),
   TE.flatMapEither(Decoder.parse(decoder))
 );
