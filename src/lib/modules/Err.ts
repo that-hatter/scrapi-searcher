@@ -1,5 +1,6 @@
 import { O, pipe, RA, RNEA, RTE } from '@that-hatter/scrapi-factory/fp';
-import { Attachment, Ctx, dd, Op, str } from '.';
+import { Attachment, dd, Op, str } from '.';
+import { Ctx } from '../../Ctx';
 import { COLORS, LIMITS } from '../constants';
 import { utils } from '../utils';
 
@@ -102,7 +103,7 @@ const logSendingErr =
 
 export const sendAlerts = (error: Err): Op.Op<ReadonlyArray<dd.Message>> =>
   pipe(
-    RTE.ask<Ctx.Ctx>(),
+    RTE.ask<Ctx>(),
     RTE.flatMap(({ dev }) => {
       const sendToDev = pipe(
         error.devAlert,

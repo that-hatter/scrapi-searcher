@@ -11,9 +11,10 @@ import {
   RTE,
   TE,
 } from '@that-hatter/scrapi-factory/fp';
+import { Ctx } from '../../Ctx';
 import { Babel, Card } from '../../ygo';
 import { EMOJI, LIMITS } from '../constants';
-import { Ctx, dd, Err, Interaction, Menu, Op, str } from '../modules';
+import { dd, Err, Interaction, Menu, Op, str } from '../modules';
 
 const MALISS: RR.ReadonlyRecord<string, string> = {
   ['86993168']: 'Why is a raven like a writing desk?',
@@ -132,7 +133,7 @@ export const cardBracketSearch = (msg: dd.Message): Op.Op<unknown> => {
   );
 };
 
-const findCard = (id: string) => (ctx: Ctx.Ctx) =>
+const findCard = (id: string) => (ctx: Ctx) =>
   pipe(
     ctx.babel.record[id],
     TE.fromNullable('Could not find selected card: ' + id)

@@ -1,11 +1,12 @@
 import type * as sf from '@that-hatter/scrapi-factory';
 import { O, pipe, RA, RNEA, RTE, TE } from '@that-hatter/scrapi-factory/fp';
+import { Ctx } from '../../../Ctx';
 import { Topic } from '../../../yard/shared';
 import { LIMITS } from '../../constants';
-import { Command, Ctx, Err, Nav, SearchCommand, str } from '../../modules';
+import { Command, Err, Nav, SearchCommand, str } from '../../modules';
 import { utils } from '../../utils';
 
-const getEnumsWithName = (nameQuery: string) => (ctx: Ctx.Ctx) =>
+const getEnumsWithName = (nameQuery: string) => (ctx: Ctx) =>
   pipe(
     ctx.yard.api.enums.array,
     RA.filter(

@@ -7,9 +7,10 @@ import {
   RTE,
   TE,
 } from '@that-hatter/scrapi-factory/fp';
-import { Babel, Banlist, Pedia } from '.';
+import { Babel, Banlists, BetaIds, KonamiIds, Shortcuts } from '.';
+import { Ctx } from '../Ctx';
 import { COLORS, LIMITS, URLS } from '../lib/constants';
-import { Ctx, dd, Nav, Op, str } from '../lib/modules';
+import { dd, Nav, Op, str } from '../lib/modules';
 import { Card } from './Babel';
 import * as BitNames from './BitNames';
 
@@ -148,7 +149,7 @@ const frameColor_ = (ctypes: ReadonlyArray<string>) => {
   return COLORS.DISCORD_TRANSPARENT;
 };
 
-export const frameColor = (c: Card) => (ctx: Ctx.Ctx) =>
+export const frameColor = (c: Card) => (ctx: Ctx) =>
   pipe(BitNames.types(c.type)(ctx.bitNames), frameColor_);
 
 const scriptFolder = (
@@ -180,7 +181,7 @@ const scriptUrl_ = (
   );
 };
 
-export const scriptUrl = (c: Card) => (ctx: Ctx.Ctx) => {
+export const scriptUrl = (c: Card) => (ctx: Ctx) => {
   const aliases = ctx.babel.array.filter(
     (a) => c.alias === a.id || a.alias === c.id
   );
@@ -268,7 +269,7 @@ const urlsSection = (
 };
 
 const limitsSection =
-  (c: Card, scopes: ReadonlyArray<string>) => (ctx: Ctx.Ctx) => {
+  (c: Card, scopes: ReadonlyArray<string>) => (ctx: Ctx) => {
     if (scopes.includes('Pre-release') || scopes.includes('Legend'))
       return labeledList('Limit')(scopes);
     return pipe(
@@ -277,7 +278,7 @@ const limitsSection =
         pipe(
           ctx.banlists,
           RA.findFirst((b) => b.name === s),
-          O.flatMap(Banlist.getAllowed(c.id)),
+          O.flatMap(Banlists.getAllowed(c.id)),
           O.map((lmt) => s + ' ' + str.parenthesized(lmt.toString())),
           O.getOrElse(() => s)
         )
@@ -319,12 +320,7 @@ export const itemEmbed =
     const title = c.name;
     const color = frameColor_(ctypes);
 
-    const kid = pipe(
-      scopes.includes('Rush')
-        ? Pedia.findRush(c.name)(ctx)
-        : Pedia.findMaster(c.id, c.name)(ctx),
-      O.flatMap((pc) => pc.konamiId)
-    );
+    const kid = KonamiIds.getKonamiId(scopes, c.id)(ctx);
 
     const aliases = ctx.babel.array.filter(
       (a) => a.alias === c.id || c.alias === a.id
@@ -442,8 +438,9 @@ export const itemEmbed =
 // card searching
 // -----------------------------------------------------------------------------
 
-export const fuzzyMatches = (query: string) => (ctx: Ctx.Ctx) => {
-  const results = ctx.babel.minisearch.search(query, { fuzzy: true });
+export const fuzzyMatches = (query: string) => (ctx: Ctx) => {
+  const fullQuery = Shortcuts.resolveShortcuts(query)(ctx);
+  const results = ctx.babel.minisearch.search(fullQuery, { fuzzy: true });
   return pipe(
     results,
     RA.filterMap(({ id }) => O.fromNullable(ctx.babel.record[id.toString()]))
@@ -452,19 +449,20 @@ export const fuzzyMatches = (query: string) => (ctx: Ctx.Ctx) => {
 
 export const bestMatch =
   (query: string) =>
-  (ctx: Ctx.Ctx): O.Option<Babel.Card> => {
+  (ctx: Ctx): O.Option<Babel.Card> => {
     if ((+query).toString() === query) {
       const idMatch = ctx.babel.record[query];
       if (idMatch) return O.some(idMatch);
+      const betaMatch = BetaIds.toBabelCard(+query)(ctx);
+      if (O.isSome(betaMatch)) return betaMatch;
     }
 
     if (query.startsWith('#')) {
       const kid = +query.substring(1);
       if ('#' + kid === query) {
         const match = pipe(
-          Pedia.findByKonamiId(kid)('master')(ctx),
-          O.orElse(() => Pedia.findByKonamiId(kid)('rush')(ctx)),
-          O.flatMap((pc) => Pedia.toBabelCard(pc)(ctx))
+          KonamiIds.toBabelCard('master', kid)(ctx),
+          O.orElse(() => KonamiIds.toBabelCard('rush', kid)(ctx))
         );
         if (O.isSome(match)) return match;
       }

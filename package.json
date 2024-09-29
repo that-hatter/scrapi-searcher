@@ -36,6 +36,7 @@
   },
   "dependencies": {
     "@octokit/rest": "^19.0.7",
+    "@octokit/webhooks": "^12.2.0",
     "@that-hatter/scrapi-factory": "^0.3.2",
     "better-sqlite3": "^11.2.1",
     "discordeno": "^18.0.1",

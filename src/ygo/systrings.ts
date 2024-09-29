@@ -8,7 +8,9 @@ import {
   TE,
 } from '@that-hatter/scrapi-factory/fp';
 import fetch from 'node-fetch';
-import { Ctx, Nav, str } from '../lib/modules';
+import { Ctx } from '../Ctx';
+import type { Data } from '../lib/modules';
+import { Nav, str } from '../lib/modules';
 import { utils } from '../lib/utils';
 
 const kinds = ['system', 'victory', 'counter', 'setname'] as const;
@@ -25,7 +27,7 @@ export type Systring = {
 
 export type Systrings = ReadonlyArray<Systring>;
 
-export const parse = (repo: string) =>
+const parse = (repo: string) =>
   flow(
     str.split('\n'),
     RA.filterMapWithIndex((i, s): O.Option<Systring> => {
@@ -59,32 +61,33 @@ const fetchAndParse = (repo: string) => {
   );
 };
 
-export const updateSystrings = () =>
-  pipe(
-    fetchAndParse('DeltaPuppetOfStrings'),
-    TE.flatMap((delta) =>
-      pipe(
-        fetchAndParse('Distribution'),
-        TE.map(
-          RA.filter(
-            ({ kind, value }) =>
-              !delta.some((d) => d.kind === kind && d.value === value)
-          )
-        ),
-        TE.map(RA.concat(delta))
-      )
+const update: TE.TaskEither<string, Systrings> = pipe(
+  fetchAndParse('DeltaPuppetOfStrings'),
+  TE.flatMap((delta) =>
+    pipe(
+      fetchAndParse('Distribution'),
+      TE.map(
+        RA.filter(
+          ({ kind, value }) =>
+            !delta.some((d) => d.kind === kind && d.value === value)
+        )
+      ),
+      TE.map(RA.concat(delta))
     )
-  );
+  )
+);
 
-export const initSystrings = updateSystrings;
+export const data: Data.Data<'systrings'> = {
+  key: 'systrings',
+  description: 'Strings from strings.conf files from Distribution and Delta.',
+  update,
+  init: update,
+  commitFilter: (repo, files) =>
+    (repo === 'DeltaPuppetOfStrings' && files.includes('strings.conf')) ||
+    (repo === 'Distribution' && files.includes('config/strings.conf')),
+};
 
 const hexString = (ct: Systring): string => '0x' + ct.value.toString(16);
-
-const setnameConstant = (s: Systring) => (ctx: Ctx.Ctx) =>
-  pipe(
-    ctx.yard.api.constants.array,
-    RA.findFirst((c) => c.enum === 'Archetype' && Number(c.value) === s.value)
-  );
 
 export const itemListDescription: Nav.Nav<Systring>['itemListDescription'] =
   (pageItems) => (item) => {
@@ -130,7 +133,7 @@ export const url = (s: Systring) =>
   (s.repo === 'Distribution' ? 'config/strings.conf#L' : 'strings.conf#L') +
   s.line;
 
-export const itemEmbed = (s: Systring) => (ctx: Ctx.Ctx) =>
+export const itemEmbed = (s: Systring) => (ctx: Ctx) =>
   TE.right({
     title: s.kind + ' string',
     url: url(s),
@@ -143,16 +146,15 @@ export const itemEmbed = (s: Systring) => (ctx: Ctx.Ctx) =>
     ]),
   });
 
-export const findMatches =
-  (kind: Kind) => (query: string) => (ctx: Ctx.Ctx) => {
-    const value = +query;
-    if (value && !isNaN(value)) {
-      const valMatches = ctx.systrings.filter(
-        (s) => s.kind === kind && s.value === value
-      );
-      if (valMatches.length > 0) return valMatches;
-    }
-    return ctx.systrings.filter(
-      (s) => s.kind === kind && s.name.toLowerCase().includes(query)
+export const findMatches = (kind: Kind) => (query: string) => (ctx: Ctx) => {
+  const value = +query;
+  if (value && !isNaN(value)) {
+    const valMatches = ctx.systrings.filter(
+      (s) => s.kind === kind && s.value === value
     );
-  };
+    if (valMatches.length > 0) return valMatches;
+  }
+  return ctx.systrings.filter(
+    (s) => s.kind === kind && s.name.toLowerCase().includes(query)
+  );
+};

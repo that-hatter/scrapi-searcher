@@ -163,7 +163,7 @@ export const createPageFromIds =
   (statuses: Greenlight.StatusSteps) => (message: dd.Message) =>
     flow(sectionFromIds(message), RTE.map(page(statuses)));
 
-export const switchSection = (ixn: Interaction.Updateable) =>
+export const switchSection = (ixn: Interaction.WithMsg) =>
   flow(
     sectionFromIds(ixn.message),
     RTE.map(page(Greenlight.pageStatuses(ixn.message))),
@@ -201,7 +201,7 @@ export const currentPageIds = (message: dd.Message): Op.Op<Ids> =>
   );
 
 export const filterStatus =
-  (statuses: Greenlight.StatusSteps) => (ixn: Interaction.Updateable) =>
+  (statuses: Greenlight.StatusSteps) => (ixn: Interaction.WithMsg) =>
     pipe(
       currentPageIds(ixn.message),
       RTE.flatMap(createPageFromIds(statuses)(ixn.message)),

@@ -1,9 +1,10 @@
 import { O, pipe, RA, RNEA, RR, RTE, TE } from '@that-hatter/scrapi-factory/fp';
 import Database from 'better-sqlite3';
 import * as buffer from 'node:buffer';
+import { Ctx } from '../../Ctx';
 import { BitNames, Pedia } from '../../ygo';
 import { getState } from '../commands/dev/stage';
-import { Button, Ctx, Decoder, Err, Interaction, str } from '../modules';
+import { Button, Decoder, Err, Interaction, str } from '../modules';
 import { utils } from '../utils';
 
 const stringWithLinks = pipe(
@@ -136,7 +137,7 @@ type BabelData = {
 
 const toBabelData =
   (id: number, name: string, c: Record[string]) =>
-  (ctx: Ctx.Ctx): BabelData => {
+  (ctx: Ctx): BabelData => {
     // TODO: support non-prerelease later
     const ot = BitNames.toInt('scopes')([...c.Medium, 'Pre-release'])(
       ctx.bitNames

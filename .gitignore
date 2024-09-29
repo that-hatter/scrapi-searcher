@@ -2,4 +2,6 @@ node_modules/
 dist/
 config.json
 tsconfig.tsbuildinfo
-data/
+data/BabelCDB
+data/LFLists
+data/scrapiyard

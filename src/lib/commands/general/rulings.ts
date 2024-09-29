@@ -1,16 +1,12 @@
 import { O, pipe, R, RTE, TE } from '@that-hatter/scrapi-factory/fp';
-import { Babel, BitNames, Card, Pedia } from '../../../ygo';
+import { Ctx } from '../../../Ctx';
+import { Babel, BitNames, Card, KonamiIds } from '../../../ygo';
 import { URLS } from '../../constants';
-import { Command, Ctx, Err, Op, str } from '../../modules';
+import { Command, Err, Op, str } from '../../modules';
 
-const msgContent = (c: Babel.Card) => (ctx: Ctx.Ctx) => {
+const msgContent = (c: Babel.Card) => (ctx: Ctx) => {
   const scopes = BitNames.scopes(c.ot)(ctx.bitNames);
-  const kid = pipe(
-    scopes.includes('Rush')
-      ? Pedia.findRush(c.name)(ctx)
-      : Pedia.findMaster(c.id, c.name)(ctx),
-    O.flatMap((pc) => pc.konamiId)
-  );
+  const kid = KonamiIds.getKonamiId(scopes, c.id)(ctx);
   if (O.isNone(kid))
     return TE.left(
       Err.forUser("Couldn't resolve rulings for " + str.bold(c.name))

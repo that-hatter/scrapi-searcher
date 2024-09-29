@@ -1,19 +1,20 @@
 import { pipe, RTE, TE } from '@that-hatter/scrapi-factory/fp';
+import { Ctx } from '../../Ctx';
 import * as Function from '../../yard/Function';
-import { Ctx, Err, Interaction, Menu, Nav, Op } from '../modules';
+import { Err, Interaction, Menu, Nav, Op } from '../modules';
 
 const functionTypeUpdate =
-  (name: string, ixn: Interaction.Updateable) =>
+  (name: string, ixn: Interaction.WithMsg) =>
   (sig: number): Op.Op<void> =>
     RTE.left(Err.forDev('Function Type signature view is unimplemented'));
 
-const findFunction = (name: string) => (ctx: Ctx.Ctx) =>
+const findFunction = (name: string) => (ctx: Ctx) =>
   TE.fromNullable('Function not found: ' + name)(
     ctx.yard.api.functions.record[name]
   );
 
 const functionUpdate =
-  (name: string, ixn: Interaction.Updateable) =>
+  (name: string, ixn: Interaction.WithMsg) =>
   (sig: number): Op.Op<void> =>
     pipe(
       RTE.Do,
@@ -27,7 +28,7 @@ const functionUpdate =
     );
 
 const update =
-  (ixn: Interaction.Updateable) =>
+  (ixn: Interaction.WithMsg) =>
   (sig: number): Op.Op<void> => {
     const embed = ixn.message.embeds[0];
     const name = embed?.title;

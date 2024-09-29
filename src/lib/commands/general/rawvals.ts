@@ -1,6 +1,7 @@
 import { flow, O, pipe, R, RA, RTE, TE } from '@that-hatter/scrapi-factory/fp';
+import { Ctx } from '../../../Ctx';
 import { Babel, BitNames, Card } from '../../../ygo';
-import { Command, Ctx, Err, Menu, Op, str } from '../../modules';
+import { Command, Err, Menu, Op, str } from '../../modules';
 
 const plainVal = (name: string, n: number | bigint) =>
   str.joinWords([str.bold(name) + ':', str.inlineCode(n.toString())]);
@@ -15,7 +16,7 @@ const valWithHex = (name: string, n: bigint) =>
 const title = (c: Babel.Card) =>
   str.inlineCode(c.id.toString()) + ' ' + str.bold(c.name);
 
-export const rawDataEmbed = (c: Babel.Card) => (ctx: Ctx.Ctx) => {
+export const rawDataEmbed = (c: Babel.Card) => (ctx: Ctx) => {
   const color = Card.frameColor(c)(ctx);
   const ctypes = BitNames.types(c.type)(ctx.bitNames);
   return {

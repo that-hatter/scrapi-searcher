@@ -9,14 +9,15 @@ import {
 } from '@that-hatter/scrapi-factory/fp';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
-import simpleGit from 'simple-git';
 import { Babel, BitNames } from '.';
-import { Ctx, str } from '../lib/modules';
+import { Ctx } from '../Ctx';
+import { PATHS } from '../lib/constants';
+import type { Data } from '../lib/modules';
+import { Github, str } from '../lib/modules';
 import { utils } from '../lib/utils';
 
-const GITHUB_URL = 'https://github.com/ProjectIgnis/lflists';
-const DATA_PATH = path.join(process.cwd(), 'data');
-const REPO_PATH = path.join(DATA_PATH, 'lflists');
+const GITHUB_URL = 'https://github.com/ProjectIgnis/LFLists';
+const REPO_PATH = path.join(PATHS.DATA, 'LFLists');
 
 export type Banlist = {
   readonly filename: string;
@@ -74,7 +75,7 @@ const dateString = (b: Banlist) => {
   );
 };
 
-export const limitsBreakdown = (c: Babel.Card) => (ctx: Ctx.Ctx) => {
+export const limitsBreakdown = (c: Babel.Card) => (ctx: Ctx) => {
   const scopes = BitNames.scopes(c.ot)(ctx.bitNames);
 
   const rush = scopes.includes('Rush');
@@ -118,8 +119,6 @@ export const limitsBreakdown = (c: Babel.Card) => (ctx: Ctx.Ctx) => {
   );
 };
 
-const git = simpleGit();
-
 const getAllLflistPaths = (dir: string) =>
   pipe(
     utils.taskify(() => fs.readdir(dir, { withFileTypes: true })),
@@ -147,13 +146,20 @@ const loadBanlists = (): TE.TaskEither<string, Banlists> =>
     TE.flatMapOption(RNEA.fromReadonlyArray, () => 'No valid banlists found.')
   );
 
-export const updateBanlists = (): TE.TaskEither<string, Banlists> =>
-  pipe(
-    utils.taskify(() => git.cwd(REPO_PATH).pull()),
-    TE.orElseW(() => utils.taskify(() => git.cwd(DATA_PATH).clone(GITHUB_URL))),
-    TE.flatMap(loadBanlists),
-    TE.mapError(utils.stringify)
-  );
+const update: TE.TaskEither<string, Banlists> = pipe(
+  Github.pullOrClone('LFLists', GITHUB_URL),
+  TE.flatMap(loadBanlists),
+  TE.mapError(utils.stringify)
+);
 
-export const initBanlists = () =>
-  pipe(loadBanlists(), TE.orElse(updateBanlists));
+export const data: Data.Data<'banlists'> = {
+  key: 'banlists',
+  description: 'Banlist data from LFLists.',
+  update,
+  init: pipe(
+    loadBanlists(),
+    TE.orElse(() => update)
+  ),
+  commitFilter: (repo, files) =>
+    repo === 'LFLists' && files.some((f) => f.endsWith('.lflist.conf')),
+};

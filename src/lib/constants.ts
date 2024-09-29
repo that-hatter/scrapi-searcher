@@ -1,3 +1,5 @@
+import * as path from 'node:path';
+
 export const LIMITS = {
   MESSAGE_CONTENT: 2000,
   EMBED_DESCRIPTION: 4000,
@@ -33,4 +35,10 @@ export const EMOJI = {
   SEARCHER: '<:searcher:1283971880885162130>',
   MIND_READER: '<:mindreader:1283972011256975390>',
   YARD: '<:yard:1283971971310293032>',
+};
+
+const CWD = process.cwd();
+export const PATHS = {
+  CWD,
+  DATA: path.join(CWD, 'data'),
 };

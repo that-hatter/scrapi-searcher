@@ -1,10 +1,11 @@
 import { O, pipe, R, RTE, TE } from '@that-hatter/scrapi-factory/fp';
-import { Babel, Banlist, Card } from '../../../ygo';
-import { Command, Ctx, Err, Op, str } from '../../modules';
+import { Ctx } from '../../../Ctx';
+import { Babel, Banlists, Card } from '../../../ygo';
+import { Command, Err, Op, str } from '../../modules';
 
-const msgContent = (c: Babel.Card) => (ctx: Ctx.Ctx) =>
+const msgContent = (c: Babel.Card) => (ctx: Ctx) =>
   pipe(
-    Banlist.limitsBreakdown(c)(ctx),
+    Banlists.limitsBreakdown(c)(ctx),
     O.getOrElse(() => str.subtext('No applicable banlist.')),
     str.prepend(str.bold(c.name) + '\n')
   );

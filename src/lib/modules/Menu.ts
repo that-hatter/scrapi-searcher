@@ -64,7 +64,7 @@ export const updateDefault =
 
 export type Execution = (
   parameters: ReadonlyArray<string>,
-  interaction: Interaction.Updateable,
+  interaction: Interaction.WithMsg,
   values: RNEA.ReadonlyNonEmptyArray<string>
 ) => Op.Op<unknown>;
 

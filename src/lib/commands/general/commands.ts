@@ -1,12 +1,13 @@
 import { flow, pipe, RTE, TE } from '@that-hatter/scrapi-factory/fp';
-import { Command, Ctx, Nav, str } from '../../modules';
+import { Ctx } from '../../../Ctx';
+import { Command, Nav, str } from '../../modules';
 
-const list = (ctx: Ctx.Ctx) => TE.right(ctx.commands.array);
+const list = (ctx: Ctx) => TE.right(ctx.commands.array);
 
 const itemListDescription =
   () =>
   ({ devOnly, syntax, description }: Command.Command) =>
-  ({ prefix }: Ctx.Ctx) =>
+  ({ prefix }: Ctx) =>
     TE.right(
       (devOnly ? '🛡️ ' : '') +
         str.inlineCode(prefix + syntax) +
