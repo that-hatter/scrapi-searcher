@@ -21,7 +21,7 @@ export const stringsEmbed = (c: Babel.Card) =>
 
 export const strings: Command.Command = {
   name: 'strings',
-  description: "Show a card's database strings.",
+  description: "Get a card's database strings.",
   syntax: 'strings <query>',
   aliases: ['strs'],
   execute: (parameters, message) =>

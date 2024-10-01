@@ -49,7 +49,7 @@ const aboutMessage =
 
 export const about: Command.Command = {
   name: 'about',
-  description: 'Show information about the bot. Equivalent to mentioning it.',
+  description: 'Get information about the bot.',
   syntax: 'about',
   aliases: [],
   execute: (_, message) =>

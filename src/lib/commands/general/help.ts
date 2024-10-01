@@ -18,7 +18,7 @@ export const helpMessage = (message: dd.Message) => (ctx: Ctx) => {
 
 export const help: Command.Command = {
   name: 'help',
-  description: 'Display a basic help message on how to use the bot.',
+  description: 'Display a basic help message.',
   syntax: 'help',
   aliases: [],
   execute: (_, message) =>

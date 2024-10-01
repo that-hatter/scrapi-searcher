@@ -4,7 +4,7 @@ import { Command, Nav, SearchCommand } from '../../modules';
 
 export const card: Command.Command = {
   name: 'card',
-  description: 'Search cards by name. Matches can be fuzzy.',
+  description: 'Find cards by name. Supports fuzzy matching.',
   syntax: 'card <query>',
   aliases: [],
   execute: (parameters, message) => {

@@ -34,7 +34,7 @@ const msgContent = (c: Babel.Card) => (ctx: Ctx) => {
 
 export const rulings: Command.Command = {
   name: 'rulings',
-  description: "Link to a card's ruling page(s).",
+  description: "Get links to a card's ruling page(s).",
   syntax: 'rulings <query>',
   aliases: ['ruling'],
   execute: (parameters, message) =>

@@ -125,8 +125,7 @@ export const filterStatus =
 
 export const stage: Command.Command = {
   name: 'stage',
-  description:
-    'Prepare a cdb file with selected cards from the Greenlight repo.',
+  description: 'Prepare a .cdb file with selected cards from Greenlight.',
   syntax: 'stage <cdb-name>',
   aliases: ['prepdb'],
   devOnly: true,

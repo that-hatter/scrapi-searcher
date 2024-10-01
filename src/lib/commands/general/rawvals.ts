@@ -108,7 +108,7 @@ const initMessage = flow(
 
 export const rawvals: Command.Command = {
   name: 'rawvals',
-  description: "Display a card's raw values from the database.",
+  description: "Get a card's raw database values.",
   syntax: 'rawvals <query>',
   aliases: ['raws'],
   execute: (parameters, message) =>

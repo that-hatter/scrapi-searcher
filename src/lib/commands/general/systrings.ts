@@ -5,8 +5,7 @@ import { Command, Nav, SearchCommand } from '../../modules';
 export const systrings: Command.Command = {
   name: 'systrings',
   description:
-    'Search system strings by name or value. ' +
-    'Name matches are case-insensitive and can be partial.',
+    ' Find system strings by name or value. Case-insensitive, partial matches allowed.',
   syntax: 'systrings <query>',
   aliases: [],
   execute: (parameters, message) => {

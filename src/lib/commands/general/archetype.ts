@@ -129,9 +129,9 @@ const hexBreakDownEmbed =
 export const archetype: Command.Command = {
   name: 'archetype',
   description:
-    'Show which archetypes make up an integer value, ' +
+    'See which archetypes make up an integer value, ' +
     'or search archetype strings (setnames) by name. ' +
-    'Name matches are case-insensitive and can be partial.',
+    'Case-insensitive, partial matches allowed.',
   syntax: 'archetype <query>',
   aliases: ['arch', 'set'],
   execute: (parameters, message) => {

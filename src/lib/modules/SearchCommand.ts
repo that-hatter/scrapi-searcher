@@ -28,7 +28,7 @@ export const noMatches = (query: string): Err.Err =>
 
 export const searchCommand = <T>(opts: Options<T>): Command.Command => ({
   name: opts.name,
-  description: `Search ${opts.name}s by name. Results are case-insensitive and can be partial.`,
+  description: `Find ${opts.name}s by name. Case-insensitive, partial matches allowed.`,
   syntax: opts.name + ' <query>',
   aliases: opts.aliases,
   execute: (parameters, message) => {

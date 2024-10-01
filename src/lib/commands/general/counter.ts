@@ -5,7 +5,7 @@ import { Command, Nav, SearchCommand } from '../../modules';
 export const counter: Command.Command = {
   name: 'counter',
   description:
-    'Search counters by name or value. Name matches are case-insensitive and can be partial.',
+    'Find counters by name or value. Case-insensitive, partial matches allowed.',
   syntax: 'counter <query>',
   aliases: [],
   execute: (parameters, message) => {

@@ -22,7 +22,7 @@ const getMatches = (query: string) => (ctx: Ctx) =>
 export const strfind: Command.Command = {
   name: 'strfind',
   description:
-    'Search card database strings. Matches are case-insensitive and can be partial.',
+    'Search card database strings. Case-insensitive, partial matches allowed.',
   syntax: 'strfind <query>',
   aliases: [],
   execute: (parameters, message) => {

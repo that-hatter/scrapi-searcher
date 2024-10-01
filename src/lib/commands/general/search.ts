@@ -13,7 +13,7 @@ const getMatches = (query: string) => (ctx: Ctx) =>
 export const search: Command.Command = {
   name: 'search',
   description:
-    'Search cards by name and text. Matches are case-insensitive and can be partial.',
+    'Find cards by name or text. Case-insensitive, partial matches allowed.',
   syntax: 'search <query>',
   aliases: ['cardsearch'],
   execute: (parameters, message) => {

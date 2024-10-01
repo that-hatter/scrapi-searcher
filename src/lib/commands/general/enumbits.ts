@@ -104,7 +104,7 @@ const itemEmbedFn =
 export const enumbits: Command.Command = {
   name: 'enumbits',
   description:
-    'Show which constants in a bit enum (except Archetype) make up an integer value.',
+    'See which constants in a bit enum (except Archetype) make up an integer value.',
   syntax: 'enumbits <value> <enum-name?>',
   aliases: ['ebits'],
   execute: (parameters, message) => {

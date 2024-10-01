@@ -12,7 +12,7 @@ const msgContent = (c: Babel.Card) => (ctx: Ctx) =>
 
 export const limits: Command.Command = {
   name: 'limits',
-  description: "Show a card's limit status across every applicable banlist.",
+  description: "Check a card's limit status across all applicable banlists.",
   syntax: 'limits <query>',
   aliases: ['limit'],
   execute: (parameters, message) =>

@@ -27,5 +27,5 @@ const searchCmd = SearchCommand.searchCommand<sf.Constant>({
 // in favor of having 'value' as a filter for constants
 export const constantval: Command.Command = {
   ...searchCmd,
-  description: 'Search constants by value. Number values must be exact.',
+  description: 'Find constants by value. Number values must be exact.',
 };

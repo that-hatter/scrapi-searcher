@@ -20,7 +20,7 @@ const itemMenuDescription = ({ aliases }: Command.Command) =>
 
 export const commands: Command.Command = {
   name: 'commands',
-  description: 'Show a list of commands.',
+  description: 'Get a list of all commands.',
   syntax: 'commands',
   aliases: ['cmds'],
   execute: (_, message) =>

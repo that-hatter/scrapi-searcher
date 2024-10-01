@@ -5,8 +5,8 @@ import { Command, Nav, SearchCommand } from '../../modules';
 export const victory: Command.Command = {
   name: 'victory',
   description:
-    'Search victory strings (alternate win conditions) by name or value. ' +
-    'Name matches are case-insensitive and can be partial.',
+    'Find victory strings (alternate win conditions) by name or value. ' +
+    'Case-insensitive, partial matches allowed.',
   syntax: 'victory <query>',
   aliases: ['win'],
   execute: (parameters, message) => {

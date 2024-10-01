@@ -4,8 +4,7 @@ import { Command, Err, Op, str } from '../../modules';
 
 export const id: Command.Command = {
   name: 'id',
-  description:
-    "Show a card's name and id (passcode) without other information.",
+  description: "Get a card's name and ID (passcode).",
   syntax: 'id <query>',
   aliases: ['passcode', 'password'],
   execute: (parameters, message) =>
