@@ -1,9 +1,10 @@
 {
   "name": "scrapi-searcher",
   "version": "0.1.0",
-  "description": "Discord bot for EDOPro's Card Scripting API.",
+  "description": "Utility bot for EDOPro scripting and development.",
   "main": "index.ts",
   "scripts": {
+    "build": "npx tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
