@@ -143,7 +143,12 @@ const getAllCdbPaths = (dir: string) =>
 const initMinisearch = (cards: ReadonlyArray<Card>): MiniSearch<Card> => {
   const minisearch = new MiniSearch<Card>({
     fields: ['name'],
-    searchOptions: { fuzzy: true, prefix: true },
+    searchOptions: {
+      fuzzy: true,
+      prefix: true,
+      weights: { fuzzy: 0.8, prefix: 0.3 },
+    },
+    tokenize: (text) => text.split(/\s+/),
   });
 
   const added: { [name: string]: Card } = {};
