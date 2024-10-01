@@ -5,7 +5,6 @@ import * as fs from 'node:fs/promises';
 import * as http from 'node:http';
 import * as path from 'node:path';
 import simpleGit from 'simple-git';
-import { Decoder } from '.';
 import { utils } from '../utils';
 
 export type Github = {
@@ -14,22 +13,20 @@ export type Github = {
   readonly webhookServer: http.Server;
 };
 
-export const configDecoder = Decoder.struct({
-  accessToken: Decoder.string,
-  webhookSecret: Decoder.string,
-  webhookPort: Decoder.number,
-});
-
-export const init = (cfg: Decoder.TypeOf<typeof configDecoder>) =>
+export const init = (
+  accessToken: string,
+  webhookPort: number,
+  webhookSecret: string
+) =>
   TE.fromIOEither(
     utils.fallibleIO((): Github => {
-      const rest = new Octokit({ auth: cfg.accessToken });
-      const webhook = new Webhooks({ secret: cfg.webhookSecret });
+      const rest = new Octokit({ auth: accessToken });
+      const webhook = new Webhooks({ secret: webhookSecret });
       const webhookServer = http
         .createServer(
           createNodeMiddleware(webhook, { path: '/api/webhook/github' })
         )
-        .listen(cfg.webhookPort);
+        .listen(webhookPort);
 
       return { rest, webhook, webhookServer };
     })

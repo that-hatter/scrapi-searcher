@@ -1,53 +1,63 @@
-import { E, pipe, RA, TE } from '@that-hatter/scrapi-factory/fp';
-import * as fs from 'node:fs/promises';
-import * as path from 'node:path';
+import { E, pipe, RA, RNEA, RR, TE } from '@that-hatter/scrapi-factory/fp';
 import { collection as commands } from './lib/commands';
-import { PATHS } from './lib/constants';
 import { list as events } from './lib/events';
 import { collection as componentInteractions } from './lib/interactions';
-import { Data, dd, Decoder, Err, Event, Github, Op } from './lib/modules';
+import { Data, dd, Decoder, Err, Event, Github, Op, str } from './lib/modules';
 import { utils } from './lib/utils';
 import { BitNames } from './ygo';
 
-const CONFIG_PATH = path.join(PATHS.CWD, 'config.json');
+const envDecoder = Decoder.struct({
+  DEV_ADMIN: Decoder.string,
+  DEV_GUILD: Decoder.string,
+  DEV_USERS: Decoder.string,
+  DEV_LOGS_CHANNEL: Decoder.string,
 
-const configDecoder = Decoder.struct({
-  dev: Decoder.struct({
-    admin: Decoder.string,
-    guild: Decoder.string,
-    logs: Decoder.string,
-    users: Decoder.record(Decoder.string),
-  }),
-  prefix: Decoder.string,
-  github: Github.configDecoder,
-  token: Decoder.string,
+  BOT_PREFIX: Decoder.string,
+  BOT_TOKEN: Decoder.string,
+
+  GITHUB_ACCESS_TOKEN: Decoder.string,
+  GITHUB_WEBHOOK_PORT: Decoder.numString,
+  GITHUB_WEBHOOK_SECRET: Decoder.string,
 });
 
 const program = pipe(
   TE.Do,
-  TE.bind('config', () =>
-    pipe(
-      utils.taskify(() => fs.readFile(CONFIG_PATH, 'utf-8')),
-      TE.flatMapIOEither((s) => utils.fallibleIO(() => JSON.parse(s))),
-      TE.flatMapEither(Decoder.parse(configDecoder))
+  TE.bind('env', () =>
+    pipe(process.env, Decoder.parse(envDecoder), TE.fromEither)
+  ),
+  TE.bind('github', ({ env }) =>
+    Github.init(
+      env.GITHUB_ACCESS_TOKEN,
+      env.GITHUB_WEBHOOK_PORT,
+      env.GITHUB_WEBHOOK_SECRET
     )
   ),
-  TE.bind('github', ({ config }) => Github.init(config.github)),
   TE.bind('data', () => Data.init),
-  TE.flatMap(({ config, github, data }) => {
+  TE.flatMap(({ env, github, data }) => {
     const bot = dd.createBot({
       intents:
         dd.GatewayIntents.Guilds |
         dd.GatewayIntents.GuildMessages |
         dd.GatewayIntents.MessageContent |
         dd.GatewayIntents.DirectMessages,
-      token: config.token,
+      token: env.BOT_TOKEN,
     });
 
     const ctx = {
       bot,
-      prefix: config.prefix,
-      dev: config.dev,
+      prefix: env.BOT_PREFIX,
+      dev: {
+        admin: env.DEV_ADMIN,
+        guild: env.DEV_GUILD,
+        users: pipe(
+          env.DEV_USERS,
+          str.split(', '),
+          RNEA.map(str.split(':')),
+          RNEA.map(([name, id]) => [String(id), name] as const),
+          RR.fromEntries
+        ),
+        logs: env.DEV_LOGS_CHANNEL,
+      },
       commands,
       componentInteractions,
       bitNames: BitNames.load(data.yard.api.constants.array, data.systrings),
