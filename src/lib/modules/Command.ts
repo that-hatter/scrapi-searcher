@@ -50,7 +50,16 @@ export const embed = (cmd: Command): R.Reader<Ctx, dd.Embed> =>
     embedFields(cmd),
     R.map((fields) => ({
       title: cmd.name,
-      description: cmd.description,
+      description:
+        cmd.description +
+        '\n' +
+        str.subtext(
+          str.link(
+            'Documentation',
+            'https://github.com/that-hatter/scrapi-searcher/blob/master/docs/commands.md#' +
+              cmd.name
+          )
+        ),
       fields,
     }))
   );
