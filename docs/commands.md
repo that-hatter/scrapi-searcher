@@ -30,6 +30,7 @@
   - [enumbits](#enumbits)
   - [archetype](#archetype)
   - [counter](#counter)
+  - [progress](#progress)
 
 ---
 
@@ -636,3 +637,17 @@ This will search for systrings with "end" in their description.
 ```
 
 This will search for systrings with a value of 1001.
+
+---
+
+### progress
+
+Show the [current progress of API documentation in scrapiyard](https://github.com/ProjectIgnis/scrapiyard/blob/master/v1-nification.md).
+
+#### Example
+
+```
+,progress
+```
+
+This will how display how many entries still have the [`under-construction` tag](https://projectignis.github.io/scrapi-book/api/tags/under-construction.html)
