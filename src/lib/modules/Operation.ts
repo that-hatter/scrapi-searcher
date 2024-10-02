@@ -31,6 +31,13 @@ export const noopReader = RTE.right(undefined);
 
 const asOperation = flow(utils.taskify, TE.mapError(Err.forDev));
 
+const normalizePayload = <T extends dd.EditMessage | dd.CreateMessage>(
+  payload: Payload<T>
+): T =>
+  typeof payload === 'string'
+    ? <T>{ content: payload, allowedMentions: { repliedUser: false } }
+    : <T>{ ...payload, allowedMentions: { repliedUser: false } };
+
 export const getMessage =
   (channelId: dd.BigString) =>
   (messageId: dd.BigString): Op<dd.Message> =>
@@ -42,29 +49,19 @@ export const sendMessage =
   (payload: Payload<dd.CreateMessage>): Op<dd.Message> =>
   ({ bot }) =>
     asOperation(() =>
-      dd.sendMessage(
-        bot,
-        channelId,
-        typeof payload === 'string'
-          ? { content: payload }
-          : (payload as dd.CreateMessage)
-      )
+      dd.sendMessage(bot, channelId, normalizePayload(payload))
     );
 
 export const sendReply =
   (message: dd.Message) =>
-  (payload: Payload<dd.CreateMessage>): Op<dd.Message> => {
-    const opts = typeof payload === 'string' ? { content: payload } : payload;
-    const messageReference = {
-      messageId: message.id,
-      failIfNotExists: false,
-    };
-    return sendMessage(message.channelId)({
-      ...opts,
-      messageReference,
-      allowedMentions: { repliedUser: false },
+  (payload: Payload<dd.CreateMessage>): Op<dd.Message> =>
+    sendMessage(message.channelId)({
+      ...normalizePayload(payload),
+      messageReference: {
+        messageId: message.id,
+        failIfNotExists: false,
+      },
     });
-  };
 
 export const editMessage =
   (channelId: dd.BigString) =>
@@ -72,14 +69,7 @@ export const editMessage =
   (payload: Payload<dd.EditMessage>): Op<dd.Message> =>
   ({ bot }) =>
     asOperation(() =>
-      dd.editMessage(
-        bot,
-        channelId,
-        messageId,
-        typeof payload === 'string'
-          ? { content: payload }
-          : (payload as dd.EditMessage)
-      )
+      dd.editMessage(bot, channelId, messageId, normalizePayload(payload))
     );
 
 export const deleteMessage =
