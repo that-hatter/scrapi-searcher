@@ -19,7 +19,7 @@ such as card prices and pack release dates are considered non-goals.
 ## Usage
 
 The bot is available in the [Project Ignis Discord server](https://discord.gg/ygopro-percy)
-and in private messages. A full list of commands can be accessed using `;command`.
+and in private messages. A full list of commands can be accessed using `,command`.
 Cards can be searched from within messages using curly braces, e.g. `{Silhouhatte Rabbit}`.
 
 The bot is set to private and cannot be added to other servers
