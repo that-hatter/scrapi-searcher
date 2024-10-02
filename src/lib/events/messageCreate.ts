@@ -2,12 +2,10 @@ import { O, pipe, TE } from '@that-hatter/scrapi-factory/fp';
 import { about } from '../commands/general/about';
 import { cardBracketSearch } from '../interactions/cardSelect';
 import { Collection, Command, Err, Event, Op, str } from '../modules';
-import { cacheMessage } from './shared';
 
 export const messageCreate: Event.Event<'messageCreate'> = {
   name: 'messageCreate',
   handle: (_, message) => (ctx) => {
-    if (message.authorId === ctx.bot.id) return cacheMessage(message);
     if (message.isFromBot) return Op.noop;
 
     if (!message.content.startsWith(ctx.prefix)) {

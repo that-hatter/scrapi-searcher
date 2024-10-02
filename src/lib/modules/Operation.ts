@@ -1,4 +1,4 @@
-import { flow, RTE, TE } from '@that-hatter/scrapi-factory/fp';
+import { flow, pipe, RA, RNEA, RTE, TE } from '@that-hatter/scrapi-factory/fp';
 import { dd, Err } from '.';
 import { Ctx } from '../../Ctx';
 import { CanBeReadonly, utils } from '../utils';
@@ -44,6 +44,22 @@ export const getMessage =
   ({ bot }) =>
     asOperation(() => dd.getMessage(bot, channelId, messageId));
 
+export const getMessages =
+  (channelId: dd.BigString) =>
+  (options: dd.GetMessagesOptions): Op<ReadonlyArray<dd.Message>> =>
+  ({ bot }) =>
+    asOperation(() =>
+      dd.getMessages(bot, channelId, options).then((col) => col.array())
+    );
+
+export const getReplies =
+  (channelId: dd.BigString) =>
+  (messageId: dd.BigString): Op<ReadonlyArray<dd.Message>> =>
+    pipe(
+      getMessages(channelId)({ limit: 100 }),
+      RTE.map(RA.filter((msg) => messageId === msg.messageReference?.messageId))
+    );
+
 export const sendMessage =
   (channelId: dd.BigString) =>
   (payload: Payload<dd.CreateMessage>): Op<dd.Message> =>
@@ -74,16 +90,18 @@ export const editMessage =
 
 export const deleteMessage =
   (channelId: dd.BigString) =>
-  (messageId: dd.BigString, reason?: string): Op<void> =>
+  (messageId: dd.BigString): Op<void> =>
   ({ bot }) =>
-    asOperation(() => bot.helpers.deleteMessage(channelId, messageId, reason));
+    asOperation(() => bot.helpers.deleteMessage(channelId, messageId));
 
 export const deleteMessages =
   (channelId: dd.BigString) =>
-  (messageIds: ReadonlyArray<dd.BigString>, reason?: string): Op<void> =>
+  (messageIds: RNEA.ReadonlyNonEmptyArray<dd.BigString>): Op<void> =>
   ({ bot }) =>
     asOperation(() =>
-      bot.helpers.deleteMessages(channelId, [...messageIds], reason)
+      messageIds.length === 1
+        ? bot.helpers.deleteMessage(channelId, RNEA.head(messageIds))
+        : bot.helpers.deleteMessages(channelId, [...messageIds])
     );
 
 export const sendInteractionResponse =
