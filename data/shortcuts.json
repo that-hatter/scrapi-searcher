@@ -21,11 +21,11 @@
   "Ally of Justice": [
     "aoj"
   ],
-  "Ancient Gear Gadjiltron Dragon": [
-    "aggd"
-  ],
   "Ancient Gear": [
     "ag"
+  ],
+  "Ancient Gear Gadjiltron Dragon": [
+    "aggd"
   ],
   "Assault Blackwing": [
     "abw"
@@ -40,11 +40,14 @@
   "Black Rose Dragon": [
     "brd"
   ],
+  "Blackwing": [
+    "bw"
+  ],
   "Blackwing Tamer": [
     "bwt"
   ],
-  "Blackwing": [
-    "bw"
+  "Blue-Eyes": [
+    "b-e"
   ],
   "Blue-Eyes Ultimate Dragon": [
     "beud",
@@ -53,9 +56,6 @@
   "Blue-Eyes White Dragon": [
     "bewd",
     "b-ewd"
-  ],
-  "Blue-Eyes": [
-    "b-e"
   ],
   "Book of Eclipse": [
     "boe"
@@ -116,14 +116,17 @@
   "Cyber Angel": [
     "ca"
   ],
-  "Cyber Dragon Infinity": [
-    "cdi"
-  ],
   "Cyber Dragon": [
     "cydra"
   ],
+  "Cyber Dragon Infinity": [
+    "cdi"
+  ],
   "Cyber End Dragon": [
     "ced"
+  ],
+  "D/D/D": [
+    "ddd"
   ],
   "Dark Armed Dragon": [
     "dad"
@@ -131,20 +134,20 @@
   "Dark Contract": [
     "dc"
   ],
+  "Dark Magician": [
+    "dm"
+  ],
   "Dark Magician Girl": [
     "dmg"
   ],
   "Dark Magician of Chaos": [
     "dmoc"
   ],
-  "Dark Magician": [
-    "dm"
+  "Dark World": [
+    "dw"
   ],
   "Dark World Dealings": [
     "dwd"
-  ],
-  "Dark World": [
-    "dw"
   ],
   "Deck Devastation Virus": [
     "ddv"
@@ -181,22 +184,20 @@
     "es",
     "ebs"
   ],
-  "Elemental HERO Absolute Zero": [
-    "a0",
-    "abz.",
-    "abz"
-  ],
   "Elemental HERO": [
     "e-hero",
     "ehero"
+  ],
+  "Elemental HERO Absolute Zero": [
+    "a0",
+    "abz"
   ],
   "Emergency Teleport": [
     "e-tele",
     "etele"
   ],
   "Emissary of Darkness": [
-    "eod",
-    "ed"
+    "eod"
   ],
   "Empowered Warrior": [
     "ew",
@@ -215,13 +216,19 @@
   ],
   "Familiar-Posessed": [
     "fp",
-    "f-o"
+    "f-p"
+  ],
+  "Fiendsmith": [
+    "fs"
   ],
   "Final Countdown": [
     "fc"
   ],
   "Fire Formation": [
     "ff"
+  ],
+  "Fire King": [
+    "fk"
   ],
   "Five-Headed Dragon": [
     "fgd",
@@ -230,12 +237,19 @@
   "Forbidden Beast": [
     "fb"
   ],
+  "Fortune Lady": [
+    "fl"
+  ],
   "Future Fusion": [
     "fufu"
   ],
   "Gaia the Fierce Knight": [
     "gtfk",
     "gfk"
+  ],
+  "Galaxy-Eyes": [
+    "ge",
+    "g-e"
   ],
   "Galaxy-Eyes Photon Dragon": [
     "gepd"
@@ -247,7 +261,11 @@
   ],
   "Gladiator Beast": [
     "gb",
-    "glad"
+    "glad",
+    "gladbeast"
+  ],
+  "Gold Pride": [
+    "gp"
   ],
   "Gravekeeper's": [
     "gk",
@@ -270,11 +288,17 @@
     "htbfd",
     "hbfd"
   ],
+  "Imperial Order": [
+    "io"
+  ],
   "Inferno Reckless Summon": [
     "irs"
   ],
   "Judgment Dragon": [
     "jd"
+  ],
+  "Kashtira": [
+    "kash"
   ],
   "Light and Darkness Dragon": [
     "ladd"
@@ -302,7 +326,7 @@
   "Mecha Phantom Beast": [
     "mpb"
   ],
-  "Mystical Space Thyphoon": [
+  "Mystical Space Typhoon": [
     "mst"
   ],
   "Neo Galaxy-Eyes Photon Dragon": [
@@ -327,6 +351,13 @@
   "Pot of Duality": [
     "pod"
   ],
+  "Pot of Extravagance": [
+    "poe",
+    "extrav"
+  ],
+  "Prank-Kids": [
+    "pranks"
+  ],
   "Raidraptor": [
     "rr"
   ],
@@ -338,6 +369,10 @@
   ],
   "Red Dragon Archfiend": [
     "rda"
+  ],
+  "Red-Eyes": [
+    "re",
+    "r-e"
   ],
   "Red-Eyes B. Dragon": [
     "rebd",
@@ -353,25 +388,20 @@
     "refmd",
     "r-efmd"
   ],
-  "Red-Eyes": [
-    "re",
-    "r-e"
-  ],
   "Reinforcement of the Army": [
     "rota"
   ],
-  "Ritual Beast Tamer": [
-    "rbt"
-  ],
   "Ritual Beast": [
     "rb"
+  ],
+  "Ritual Beast Tamer": [
+    "rbt"
   ],
   "Shadow-Imprisoning Mirror": [
     "sim",
     "s-im"
   ],
   "Six Samurai": [
-    "ss",
     "sixsam",
     "6s",
     "6sam"
@@ -379,6 +409,16 @@
   "Skill Drain": [
     "skd",
     "sd"
+  ],
+  "Sky Striker": [
+    "ss"
+  ],
+  "Sky Striker Ace": [
+    "ssa"
+  ],
+  "Snake-Eye": [
+    "s-e",
+    "se"
   ],
   "Solemn Judgment": [
     "sj"
@@ -389,15 +429,18 @@
   "Speedroid": [
     "sr"
   ],
+  "Spiritual Beast": [
+    "sb",
+    "spirb",
+    "srb"
+  ],
   "Spiritual Beast Tamer": [
     "sbt",
     "spirbt",
     "srbt"
   ],
-  "Spiritual Beast": [
-    "sb",
-    "spirb",
-    "srb"
+  "Starving Venom": [
+    "sv"
   ],
   "Super Defense Robot": [
     "sdr"
@@ -414,6 +457,14 @@
   "Superheavy Samurai": [
     "shs",
     "susa"
+  ],
+  "Supreme King Dragon Starving Venom": [
+    "sksv",
+    "skdsv"
+  ],
+  "Swordsoul": [
+    "swso",
+    "swoswo"
   ],
   "T.G.": [
     "tg",
@@ -436,9 +487,15 @@
     "t-roar",
     "troar"
   ],
+  "There Can Be Only One": [
+    "tcboo"
+  ],
   "Thousand-Eyes Restrict": [
     "ter",
     "t-er"
+  ],
+  "Thunder Dragon": [
+    "thundra"
   ],
   "Thunder King Rai-Oh": [
     "tkro",
@@ -466,14 +523,27 @@
     "t,dib",
     "tdib"
   ],
+  "True King of all Calamities": [
+    "vfd"
+  ],
   "U.A.": [
     "ua",
     "u.a",
     "ua."
   ],
+  "Vanquish Soul": [
+    "vs"
+  ],
+  "Virtual World": [
+    "vw"
+  ],
   "Vision HERO": [
     "v-hero",
     "vhero"
+  ],
+  "Voiceless Voice": [
+    "vovo",
+    "vv"
   ],
   "Wind Witch": [
     "ww"
