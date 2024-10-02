@@ -10,8 +10,8 @@ export const helpMessage = (message: dd.Message) => (ctx: Ctx) => {
     'View a list of commands by typing ' +
       str.inlineCode(ctx.prefix + 'commands') +
       '.',
-    'Search cards inside messages using curly braces, e.g. ' +
-      str.inlineCode(str.braced(sample)) +
+    'Search cards inside messages using square brackets, e.g. ' +
+      str.inlineCode(str.bracketed(sample)) +
       '.',
   ]);
 };

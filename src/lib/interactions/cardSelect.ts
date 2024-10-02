@@ -119,7 +119,7 @@ export const cardBracketSearch = (msg: dd.Message): Op.Op<unknown> => {
   if (!RA.isNonEmpty(texts)) return Op.noopReader;
   return pipe(
     texts,
-    RA.flatMap((s) => s.match(/\{(.+?)\}/g) ?? []),
+    RA.flatMap((s) => s.match(/\[(.+?)\]/g) ?? []),
     RA.map(handleQuery),
     R.sequenceArray,
     R.map(RA.separate),
