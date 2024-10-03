@@ -14,9 +14,9 @@ Searcher primarily serves as a Project Ignis devtool for scripters and developer
 
 ## Usage
 
-The bot is only available in the [Project Ignis Discord server](https://discord.gg/ygopro-percy) and in private messages. It is set to private and cannot be added to other servers. A full list of commands can be accessed using `,command`. Cards can be searched from within messages using square brackets, e.g. `[Silhouhatte Rabbit]`.
+The bot is only available in the [Project Ignis Discord server](https://discord.gg/ygopro-percy) and in direct messages. It is set to private and cannot be added to other servers. A full list of commands can be accessed using `,commands`. Cards can be searched from within messages using square brackets, e.g. `[Silhouhatte Rabbit]`.
 
-If you have further inquiries, you can reach out to [@that-hatter](https://github.com/that-hatter) (or `@that.hatter` on Discord).
+For further inquiries, you can reach out to [@that-hatter](https://github.com/that-hatter) (or `@that.hatter` on Discord).
 
 ## Contributing
 
