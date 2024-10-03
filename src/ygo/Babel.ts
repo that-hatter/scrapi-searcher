@@ -4,6 +4,7 @@ import { ioEither } from 'fp-ts';
 import MiniSearch from 'minisearch';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
+import { Ctx } from '../Ctx';
 import { PATHS } from '../lib/constants';
 import type { Data } from '../lib/modules';
 import { Collection, Decoder, Github } from '../lib/modules';
@@ -204,3 +205,9 @@ export const data: Data.Data<'babel'> = {
   commitFilter: (repo, files) =>
     repo === 'BabelCDB' && files.some((f) => f.endsWith('.cdb')),
 };
+
+export const getAliases = (c: Card) => (ctx: Ctx) =>
+  pipe(
+    ctx.babel.array,
+    RA.filter((a) => a.alias === c.id || c.alias === a.id)
+  );

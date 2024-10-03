@@ -2,10 +2,10 @@ import {
   flow,
   O,
   pipe,
+  R,
   RA,
   RNEA,
   RTE,
-  TE,
 } from '@that-hatter/scrapi-factory/fp';
 import { Babel, Banlists, BetaIds, KonamiIds, Shortcuts } from '.';
 import { Ctx } from '../Ctx';
@@ -14,59 +14,43 @@ import { dd, Nav, Op, str } from '../lib/modules';
 import { Card } from './Babel';
 import * as BitNames from './BitNames';
 
-const mainType = RA.findFirst(
-  (ctype: string) =>
-    ctype === 'Skill' ||
-    ctype === 'Monster' ||
-    ctype === 'Spell' ||
-    ctype === 'Trap'
-);
-
-// -----------------------------------------------------------------------------
-// cdb-to-text conversions not handled by BitNames
-// -----------------------------------------------------------------------------
-
-const ATK = (c: Card) => (c.atk === -2n ? '?' : c.atk.toString());
-
-const DEF = (c: Card) => (c.def === -2n ? '?' : c.def.toString());
-
-const level = (c: Card) => (ctypes: ReadonlyArray<string>) =>
-  (ctypes.includes('Pendulum') ? c.level & 0xffffn : c.level).toString();
-
-const rank = level;
-
-const scales = (c: Card) => {
-  const bits = c.level >> 16n;
-  return (bits >> 8n) + '/' + (bits & 0xffn);
+type PreFormatted = {
+  readonly card: Babel.Card;
+  readonly scopes: ReadonlyArray<string>;
+  readonly rush: boolean;
+  readonly archetypes: ReadonlyArray<string>;
+  readonly types: ReadonlyArray<string>;
+  readonly mainType: string;
+  readonly aliases: ReadonlyArray<Card>;
+  readonly konamiId: O.Option<number>;
 };
 
-// -----------------------------------------------------------------------------
-// card texts
-// -----------------------------------------------------------------------------
+const mainType = flow(
+  RA.findFirst(
+    (t) => t === 'Skill' || t === 'Monster' || t === 'Spell' || t === 'Trap'
+  ),
+  O.getOrElse(() => 'Non-Card')
+);
 
-const unofficialDisclaimer = (kid: O.Option<number>) => (text: string) => {
-  if (O.isNone(kid)) return text;
-  const diffMarker =
-    "The above text is unofficial and describes the card's functionality in the OCG.";
-  return text.replace(
-    '\n* ' + diffMarker,
-    str.subtext(str.link(diffMarker, URLS.YGORESOURCES_DIFFS + '#' + kid.value))
+const preformat = (card: Card): R.Reader<Ctx, PreFormatted> =>
+  pipe(
+    R.Do,
+    R.let('card', () => card),
+    R.bind('scopes', () => BitNames.scopes(card.ot)),
+    R.let('rush', ({ scopes }) => scopes.includes('Rush')),
+    R.bind('archetypes', () => BitNames.archetypes(card.setcode)),
+    R.bind('types', () => BitNames.types(card.type)),
+    R.let('mainType', ({ types }) => mainType(types)),
+    R.bind('aliases', () => Babel.getAliases(card)),
+    R.bind('konamiId', ({ scopes }) => KonamiIds.getKonamiId(scopes, card.id))
   );
-};
 
-const descLines = flow(
-  str.split('\n'),
-  RNEA.map(str.trim),
-  RA.filter(
-    (s) =>
-      s.length > 0 && !s.split('').every((char) => char === '-' || char === '=')
-  )
-);
-
-const isHeading = (s: string) => s.startsWith('[') && s.endsWith(']');
+// -----------------------------------------------------------------------------
+// card text parsing
+// -----------------------------------------------------------------------------
 
 // splits desc fields into multiple parts if they exceed text field value limits
-const safeDescFields = (
+const safeTextFields = (
   field: dd.DiscordEmbedField
 ): Array<dd.DiscordEmbedField> => {
   if (field.value.length <= LIMITS.EMBED_FIELD) return [field];
@@ -83,11 +67,12 @@ const safeDescFields = (
     .map((v, i) => ({ name: i === 0 ? field.name : '\u200b', value: v }));
 };
 
-const descFields =
+const textFields =
   (defaultName: string) =>
   (lines: ReadonlyArray<string>): Array<dd.DiscordEmbedField> => {
     if (!RA.isNonEmpty(lines)) return [];
-    if (lines.length === 1) return [{ name: defaultName, value: lines[0] }];
+    if (lines.length === 1)
+      return [{ name: defaultName, value: RNEA.head(lines) }];
 
     const [head, tail] = RNEA.unprepend(lines);
     const { init, rest } = RA.spanLeft((s: string) => !isHeading(s))(tail);
@@ -100,22 +85,43 @@ const descFields =
       : { name: defaultName, value: [head, ...init].join('\n') };
 
     return pipe(
-      [field, ...descFields('')(rest)],
-      RA.flatMap(safeDescFields),
+      [field, ...textFields('')(rest)],
+      RA.flatMap(safeTextFields),
       RA.toArray
     );
   };
 
-const rushDescFields = (defaultName: string) => (c: Card) => {
-  const lines = descLines(c.desc);
+const parseTextLines = flow(
+  str.split('\n'),
+  RNEA.map(str.trim),
+  RA.filter(
+    (s) =>
+      s.length > 0 && !s.split('').every((char) => char === '-' || char === '=')
+  )
+);
+
+const isHeading = (s: string) => s.startsWith('[') && s.endsWith(']');
+
+const parseRushText = (desc: string, defaultName: string) => {
+  const lines = parseTextLines(desc);
   const [fst] = lines;
   const maxHeading = 'MAXIMUM ATK = ';
   if (!fst || !fst.startsWith(maxHeading))
-    return [O.none, descFields(defaultName)(lines)] as const;
+    return [O.none, textFields(defaultName)(lines)] as const;
   return [
     O.some(fst.substring(maxHeading.length).trim()),
-    descFields(defaultName)(lines.slice(1)),
+    textFields(defaultName)(lines.slice(1)),
   ] as const;
+};
+
+const withUnofficialDisclaimer = (kid: O.Option<number>) => (text: string) => {
+  if (O.isNone(kid)) return text;
+  const diffMarker =
+    "The above text is unofficial and describes the card's functionality in the OCG.";
+  return text.replace(
+    '\n* ' + diffMarker,
+    str.subtext(str.link(diffMarker, URLS.YGORESOURCES_DIFFS + '#' + kid.value))
+  );
 };
 
 // -----------------------------------------------------------------------------
@@ -149,67 +155,45 @@ const frameColor_ = (ctypes: ReadonlyArray<string>) => {
   return COLORS.DISCORD_TRANSPARENT;
 };
 
-export const frameColor = (c: Card) => (ctx: Ctx) =>
-  pipe(BitNames.types(c.type)(ctx.bitNames), frameColor_);
+export const frameColor = (c: Card) =>
+  pipe(BitNames.types(c.type), R.map(frameColor_));
 
-const scriptFolder = (
-  c: Card,
-  mainType: O.Option<string>,
-  scopes: ReadonlyArray<string>
-) => {
-  if (O.isSome(mainType) && mainType.value === 'Skill') return 'skill';
-  if (scopes.includes('Rush')) return 'rush';
-  if (c.name.endsWith(' (Pre-Errata)')) return 'pre-errata';
-  if (c.name.endsWith(' (Goat)')) return 'goat';
-  if (scopes.includes('Pre-release')) return 'pre-release';
-  if (scopes.includes('OCG') || scopes.includes('TCG')) return 'official';
+const scriptFolder = (pf: PreFormatted) => {
+  if (pf.rush) return 'rush';
+  if (pf.mainType === 'Skill') return 'skill';
+  if (pf.card.name.endsWith(' (Pre-Errata)')) return 'pre-errata';
+  if (pf.card.name.endsWith(' (Goat)')) return 'goat';
+  if (pf.scopes.includes('Pre-release')) return 'pre-release';
+  if (pf.scopes.includes('OCG') || pf.scopes.includes('TCG')) return 'official';
   return 'unofficial';
 };
 
-const scriptUrl_ = (
-  c: Card,
-  aliases: ReadonlyArray<Card>,
-  mainType: O.Option<string>,
-  ctypes: ReadonlyArray<string>,
-  scopes: ReadonlyArray<string>
-): O.Option<string> => {
-  const main = aliases.find((a) => a.alias === 0 && c.ot === a.ot) ?? c;
-  if (ctypes.includes('Normal') && !ctypes.includes('Pendulum')) return O.none;
-  const folder = scriptFolder(main, mainType, scopes);
+const _scriptURL = (pf: PreFormatted): O.Option<string> => {
+  if (pf.types.includes('Normal') && pf.types.includes('Pendulum'))
+    return O.none;
+  const folder = scriptFolder(pf);
+  const main =
+    pf.aliases.find((a) => a.alias === 0 && pf.card.ot === a.ot) ?? pf.card;
   return O.some(
     URLS.CARDSCRIPTS + 'blob/master/' + folder + '/c' + main.id + '.lua'
   );
 };
 
-export const scriptUrl = (c: Card) => (ctx: Ctx) => {
-  const aliases = ctx.babel.array.filter(
-    (a) => c.alias === a.id || a.alias === c.id
-  );
-  const ctypes = BitNames.types(c.type)(ctx.bitNames);
-  return scriptUrl_(
-    c,
-    aliases,
-    mainType(ctypes),
-    ctypes,
-    BitNames.scopes(c.ot)(ctx.bitNames)
-  );
-};
-
 // TODO: exclude non-cards
-const pediaURL = (c: Card, kid: O.Option<number>) => {
-  if (O.isSome(kid)) return O.some(URLS.YUGIPEDIA_WIKI + kid.value);
+const pediaURL = ({ card, konamiId }: PreFormatted) => {
+  if (O.isSome(konamiId)) return O.some(URLS.YUGIPEDIA_WIKI + konamiId.value);
 
   if (
-    c.type === 0n ||
-    c.ot >= 0x800n || // Illegal/Non-card/Custom
-    c.name.endsWith(' (Goat)') ||
-    c.name.endsWith(' (Pre-Errata)') ||
-    c.name.endsWith(' (DM)') ||
-    c.name.endsWith(' (Deck Master)')
+    card.type === 0n ||
+    card.ot >= 0x800n || // Illegal/Non-card/Custom
+    card.name.endsWith(' (Goat)') ||
+    card.name.endsWith(' (Pre-Errata)') ||
+    card.name.endsWith(' (DM)') ||
+    card.name.endsWith(' (Deck Master)')
   )
     return O.none;
 
-  const pname = c.name
+  const pname = card.name
     .replace(' (Anime)', ' (anime)')
     .replace(' (Rush)', ' (Rush Duel)')
     .replace(' (Skill)', ' (anime Skill)')
@@ -221,36 +205,33 @@ const pediaURL = (c: Card, kid: O.Option<number>) => {
   return O.some(URLS.YUGIPEDIA_WIKI + encodeURIComponent(pname));
 };
 
-const urlsSection = (
-  c: Card,
-  aliases: ReadonlyArray<Card>,
-  konamiId: O.Option<number>,
-  mainType: O.Option<string>,
-  ctypes: ReadonlyArray<string>,
-  scopes: ReadonlyArray<string>
-) => {
+const urlsSection = (pf: PreFormatted) => {
   const script = pipe(
-    scriptUrl_(c, aliases, mainType, ctypes, scopes),
+    _scriptURL(pf),
     O.map((s) => str.link('Script', s, 'EDOPro card script'))
   );
 
-  const officialDb = O.map((kid: number) =>
-    str.link(
-      'Konami DB',
-      (scopes.includes('Rush') ? URLS.KONAMI_DB_RUSH : URLS.KONAMI_DB_MASTER) +
-        '/card_search.action?ope=2&request_locale=ja&cid=' +
-        kid,
-      'Official card data and rulings (JP)'
+  const officialDb = pipe(
+    pf.konamiId,
+    O.map((kid) =>
+      str.link(
+        'Konami DB',
+        (pf.rush ? URLS.KONAMI_DB_RUSH : URLS.KONAMI_DB_MASTER) +
+          '/card_search.action?ope=2&request_locale=ja&cid=' +
+          kid,
+        'Official card data and rulings (JP)'
+      )
     )
   );
 
   const pedia = pipe(
-    pediaURL(c, konamiId),
-    O.map((url: string) => str.link('Yugipedia', url, 'Card wiki page'))
+    pediaURL(pf),
+    O.map((url) => str.link('Yugipedia', url, 'Card wiki page'))
   );
 
-  const ygoResources = flow(
-    O.filter((_: number) => !scopes.includes('Rush')),
+  const ygoResources = pipe(
+    pf.konamiId,
+    O.filter((_) => !pf.rush),
     O.map((kid) =>
       str.link(
         'YGOResources',
@@ -261,178 +242,227 @@ const urlsSection = (
   );
 
   return pipe(
-    [script, officialDb(konamiId), pedia, ygoResources(konamiId)],
+    [script, officialDb, pedia, ygoResources],
     str.join(' | '),
     str.unempty,
     O.map(str.subtext)
   );
 };
 
-const limitsSection =
-  (c: Card, scopes: ReadonlyArray<string>) => (ctx: Ctx) => {
-    if (scopes.includes('Pre-release') || scopes.includes('Legend'))
-      return labeledList('Limit')(scopes);
-    return pipe(
-      scopes,
-      RA.map((s) =>
-        pipe(
-          ctx.banlists,
-          RA.findFirst((b) => b.name === s),
-          O.flatMap(Banlists.getAllowed(c.id)),
-          O.map((lmt) => s + ' ' + str.parenthesized(lmt.toString())),
-          O.getOrElse(() => s)
-        )
-      ),
-      labeledList('Limit')
-    );
-  };
+const limitsSection = (pf: PreFormatted) => (ctx: Ctx) => {
+  if (pf.scopes.includes('Pre-release') || pf.scopes.includes('Legend'))
+    return labeledList('Limit')(pf.scopes);
+  return pipe(
+    pf.scopes,
+    RA.map((s) =>
+      pipe(
+        ctx.banlists,
+        RA.findFirst((b) => b.name === s),
+        O.flatMap(Banlists.getAllowed(pf.card.id)),
+        O.map((lmt) => s + ' ' + str.parenthesized(lmt.toString())),
+        O.getOrElse(() => s)
+      )
+    ),
+    labeledList('Limit')
+  );
+};
 
-const passcodesFooter = (c: Card, kid: O.Option<number>) =>
-  flow(
-    RA.prepend(c),
+const passcodesFooter = (pf: PreFormatted) =>
+  pipe(
+    pf.aliases,
+    RA.prepend(pf.card),
     RNEA.map((c) => c.id.toString()),
     RA.appendW(
       pipe(
-        kid,
+        pf.konamiId,
         O.map((k) => 'Konami ID #' + k)
       )
     ),
     str.join(' | '),
-    (text) => ({ text })
+    (text): dd.DiscordEmbedFooter => ({ text })
   );
 
-// TODO: refactor into individual functions per type/scope
-export const itemEmbed =
-  (c: Card): Op.SubOp<dd.Embed> =>
-  (ctx) => {
-    const bns = ctx.bitNames;
+const ATKDEF = (n: bigint) => (n === -2n ? '?' : n.toString());
 
-    const ctypes = BitNames.types(c.type)(bns);
-    const mtype = mainType(ctypes);
+const levelRank = (pf: PreFormatted) =>
+  (pf.types.includes('Pendulum')
+    ? pf.card.level & 0xffffn
+    : pf.card.level
+  ).toString();
 
-    const scopes = BitNames.scopes(c.ot)(bns);
-    const archs = pipe(
-      BitNames.archetypes(c.setcode)(bns),
-      RA.map(str.doubleQuoted)
-    );
+const scales = (c: Card) => {
+  const bits = c.level >> 16n;
+  return (bits >> 8n) + '/' + (bits & 0xffn);
+};
 
-    // embed commons
-    const title = c.name;
-    const color = frameColor_(ctypes);
+const finalizeEmbed = (
+  pf: PreFormatted,
+  description: string,
+  fields: dd.DiscordEmbedField[]
+): dd.Embed => ({
+  title: pf.card.name,
+  description,
+  fields,
+  color: frameColor_(pf.types),
+  footer: passcodesFooter(pf),
+});
 
-    const kid = KonamiIds.getKonamiId(scopes, c.id)(ctx);
+const commonEmbedDescription = (pf: PreFormatted) =>
+  pipe(
+    limitsSection(pf),
+    R.map((limits) =>
+      str.joinParagraphs([
+        urlsSection(pf),
+        limits,
+        labeledList('Archetype')(pf.archetypes),
+        labeledList('Card Type')(pf.types),
+      ])
+    )
+  );
 
-    const aliases = ctx.babel.array.filter(
-      (a) => a.alias === c.id || c.alias === a.id
-    );
-    const footer = passcodesFooter(c, kid)(aliases);
-
-    const commonDesc = str.joinParagraphs([
-      urlsSection(c, aliases, kid, mtype, ctypes, scopes),
-      limitsSection(c, scopes)(ctx),
-      labeledList('Archetype')(archs),
-      labeledList('Card Type')(ctypes),
-    ]);
-
-    if (O.isSome(mtype) && scopes.includes('Rush')) {
-      const race = BitNames.race(c.race)(bns);
-      const attributes = BitNames.attribute(c.attribute)(bns);
-      const [maxATK, fields] = rushDescFields(
-        ctypes.includes('Normal') ? 'Flavor Text' : 'Card Text'
-      )(c);
-
-      const description = ctypes.includes('Monster')
-        ? str.joinParagraphs([
-            commonDesc,
-            str.joinWords([
-              labeledList('Monster Type')(race),
-              labeledList('Attribute')(attributes),
-            ]),
-            str.joinWords([
-              labeled('Level')(level(c)(ctypes)),
-              labeled('ATK')(ATK(c)),
-              labeled('DEF')(DEF(c)),
-              O.map(labeled('Maximum ATK'))(maxATK),
-            ]),
-          ])
-        : commonDesc;
-
-      return TE.right({ title, color, description, fields, footer });
-    }
-
-    if (O.isSome(mtype) && mtype.value === 'Skill') {
-      const fields = pipe(c.desc, descLines, descFields('Skill Text'));
-
-      const description = str.joinParagraphs([
-        commonDesc,
-        labeledList('Character')(BitNames.skillCharacters(c.race)(bns)),
-      ]);
-
-      return TE.right({ title, color, description, fields, footer });
-    }
-
-    if (O.isSome(mtype) && mtype.value === 'Monster') {
-      const isLink = ctypes.includes('Link');
-      const isPendulum = ctypes.includes('Pendulum');
-
-      const arrows = isLink ? BitNames.linkArrows(c.def)(bns) : [];
-      const race = BitNames.race(c.race)(bns);
-      const attribute = BitNames.attribute(c.attribute)(bns);
-
-      const fields = pipe(
-        c.desc,
-        unofficialDisclaimer(kid),
-        descLines,
-        descFields(ctypes.includes('Normal') ? 'Flavor Text' : 'Card Text')
+const rushMonsterEmbed = (pf: PreFormatted) =>
+  pipe(
+    R.Do,
+    R.bind('races', () => BitNames.race(pf.card.race)),
+    R.bind('attrs', () => BitNames.attribute(pf.card.attribute)),
+    R.bind('commonDesc', () => commonEmbedDescription(pf)),
+    R.map(({ races, attrs, commonDesc }) => {
+      const [maxATK, fields] = parseRushText(
+        pf.card.desc,
+        pf.types.includes('Normal') ? 'Flavor Text' : 'Card Text'
       );
 
       const description = str.joinParagraphs([
         commonDesc,
         str.joinWords([
-          labeledList('Monster Type')(race),
-          labeledList('Attribute')(attribute),
+          labeledList('Monster Type')(races),
+          labeledList('Attribute')(attrs),
+        ]),
+        str.joinWords([
+          labeled('Level')(levelRank(pf)),
+          labeled('ATK')(ATKDEF(pf.card.atk)),
+          labeled('DEF')(ATKDEF(pf.card.def)),
+          O.map(labeled('Maximum ATK'))(maxATK),
+        ]),
+      ]);
+
+      return finalizeEmbed(pf, description, fields);
+    })
+  );
+
+const rushNonMonsterEmbed = (pf: PreFormatted) =>
+  pipe(
+    commonEmbedDescription(pf),
+    R.map((description) => {
+      const [_, fields] = parseRushText(pf.card.desc, 'Card Text');
+      return finalizeEmbed(pf, description, fields);
+    })
+  );
+
+const rushEmbed = (pf: PreFormatted) =>
+  pf.types.includes('Monster') ? rushMonsterEmbed(pf) : rushNonMonsterEmbed(pf);
+
+const skillEmbed = (pf: PreFormatted) =>
+  pipe(
+    R.Do,
+    R.bind('commonDesc', () => commonEmbedDescription(pf)),
+    R.bind('chars', () => BitNames.skillCharacters(pf.card.race)),
+    R.map(({ commonDesc, chars }) =>
+      finalizeEmbed(
+        pf,
+        str.joinParagraphs([commonDesc, labeledList('Characters')(chars)]),
+        pipe(pf.card.desc, parseTextLines, textFields('Skill Text'))
+      )
+    )
+  );
+
+const masterMonsterEmbed = (pf: PreFormatted) =>
+  pipe(
+    R.Do,
+    R.let('isLink', () => pf.types.includes('Link')),
+    R.bind('arrows', ({ isLink }) =>
+      isLink ? BitNames.linkArrows(pf.card.def) : R.of([])
+    ),
+    R.bind('commonDesc', () => commonEmbedDescription(pf)),
+    R.bind('races', () => BitNames.race(pf.card.race)),
+    R.bind('attrs', () => BitNames.attribute(pf.card.attribute)),
+    R.map(({ isLink, arrows, commonDesc, races, attrs }) => {
+      const fields = pipe(
+        pf.card.desc,
+        withUnofficialDisclaimer(pf.konamiId),
+        parseTextLines,
+        textFields(pf.types.includes('Normal') ? 'Flavor Text' : 'Card Text')
+      );
+
+      const description = str.joinParagraphs([
+        commonDesc,
+        str.joinWords([
+          labeledList('Monster Type')(races),
+          labeledList('Attribute')(attrs),
         ]),
         str.joinWords([
           isLink
             ? labeled('Link Rating')(arrows.length.toString())
-            : ctypes.includes('Xyz')
-            ? labeled('Rank')(rank(c)(ctypes))
-            : labeled('Level')(level(c)(ctypes)),
-          labeled('ATK')(ATK(c)),
+            : pf.types.includes('Xyz')
+            ? labeled('Rank')(levelRank(pf))
+            : labeled('Level')(levelRank(pf)),
+          labeled('ATK')(ATKDEF(pf.card.atk)),
           isLink
             ? labeled('Link Arrows')(arrows.join(''))
-            : labeled('DEF')(DEF(c)),
-          isPendulum ? labeled('Pendulum Scale')(scales(c)) : '',
+            : labeled('DEF')(ATKDEF(pf.card.def)),
+          pf.types.includes('Pendulum')
+            ? labeled('Pendulum Scale')(scales(pf.card))
+            : '',
         ]),
       ]);
 
-      return TE.right({ title, color, description, fields, footer });
-    }
+      return finalizeEmbed(pf, description, fields);
+    })
+  );
 
-    // spells, traps, and others
+const masterNonMonsterEmbed = (pf: PreFormatted) =>
+  pipe(
+    R.Do,
+    R.let('isLink', () => pf.types.includes('Link')),
+    R.bind('arrows', ({ isLink }) =>
+      isLink ? BitNames.linkArrows(pf.card.def) : R.of([])
+    ),
+    R.bind('commonDesc', () => commonEmbedDescription(pf)),
+    R.map(({ isLink, arrows, commonDesc }) => {
+      const description = isLink
+        ? str.joinParagraphs([
+            commonDesc,
+            str.joinWords([
+              labeled('Link Rating')(arrows.length.toString()),
+              labeled('Link Arrows')(arrows.join('')),
+            ]),
+          ])
+        : commonDesc;
 
-    const isLink = ctypes.includes('Link');
-    const arrows = isLink ? BitNames.linkArrows(c.def)(bns) : [];
+      const fields = pipe(
+        pf.card.desc,
+        withUnofficialDisclaimer(pf.konamiId),
+        parseTextLines,
+        textFields('Card Text')
+      );
 
-    const description = isLink
-      ? str.joinParagraphs([
-          commonDesc,
-          str.joinWords([
-            labeled('Link Rating')(arrows.length.toString()),
-            labeled('Link Arrows')(arrows.join('')),
-          ]),
-        ])
-      : commonDesc;
+      return finalizeEmbed(pf, description, fields);
+    })
+  );
 
-    const fields = pipe(
-      c.desc,
-      unofficialDisclaimer(kid),
-      descLines,
-      descFields('Card Text')
-    );
-
-    return TE.right({ title, color, description, fields, footer });
-  };
+export const itemEmbed: (c: Card) => Op.SubOp<dd.Embed> = flow(
+  preformat,
+  R.flatMap((pf) =>
+    pf.rush
+      ? rushEmbed(pf)
+      : pf.mainType === 'Skill'
+      ? skillEmbed(pf)
+      : pf.mainType === 'Monster'
+      ? masterMonsterEmbed(pf)
+      : masterNonMonsterEmbed(pf)
+  ),
+  RTE.fromReader
+);
 
 // -----------------------------------------------------------------------------
 // card searching
@@ -479,6 +509,12 @@ export const bestMatch =
 
     return RA.head(fuzzyMatches(query)(ctx));
   };
+
+// -----------------------------------------------------------------------------
+// helpers for card-related commands
+// -----------------------------------------------------------------------------
+
+export const scriptURL = flow(preformat, R.map(_scriptURL));
 
 export const getCdbStrings = (c: Card) =>
   pipe(

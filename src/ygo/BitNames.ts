@@ -1,5 +1,6 @@
 import * as sf from '@that-hatter/scrapi-factory';
 import { flow, O, pipe, RA } from '@that-hatter/scrapi-factory/fp';
+import { Ctx } from '../Ctx';
 import { str } from '../lib/modules';
 import { utils } from '../lib/utils';
 import { Systrings } from './Systrings';
@@ -39,27 +40,33 @@ const enumValMap = (en: string) =>
     (entries): BitNameMap => new Map(entries)
   );
 
-const toNames = (key: keyof BitNames) => (int: bigint) => (bns: BitNames) =>
-  pipe(
-    int,
-    bitSplit,
-    RA.filter((b) => b !== 0n),
-    RA.map((b) => bns[key].get(b) ?? '???')
-  );
+const toNames =
+  (key: keyof BitNames) =>
+  (int: bigint) =>
+  ({ bitNames }: Ctx) =>
+    pipe(
+      int,
+      bitSplit,
+      RA.filter((b) => b !== 0n),
+      RA.map((b) => bitNames[key].get(b) ?? '???')
+    );
 
 export const toInt =
-  (key: keyof BitNames) => (names: ReadonlyArray<string>) => (bns: BitNames) =>
+  (key: keyof BitNames) =>
+  (names: ReadonlyArray<string>) =>
+  ({ bitNames }: Ctx) =>
     pipe(
-      [...bns[key].entries()],
+      [...bitNames[key].entries()],
       RA.filter(([_, name]) => names.includes(name)),
       RA.map(([val]) => val),
       RA.reduce(0n, (b, a) => b | a)
     );
 
 export const archetypesInt =
-  (names: ReadonlyArray<string>) => (bns: BitNames) => {
+  (names: ReadonlyArray<string>) =>
+  ({ bitNames }: Ctx) => {
     const vals = pipe(
-      [...bns.archetypes.entries()],
+      [...bitNames.archetypes.entries()],
       RA.filter(([_, name]) => names.includes(name)),
       RA.map(([val]) => val)
     );
@@ -135,17 +142,19 @@ export const load = (cs: ReadonlyArray<sf.Constant>, ss: Systrings) => ({
 
 export const scopes = toNames('scopes');
 
-export const archetypes = (setcode: bigint) => (bns: BitNames) =>
-  pipe(
-    [
-      (setcode >> 48n) & 0xffffn,
-      (setcode >> 32n) & 0xffffn,
-      (setcode >> 16n) & 0xffffn,
-      setcode & 0xffffn,
-    ],
-    RA.filter((b) => b > 0n),
-    RA.map((b) => bns.archetypes.get(b) ?? '???')
-  );
+export const archetypes =
+  (setcode: bigint) =>
+  ({ bitNames }: Ctx) =>
+    pipe(
+      [
+        (setcode >> 48n) & 0xffffn,
+        (setcode >> 32n) & 0xffffn,
+        (setcode >> 16n) & 0xffffn,
+        setcode & 0xffffn,
+      ],
+      RA.filter((b) => b > 0n),
+      RA.map((b) => bitNames.archetypes.get(b) ?? '???')
+    );
 
 export const types = toNames('types');
 

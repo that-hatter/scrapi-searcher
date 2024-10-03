@@ -139,14 +139,12 @@ const toBabelData =
   (id: number, name: string, c: Record[string]) =>
   (ctx: Ctx): BabelData => {
     // TODO: support non-prerelease later
-    const ot = BitNames.toInt('scopes')([...c.Medium, 'Pre-release'])(
-      ctx.bitNames
-    );
+    const ot = BitNames.toInt('scopes')([...c.Medium, 'Pre-release'])(ctx);
 
     const setcode = pipe(
       c.Archseries,
       RA.map((a) => archetypeOverrides[a] ?? a),
-      (archs) => BitNames.archetypesInt(archs)(ctx.bitNames)
+      (archs) => BitNames.archetypesInt(archs)(ctx)
     );
 
     const defaults = {
@@ -167,14 +165,14 @@ const toBabelData =
     if (c['Card type'] === 'Spell Card') {
       const typeStrs =
         c.Property === 'Normal' ? ['Spell'] : ['Spell', c.Property];
-      const type = BitNames.toInt('types')(typeStrs)(ctx.bitNames);
+      const type = BitNames.toInt('types')(typeStrs)(ctx);
       return { ...defaults, type };
     }
 
     if (c['Card type'] === 'Trap Card') {
       const typeStrs =
         c.Property === 'Normal' ? ['Trap'] : ['Trap', c.Property];
-      const type = BitNames.toInt('types')(typeStrs)(ctx.bitNames);
+      const type = BitNames.toInt('types')(typeStrs)(ctx);
 
       if (c.Archseries.includes('Trap Monster')) {
         const match = c.Lore.match(
@@ -199,12 +197,12 @@ const toBabelData =
             const lvlStr = stat.substring(5).trim();
             level = lvlStr === '?' ? 0n : utils.safeBigInt(lvlStr);
           } else {
-            attribute = BitNames.toInt('attributes')([stat])(ctx.bitNames);
+            attribute = BitNames.toInt('attributes')([stat])(ctx);
             if (attribute !== 0n) return;
             const raceStr = stat.toLowerCase().endsWith('-type')
               ? stat.substring(stat.length - 5)
               : stat;
-            race = BitNames.toInt('races')([raceStr])(ctx.bitNames);
+            race = BitNames.toInt('races')([raceStr])(ctx);
           }
         });
 
@@ -215,8 +213,8 @@ const toBabelData =
     }
 
     const typeStrs = ['Monster', ...c.Types.slice(1)];
-    const type = BitNames.toInt('types')(typeStrs)(ctx.bitNames);
-    const race = BitNames.toInt('races')([c.Types[0]])(ctx.bitNames);
+    const type = BitNames.toInt('types')(typeStrs)(ctx);
+    const race = BitNames.toInt('races')([c.Types[0]])(ctx);
     const atk = c['ATK string'];
     const def = pipe(
       c['DEF string'],
@@ -224,7 +222,7 @@ const toBabelData =
         pipe(
           c['Link Arrows'],
           RA.filterMap((n) => O.fromNullable(arrowNames[n])),
-          (arrows) => BitNames.toInt('linkArrows')(arrows)(ctx.bitNames)
+          (arrows) => BitNames.toInt('linkArrows')(arrows)(ctx)
         )
       )
     );
@@ -241,7 +239,7 @@ const toBabelData =
           O.getOrElse(() => lvl)
         )
     );
-    const attribute = BitNames.toInt('attributes')([c.Attribute])(ctx.bitNames);
+    const attribute = BitNames.toInt('attributes')([c.Attribute])(ctx);
     const desc = O.isSome(c['Pendulum Effect'])
       ? str.joinParagraphs([
           '[ Pendulum Effect ]',

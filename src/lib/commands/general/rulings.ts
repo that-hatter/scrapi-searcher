@@ -5,7 +5,7 @@ import { URLS } from '../../constants';
 import { Command, Err, Op, str } from '../../modules';
 
 const msgContent = (c: Babel.Card) => (ctx: Ctx) => {
-  const scopes = BitNames.scopes(c.ot)(ctx.bitNames);
+  const scopes = BitNames.scopes(c.ot)(ctx);
   const kid = KonamiIds.getKonamiId(scopes, c.id)(ctx);
   if (O.isNone(kid))
     return TE.left(

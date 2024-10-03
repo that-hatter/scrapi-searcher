@@ -13,7 +13,7 @@ export const script: Command.Command = {
       R.map(TE.fromOption(Err.ignore)),
       RTE.flatMap((c) =>
         pipe(
-          Card.scriptUrl(c),
+          Card.scriptURL(c),
           R.map(TE.fromOption(Err.ignore)),
           RTE.map(str.clamped('<', '>')),
           RTE.map(str.prepend(str.bold(c.name) + '\n'))

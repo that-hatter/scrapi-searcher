@@ -76,7 +76,7 @@ const dateString = (b: Banlist) => {
 };
 
 export const limitsBreakdown = (c: Babel.Card) => (ctx: Ctx) => {
-  const scopes = BitNames.scopes(c.ot)(ctx.bitNames);
+  const scopes = BitNames.scopes(c.ot)(ctx);
 
   const rush = scopes.includes('Rush');
   const ocg = scopes.includes('OCG');

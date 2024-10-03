@@ -18,7 +18,7 @@ const title = (c: Babel.Card) =>
 
 export const rawDataEmbed = (c: Babel.Card) => (ctx: Ctx) => {
   const color = Card.frameColor(c)(ctx);
-  const ctypes = BitNames.types(c.type)(ctx.bitNames);
+  const ctypes = BitNames.types(c.type)(ctx);
   return {
     color,
     title: title(c),
