@@ -1,7 +1,7 @@
-import { pipe, R, RTE, TE } from '@that-hatter/scrapi-factory/fp';
+import { pipe, RTE } from '@that-hatter/scrapi-factory/fp';
 import { Card } from '../../../ygo';
 import { URLS } from '../../constants';
-import { Command, Err, Op, str } from '../../modules';
+import { Command, Op, str } from '../../modules';
 
 export const cdb: Command.Command = {
   name: 'cdb',
@@ -11,7 +11,6 @@ export const cdb: Command.Command = {
   execute: (parameters, message) =>
     pipe(
       Card.bestMatch(parameters.join(' ')),
-      R.map(TE.fromOption(Err.ignore)),
       RTE.map(
         (c) =>
           str.bold(c.name) +

@@ -1,7 +1,7 @@
-import { flow, O, pipe, R, RA, RTE, TE } from '@that-hatter/scrapi-factory/fp';
+import { flow, O, pipe, R, RA, RTE } from '@that-hatter/scrapi-factory/fp';
 import { Ctx } from '../../../Ctx';
 import { Babel, BitNames, Card } from '../../../ygo';
-import { Command, Err, Menu, Op, str } from '../../modules';
+import { Command, Menu, Op, str } from '../../modules';
 
 const plainVal = (name: string, n: number | bigint) =>
   str.joinWords([str.bold(name) + ':', str.inlineCode(n.toString())]);
@@ -114,7 +114,6 @@ export const rawvals: Command.Command = {
   execute: (parameters, message) =>
     pipe(
       Card.bestMatch(parameters.join(' ')),
-      R.map(TE.fromOption(Err.ignore)),
       RTE.flatMapReader(initMessage),
       RTE.flatMap(Op.sendReply(message))
     ),

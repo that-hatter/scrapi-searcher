@@ -1,6 +1,6 @@
-import { pipe, R, RTE, TE } from '@that-hatter/scrapi-factory/fp';
+import { pipe, RTE } from '@that-hatter/scrapi-factory/fp';
 import { Card } from '../../../ygo';
-import { Command, Err, Op, str } from '../../modules';
+import { Command, Op, str } from '../../modules';
 
 export const script: Command.Command = {
   name: 'script',
@@ -10,11 +10,9 @@ export const script: Command.Command = {
   execute: (parameters, message) =>
     pipe(
       Card.bestMatch(parameters.join(' ')),
-      R.map(TE.fromOption(Err.ignore)),
       RTE.flatMap((c) =>
         pipe(
           Card.scriptURL(c),
-          R.map(TE.fromOption(Err.ignore)),
           RTE.map(str.clamped('<', '>')),
           RTE.map(str.prepend(str.bold(c.name) + '\n'))
         )

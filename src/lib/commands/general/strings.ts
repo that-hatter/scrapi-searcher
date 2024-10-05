@@ -1,6 +1,6 @@
-import { O, pipe, R, RA, RTE, TE } from '@that-hatter/scrapi-factory/fp';
+import { O, pipe, R, RA, RTE } from '@that-hatter/scrapi-factory/fp';
 import { Babel, Card } from '../../../ygo';
-import { Command, Err, Op, str } from '../../modules';
+import { Command, Op, str } from '../../modules';
 
 export const stringsEmbed = (c: Babel.Card) =>
   pipe(
@@ -27,7 +27,6 @@ export const strings: Command.Command = {
   execute: (parameters, message) =>
     pipe(
       Card.bestMatch(parameters.join(' ')),
-      R.map(TE.fromOption(Err.ignore)),
       RTE.flatMapReader(stringsEmbed),
       RTE.map((embed) => ({ embeds: [embed] })),
       RTE.flatMap(Op.sendReply(message))

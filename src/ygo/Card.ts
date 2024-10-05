@@ -6,11 +6,12 @@ import {
   RA,
   RNEA,
   RTE,
+  TE,
 } from '@that-hatter/scrapi-factory/fp';
 import { Babel, Banlists, BetaIds, KonamiIds, Shortcuts } from '.';
 import { Ctx } from '../Ctx';
 import { COLORS, LIMITS, URLS } from '../lib/constants';
-import { dd, Nav, Op, str } from '../lib/modules';
+import { dd, Err, Nav, Op, str } from '../lib/modules';
 import { Card } from './Babel';
 import * as BitNames from './BitNames';
 
@@ -32,7 +33,7 @@ const mainType = flow(
   O.getOrElse(() => 'Non-Card')
 );
 
-const preformat = (card: Card): R.Reader<Ctx, PreFormatted> =>
+const preformat = (card: Card): Op.SubOp<PreFormatted> =>
   pipe(
     R.Do,
     R.let('card', () => card),
@@ -42,7 +43,10 @@ const preformat = (card: Card): R.Reader<Ctx, PreFormatted> =>
     R.bind('types', () => BitNames.types(card.type)),
     R.let('mainType', ({ types }) => mainType(types)),
     R.bind('aliases', () => Babel.getAliases(card)),
-    R.bind('konamiId', ({ scopes }) => KonamiIds.getKonamiId(scopes, card.id))
+    RTE.fromReader,
+    RTE.bind('konamiId', ({ scopes }) =>
+      KonamiIds.getOrFetchMissing(scopes, card.id, card.name)
+    )
   );
 
 // -----------------------------------------------------------------------------
@@ -452,7 +456,7 @@ const masterNonMonsterEmbed = (pf: PreFormatted) =>
 
 export const itemEmbed: (c: Card) => Op.SubOp<dd.Embed> = flow(
   preformat,
-  R.flatMap((pf) =>
+  RTE.flatMapReader((pf) =>
     pf.rush
       ? rushEmbed(pf)
       : pf.mainType === 'Skill'
@@ -460,8 +464,7 @@ export const itemEmbed: (c: Card) => Op.SubOp<dd.Embed> = flow(
       : pf.mainType === 'Monster'
       ? masterMonsterEmbed(pf)
       : masterNonMonsterEmbed(pf)
-  ),
-  RTE.fromReader
+  )
 );
 
 // -----------------------------------------------------------------------------
@@ -486,35 +489,71 @@ export const fuzzyMatches = (query: string) => (ctx: Ctx) => {
   });
 };
 
-export const bestMatch =
+const isNumeric = (s: string) => (+s).toString() === s;
+
+const passcodeMatch =
   (query: string) =>
-  (ctx: Ctx): O.Option<Babel.Card> => {
-    if ((+query).toString() === query) {
-      const idMatch = ctx.babel.record[query];
-      if (idMatch) return O.some(idMatch);
-      const betaMatch = BetaIds.toBabelCard(+query)(ctx);
-      if (O.isSome(betaMatch)) return betaMatch;
-    }
+  (ctx: Ctx): O.Option<Babel.Card> =>
+    pipe(
+      query,
+      O.fromPredicate(isNumeric),
+      O.orElse(() =>
+        pipe(
+          query,
+          O.fromPredicate(str.startsWith('c')),
+          O.map((cid) => cid.substring(1)),
+          O.filter(isNumeric)
+        )
+      ),
+      O.flatMap((id) =>
+        pipe(
+          Babel.getCard(id)(ctx),
+          O.orElse(() => BetaIds.toBabelCard(id)(ctx))
+        )
+      )
+    );
 
-    if (query.startsWith('#')) {
-      const kid = +query.substring(1);
-      if ('#' + kid === query) {
-        const match = pipe(
-          KonamiIds.toBabelCard('master', kid)(ctx),
-          O.orElse(() => KonamiIds.toBabelCard('rush', kid)(ctx))
-        );
-        if (O.isSome(match)) return match;
-      }
-    }
+const konamiIdMatch =
+  (query: string) =>
+  (ctx: Ctx): O.Option<Babel.Card> =>
+    pipe(
+      query,
+      O.fromPredicate(str.startsWith('#')),
+      O.map((kid) => kid.substring(1)),
+      O.filter(isNumeric),
+      O.flatMap((kid) =>
+        pipe(
+          KonamiIds.toBabelCard('master', +kid)(ctx),
+          O.orElse(() => KonamiIds.toBabelCard('rush', +kid)(ctx))
+        )
+      )
+    );
 
-    return RA.head(fuzzyMatches(query)(ctx));
-  };
+export const bestMatch =
+  (query: string): Op.Op<Babel.Card> =>
+  (ctx) =>
+    pipe(
+      passcodeMatch(query)(ctx),
+      O.orElse(() => konamiIdMatch(query)(ctx)),
+      O.orElse(() => RA.head(fuzzyMatches(query)(ctx))),
+      TE.fromOption(() =>
+        Err.forUser(
+          'No matches found for ' + str.inlineCode(str.limit('...', 50)(query))
+        )
+      )
+    );
 
 // -----------------------------------------------------------------------------
 // helpers for card-related commands
 // -----------------------------------------------------------------------------
 
-export const scriptURL = flow(preformat, R.map(_scriptURL));
+export const scriptURL: (c: Card) => Op.Op<string> = flow(
+  preformat,
+  RTE.mapError(Err.forDev),
+  RTE.flatMapOption(_scriptURL, (pf) =>
+    Err.forUser('There is no script for ' + str.bold(pf.card.name))
+  )
+);
 
 export const getCdbStrings = (c: Card) =>
   pipe(

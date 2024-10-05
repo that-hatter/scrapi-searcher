@@ -206,6 +206,9 @@ export const data: Data.Data<'babel'> = {
     repo === 'BabelCDB' && files.some((f) => f.endsWith('.cdb')),
 };
 
+export const getCard = (id: number | string) => (ctx: Ctx) =>
+  O.fromNullable(ctx.babel.record[id.toString()]);
+
 export const getAliases = (c: Card) => (ctx: Ctx) =>
   pipe(
     ctx.babel.array,

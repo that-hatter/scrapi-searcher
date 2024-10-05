@@ -1,7 +1,7 @@
-import { O, pipe, R, RTE, TE } from '@that-hatter/scrapi-factory/fp';
+import { O, pipe, RTE } from '@that-hatter/scrapi-factory/fp';
 import { Ctx } from '../../../Ctx';
 import { Babel, Banlists, Card } from '../../../ygo';
-import { Command, Err, Op, str } from '../../modules';
+import { Command, Op, str } from '../../modules';
 
 const msgContent = (c: Babel.Card) => (ctx: Ctx) =>
   pipe(
@@ -18,7 +18,6 @@ export const limits: Command.Command = {
   execute: (parameters, message) =>
     pipe(
       Card.bestMatch(parameters.join(' ')),
-      R.map(TE.fromOption(Err.ignore)),
       RTE.flatMapReader(msgContent),
       RTE.flatMap(Op.sendReply(message))
     ),

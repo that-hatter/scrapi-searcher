@@ -1,5 +1,6 @@
 import { O, pipe, RA, RR, TE } from '@that-hatter/scrapi-factory/fp';
 import fetch from 'node-fetch';
+import { Babel } from '.';
 import { Ctx } from '../Ctx';
 import type { Data } from '../lib/modules';
 import { Decoder } from '../lib/modules';
@@ -21,8 +22,7 @@ const URL =
   'DeltaPuppetOfStrings/master/mappings.json';
 
 const update = pipe(
-  utils.taskify(() => fetch(URL).then((response) => response.text())),
-  TE.flatMapIOEither((s) => utils.fallibleIO(() => JSON.parse(s))),
+  utils.taskify(() => fetch(URL).then((response) => response.json())),
   TE.flatMapEither(Decoder.parse(decoder))
 );
 
@@ -35,8 +35,10 @@ export const data: Data.Data<'betaIds'> = {
     repo === 'DeltaPuppetOfStrings' && files.includes('mappings.json'),
 };
 
-export const toBabelCard = (betaId: number) => (ctx: Ctx) =>
-  pipe(
-    O.fromNullable(ctx.betaIds[betaId.toString()]),
-    O.flatMap((id) => O.fromNullable(ctx.babel.record[id.toString()]))
-  );
+export const toBabelCard =
+  (betaId: number | string) =>
+  (ctx: Ctx): O.Option<Babel.Card> =>
+    pipe(
+      O.fromNullable(ctx.betaIds[betaId.toString()]),
+      O.flatMap((id) => Babel.getCard(id)(ctx))
+    );
