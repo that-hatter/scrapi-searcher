@@ -1,36 +1,35 @@
-import { O, pipe, R, RTE, TE } from '@that-hatter/scrapi-factory/fp';
-import { Ctx } from '../../../Ctx';
+import { identity, pipe, R, RTE } from '@that-hatter/scrapi-factory/fp';
 import { Babel, BitNames, Card, KonamiIds } from '../../../ygo';
 import { URLS } from '../../constants';
 import { Command, Err, Op, str } from '../../modules';
 
-const msgContent = (c: Babel.Card) => (ctx: Ctx) => {
-  const scopes = BitNames.scopes(c.ot)(ctx);
-  const kid = KonamiIds.getKonamiId(scopes, c.id)(ctx);
-  if (O.isNone(kid))
-    return TE.left(
-      Err.forUser("Couldn't resolve rulings for " + str.bold(c.name))
-    );
+const msgContent = (c: Babel.Card) =>
+  pipe(
+    BitNames.scopes(c.ot),
+    R.bindTo('scopes'),
+    RTE.fromReader,
+    RTE.bind('konamiId', ({ scopes }) =>
+      pipe(
+        KonamiIds.getOrFetchMissing(scopes, c.id, c.name),
+        RTE.mapError(Err.forDev),
+        RTE.flatMapOption(identity, () =>
+          Err.forUser('There are no rulings for ' + str.bold(c.name))
+        )
+      )
+    ),
+    RTE.map(({ scopes, konamiId }) => {
+      const rush = scopes.includes('Rush');
+      const db = rush ? URLS.KONAMI_DB_RUSH : URLS.KONAMI_DB_MASTER;
+      const konami =
+        `🇯🇵 Konami DB: ` +
+        `<${db}/faq_search.action?ope=2&request_locale=ja&cid=${konamiId}>`;
+      if (rush) return str.joinParagraphs([str.bold(c.name), konami]);
 
-  const ygoResources = pipe(
-    kid,
-    O.filter((_: number) => !scopes.includes('Rush')),
-    O.map(
-      (kid) => '🇬🇧 YGOResources: <' + URLS.YGORESOURCES_DB + 'card#' + kid + '>'
-    )
+      const ygoResources =
+        `🇬🇧 YGOResources: ` + `<${URLS.YGORESOURCES_DB}card#${konamiId}>`;
+      return str.joinParagraphs([str.bold(c.name), konami, ygoResources]);
+    })
   );
-
-  const officialDb =
-    '🇯🇵 Konami DB: <' +
-    (scopes.includes('Rush') ? URLS.KONAMI_DB_RUSH : URLS.KONAMI_DB_MASTER) +
-    '/faq_search.action?ope=2&request_locale=ja&cid=' +
-    kid.value +
-    '>';
-
-  return TE.right(
-    str.joinParagraphs([str.bold(c.name), ygoResources, officialDb])
-  );
-};
 
 export const rulings: Command.Command = {
   name: 'rulings',
@@ -40,7 +39,6 @@ export const rulings: Command.Command = {
   execute: (parameters, message) =>
     pipe(
       Card.bestMatch(parameters.join(' ')),
-      R.map(TE.fromOption(Err.ignore)),
       RTE.flatMap(msgContent),
       RTE.flatMap(Op.sendReply(message))
     ),

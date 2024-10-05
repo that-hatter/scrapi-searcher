@@ -21,8 +21,7 @@ const URL =
   'scrapi-searcher/master/data/shortcuts.json';
 
 const update = pipe(
-  utils.taskify(() => fetch(URL).then((response) => response.text())),
-  TE.flatMapIOEither((s) => utils.fallibleIO(() => JSON.parse(s))),
+  utils.taskify(() => fetch(URL).then((response) => response.json())),
   TE.flatMapEither(Decoder.parse(decoder))
 );
 

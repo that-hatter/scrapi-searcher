@@ -22,13 +22,6 @@ export type Optional<T> = {
 
 const replacer = (_: string, value: unknown) => {
   if (typeof value === 'bigint') return value.toString();
-  if (
-    typeof value === 'object' &&
-    value !== null &&
-    !(value instanceof Array) &&
-    !(value instanceof Date)
-  )
-    return Object.fromEntries(Object.entries(value).sort());
   return value;
 };
 

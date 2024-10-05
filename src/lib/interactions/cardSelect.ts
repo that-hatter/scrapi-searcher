@@ -1,16 +1,15 @@
 import {
-  E,
   flow,
   identity,
   O,
   pipe,
-  R,
   RA,
   RNEA,
   RR,
   RTE,
   TE,
 } from '@that-hatter/scrapi-factory/fp';
+import { readerTask as RT } from 'fp-ts';
 import { Ctx } from '../../Ctx';
 import { Babel, Card } from '../../ygo';
 import { EMOJI, LIMITS } from '../constants';
@@ -78,10 +77,8 @@ const initMessage =
       )
     );
 
-const handleQuery = (query: string) => {
-  const q = query.substring(1, query.length - 1);
-  return pipe(q, str.trim, Card.bestMatch, R.map(E.fromOption(() => q)));
-};
+const handleQuery = (query: string) =>
+  pipe(query.substring(1, query.length - 1), str.trim, Card.bestMatch);
 
 const sendFoundCards = (
   msg: dd.Message,
@@ -89,6 +86,7 @@ const sendFoundCards = (
 ): Op.Op<unknown> => {
   if (!RA.isNonEmpty(cards)) return Op.noopReader;
   const head = RNEA.head(cards);
+
   return pipe(
     head,
     initMessage(cards),
@@ -99,20 +97,16 @@ const sendFoundCards = (
 
 const sendNoMatches = (
   msg: dd.Message,
-  queries: ReadonlyArray<string>
-): Op.Op<unknown> => {
-  if (!RA.isNonEmpty(queries)) return Op.noopReader;
-  const lineLimit = Math.floor(LIMITS.MESSAGE_CONTENT - 200 / queries.length);
-  return pipe(
-    queries,
-    RA.map(str.limit('...', lineLimit)),
-    RA.map(str.inlineCode),
-    str.unorderedList,
-    str.prepend('No matches found for:\n'),
+  errs: ReadonlyArray<Err.Err>
+): Op.Op<unknown> =>
+  pipe(
+    errs,
+    RA.map((e) => e.userAlert),
+    str.joinParagraphs,
     str.limit('', LIMITS.MESSAGE_CONTENT),
-    Op.sendReply(msg)
+    (content) =>
+      content.length > 0 ? Op.sendReply(msg)(content) : Op.noopReader
   );
-};
 
 export const cardBracketSearch = (msg: dd.Message): Op.Op<unknown> => {
   const texts = str.getTextParts(msg.content);
@@ -121,10 +115,9 @@ export const cardBracketSearch = (msg: dd.Message): Op.Op<unknown> => {
     texts,
     RA.flatMap((s) => s.match(/\[(.+?)\]/g) ?? []),
     RA.map(handleQuery),
-    R.sequenceArray,
-    R.map(RA.separate),
-    RTE.fromReader,
-    RTE.flatMap(({ left: errs, right: cards }) =>
+    RT.sequenceArray,
+    RT.map(RA.separate),
+    RT.flatMap(({ left: errs, right: cards }) =>
       pipe(
         sendFoundCards(msg, cards),
         RTE.tap(() => sendNoMatches(msg, errs))

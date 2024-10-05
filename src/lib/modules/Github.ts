@@ -1,10 +1,13 @@
 import { Octokit } from '@octokit/rest';
 import { createNodeMiddleware, Webhooks } from '@octokit/webhooks';
-import { TE } from '@that-hatter/scrapi-factory/fp';
+import { pipe, TE } from '@that-hatter/scrapi-factory/fp';
+import * as buffer from 'node:buffer';
 import * as fs from 'node:fs/promises';
 import * as http from 'node:http';
 import * as path from 'node:path';
 import simpleGit from 'simple-git';
+import { str } from '.';
+import { Ctx } from '../../Ctx';
 import { utils } from '../utils';
 
 export type Github = {
@@ -48,3 +51,34 @@ export const pullOrClone = (name: string, repoUrl: string) => {
       )
   );
 };
+
+export const updateFile =
+  (
+    owner: string,
+    repo: string,
+    branch: string,
+    path: string,
+    content: string,
+    message: string
+  ) =>
+  (ctx: Ctx) =>
+    pipe(
+      utils.taskify(() => ctx.github.repos.getContent({ owner, repo, path })),
+      TE.flatMapNullable(
+        ({ data }) => (data instanceof Array ? data[0]?.sha : data?.sha),
+        () => 'Failed to get file sha: ' + str.inlineCode(path)
+      ),
+      TE.flatMap((sha) =>
+        utils.taskify(() =>
+          ctx.github.rest.repos.createOrUpdateFileContents({
+            owner,
+            repo,
+            branch,
+            path,
+            sha,
+            message: '[auto] ' + message,
+            content: buffer.Buffer.from(content).toString('base64'),
+          })
+        )
+      )
+    );
