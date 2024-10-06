@@ -12,7 +12,7 @@ const menu = pipe(
     Menu.row({
       customId: 'update',
       placeholder: 'Select data to update',
-      maxValues: 3,
+      maxValues: Data.array.length,
       options,
     })
 );
