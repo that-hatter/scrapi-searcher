@@ -5,6 +5,9 @@
   "A Hero Lives": [
     "ahl"
   ],
+  "Adamancipator": [
+    "adam"
+  ],
   "Advanced Chemical Beast": [
     "achemb",
     "achb"
@@ -29,6 +32,9 @@
   ],
   "Assault Blackwing": [
     "abw"
+  ],
+  "Apollousa": [
+    "apo"
   ],
   "Battlin' Boxer": [
     "bb",
@@ -69,6 +75,12 @@
   "Bottomless Trap Hole": [
     "bth"
   ],
+  "Branded Fusion": [
+    "brafu"
+  ],
+  "Brilliant Fusion": [
+    "brifu"
+  ],
   "Brionac, Dragon of the Ice Barrier": [
     "brio",
     "bdoftib",
@@ -88,11 +100,17 @@
   "Call of the Haunted": [
     "coth"
   ],
+  "Called by the Grave": [
+    "cbtg"
+  ],
   "Cardcar D": [
     "ccd"
   ],
   "Celtic Guard": [
     "cg"
+  ],
+  "Centur-Ion": [
+    "centurion"
   ],
   "Chaos Emperor Dragon": [
     "ced"
@@ -125,9 +143,6 @@
   "Cyber End Dragon": [
     "ced"
   ],
-  "D/D/D": [
-    "ddd"
-  ],
   "Dark Armed Dragon": [
     "dad"
   ],
@@ -142,6 +157,9 @@
   ],
   "Dark Magician of Chaos": [
     "dmoc"
+  ],
+  "Dark Ruler No More": [
+    "drnm"
   ],
   "Dark World": [
     "dw"
@@ -164,6 +182,9 @@
   "Destiny Hero - Malicious": [
     "mali"
   ],
+  "Destroyer Phoenix Enforcer": [
+    "dpe"
+  ],
   "Different Dimension Reincarnation": [
     "ddr",
     "d.d.r.",
@@ -172,6 +193,10 @@
   "Dimensional Prison": [
     "d-prison",
     "dprison"
+  ],
+  "Dimensional Fissure": [
+    "difi",
+    "dimfi"
   ],
   "Dragon Master Knight": [
     "dmk"
@@ -234,6 +259,10 @@
     "fgd",
     "fhd"
   ],
+  "Floowandereeze": [
+    "flunder",
+    "floo"
+  ],
   "Forbidden Beast": [
     "fb"
   ],
@@ -257,7 +286,7 @@
   "Gem-Knight": [
     "gemk",
     "gem-k",
-    "gemkn"
+    "gemknight"
   ],
   "Gladiator Beast": [
     "gb",
@@ -272,8 +301,11 @@
     "gk's",
     "gks"
   ],
-  "Guts Master": [
-    "gm"
+  "Halqifibrax": [
+    "halq"
+  ],
+  "Harpie's Feather Duster": [
+    "hfd"
   ],
   "Hazy Flame": [
     "hf"
@@ -288,6 +320,9 @@
     "htbfd",
     "hbfd"
   ],
+  "Hu-Li": [
+    "huli"
+  ],
   "Imperial Order": [
     "io"
   ],
@@ -297,21 +332,26 @@
   "Judgment Dragon": [
     "jd"
   ],
+  "Kairyu-Shin": [
+    "kairyushin"
+  ],
+  "Kaleido-heart": [
+    "kaleidoheart"
+  ],
   "Kashtira": [
     "kash"
+  ],
+  "Ki-sikil": [
+    "kisikil"
   ],
   "Light and Darkness Dragon": [
     "ladd"
   ],
-  "Light-Imprisoning Mirror": [
-    "lim",
-    "l-im"
-  ],
-  "Lightpulsar Dragon": [
-    "lpd"
-  ],
   "Lightsworn": [
     "ls"
+  ],
+  "Lil-la": [
+    "lilla"
   ],
   "Lunalight": [
     "ll"
@@ -326,15 +366,31 @@
   "Mecha Phantom Beast": [
     "mpb"
   ],
+  "M-X-Saber": [
+    "mxsaber",
+    "mx"
+  ],
   "Mystical Space Typhoon": [
     "mst"
   ],
   "Neo Galaxy-Eyes Photon Dragon": [
     "neogepd"
   ],
+  "Nibiru": [
+    "nib"
+  ],
+  "Ni-Ni": [
+    "nini"
+  ],
+  "Utopic Draco Future": [
+    "udf"
+  ],
   "Odd-Eyes": [
     "oe",
     "o-e"
+  ],
+  "Pankratops": [
+    "pank"
   ],
   "Phantom of Chaos": [
     "poc"
@@ -344,6 +400,9 @@
   ],
   "Plaguespreader Zombie": [
     "psz"
+  ],
+  "Polymerization": [
+    "poly"
   ],
   "Pot of Avarice": [
     "poa"
@@ -357,6 +416,15 @@
   ],
   "Prank-Kids": [
     "pranks"
+  ],
+  "Psy-Frame": [
+    "psyframe"
+  ],
+  "Psy-Framegear": [
+    "psyframegear"
+  ],
+  "Pyschic End Punisher": [
+    "pep"
   ],
   "Raidraptor": [
     "rr"
@@ -388,8 +456,14 @@
     "refmd",
     "r-efmd"
   ],
+  "Red-Eyes Fusion": [
+    "ref"
+  ],
   "Reinforcement of the Army": [
     "rota"
+  ],
+  "Rescue-Ace": [
+    "r-ace"
   ],
   "Ritual Beast": [
     "rb"
@@ -397,9 +471,14 @@
   "Ritual Beast Tamer": [
     "rbt"
   ],
-  "Shadow-Imprisoning Mirror": [
-    "sim",
-    "s-im"
+  "S-Force": [
+    "sforce"
+  ],
+  "Sarcophagus": [
+    "sarc"
+  ],
+  "Sevens Road Magician": [
+    "srm"
   ],
   "Six Samurai": [
     "sixsam",
@@ -466,10 +545,10 @@
     "swso",
     "swoswo"
   ],
-  "T.G.": [
-    "tg",
-    "t.g",
-    "tg."
+  "Super Polymerization": [
+    "spoly",
+    "superpoly",
+    "s-poly"
   ],
   "The Huge Revolution is Over": [
     "thrio",
@@ -501,10 +580,6 @@
     "tkro",
     "tkr-o"
   ],
-  "Torrential Tribute": [
-    "tt",
-    "totr"
-  ],
   "Tour Guide from the Underworld": [
     "tgu",
     "tgftu",
@@ -516,6 +591,9 @@
   "Trap Hole": [
     "th"
   ],
+  "Tri-Brigade": [
+    "tribrigade"
+  ],
   "Trishula, Dragon of the Ice Barrier": [
     "trish",
     "tdotib",
@@ -526,10 +604,8 @@
   "True King of all Calamities": [
     "vfd"
   ],
-  "U.A.": [
-    "ua",
-    "u.a",
-    "ua."
+  "Ultimate Conductor Tyranno": [
+    "uct"
   ],
   "Vanquish Soul": [
     "vs"
@@ -552,8 +628,17 @@
     "wu",
     "w-u"
   ],
+  "X-Saber": [
+    "xsaber"
+  ],
+  "XX-Saber": [
+    "xxsaber"
+  ],
   "Yang Zing": [
     "yz"
+  ],
+  "Z-ARC": [
+    "zarc"
   ],
   "of the Forest": [
     "otf"
