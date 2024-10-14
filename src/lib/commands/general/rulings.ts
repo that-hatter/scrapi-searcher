@@ -7,13 +7,18 @@ const msgContent = (c: Babel.Card) =>
   pipe(
     BitNames.scopes(c.ot),
     R.bindTo('scopes'),
+    R.bind('types', () => BitNames.types(c.type)),
     RTE.fromReader,
-    RTE.bind('konamiId', ({ scopes }) =>
+    RTE.bind('konamiId', ({ scopes, types }) =>
       pipe(
-        KonamiIds.getOrFetchMissing(scopes, c.id, c.name),
+        KonamiIds.getOrFetchMissing(c, scopes, types),
         RTE.mapError(Err.forDev),
         RTE.flatMapOption(identity, () =>
-          Err.forUser('There are no rulings for ' + str.bold(c.name))
+          Err.forUser(
+            'There are no rulings for ' +
+              str.bold(c.name + ' ' + str.inlineCode(c.id.toString())) +
+              '.'
+          )
         )
       )
     ),

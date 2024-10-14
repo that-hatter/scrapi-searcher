@@ -35,9 +35,9 @@ export const data: Data.Data<'konamiIds'> = {
 
 type Key = 'master' | 'rush';
 
-export const getExisting = (key: Key, passcode: number) => (ctx: Ctx) =>
+export const getExisting = (card: Babel.Card, key: Key) => (ctx: Ctx) =>
   pipe(
-    ctx.konamiIds[key][passcode.toString()],
+    ctx.konamiIds[key][card.id.toString()],
     O.fromNullable,
     O.filter((n) => n > 0)
   );
@@ -88,8 +88,8 @@ const addToFile = (key: Key, passcode: number, kid: number) => (ctx: Ctx) =>
     (content) =>
       Github.updateFile(
         OWNER,
-        REPO,
-        BRANCH,
+        'updates-test',
+        'main',
         PATH,
         content,
         'add konami id for ' + passcode
@@ -97,25 +97,30 @@ const addToFile = (key: Key, passcode: number, kid: number) => (ctx: Ctx) =>
   );
 
 export const getOrFetchMissing =
-  (scopes: ReadonlyArray<string>, passcode: number, name: string) =>
+  (
+    card: Babel.Card,
+    scopes: ReadonlyArray<string>,
+    types: ReadonlyArray<string>
+  ) =>
   (ctx: Ctx) => {
     const key = scopes.includes('Rush') ? 'rush' : 'master';
 
-    const saved = O.fromNullable(ctx.konamiIds[key][passcode.toString()]);
-    if (O.isSome(saved))
+    const saved = ctx.konamiIds[key][card.id.toString()];
+    if (saved)
       return pipe(
         saved,
-        O.filter((n) => n > 0),
+        O.fromPredicate((n) => n > 0),
         TE.right
       );
 
-    if (scopes.includes('Pre-Release')) return TE.right(O.none);
+    if (scopes.includes('Pre-release') || types.includes('Token'))
+      return TE.right(O.none);
     if (key !== 'rush' && !scopes.includes('OCG') && !scopes.includes('TCG'))
       return TE.right(O.none);
 
     return pipe(
-      fetchFromPedia(key, name),
-      TE.tap((kid) => addToFile(key, passcode, kid)(ctx)),
+      fetchFromPedia(key, card.name),
+      TE.tap((kid) => addToFile(key, card.id, kid)(ctx)),
       TE.map(O.some)
     );
   };
