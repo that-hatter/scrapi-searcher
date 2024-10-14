@@ -108,12 +108,22 @@ const sendNoMatches = (
       content.length > 0 ? Op.sendReply(msg)(content) : Op.noopReader
   );
 
+const bracketSearchFilter = (query: string) => {
+  const s = query.toLowerCase();
+  // Maximum [L] and [R] pieces have brackets in their names
+  if (s === '[l]' || s === '[r]') return false;
+  // users may share script errors without enclosing them in code blocks
+  if (s === '[script error]') return false;
+  return !s.startsWith('[string "') || !s.endsWith('.lua"]');
+};
+
 export const cardBracketSearch = (msg: dd.Message): Op.Op<unknown> => {
   const texts = str.getTextParts(msg.content);
   if (!RA.isNonEmpty(texts)) return Op.noopReader;
   return pipe(
     texts,
     RA.flatMap((s) => s.match(/\[(.+?)\]/g) ?? []),
+    RA.filter(bracketSearchFilter),
     RA.map(handleQuery),
     RT.sequenceArray,
     RT.map(RA.separate),
