@@ -44,8 +44,8 @@ const preformat = (card: Card): Op.SubOp<PreFormatted> =>
     R.let('mainType', ({ types }) => mainType(types)),
     R.bind('aliases', () => Babel.getAliases(card)),
     RTE.fromReader,
-    RTE.bind('konamiId', ({ scopes }) =>
-      KonamiIds.getOrFetchMissing(scopes, card.id, card.name)
+    RTE.bind('konamiId', ({ scopes, types }) =>
+      KonamiIds.getOrFetchMissing(card, scopes, types)
     )
   );
 
@@ -173,7 +173,7 @@ const scriptFolder = (pf: PreFormatted) => {
 };
 
 const _scriptURL = (pf: PreFormatted): O.Option<string> => {
-  if (pf.types.includes('Normal') && pf.types.includes('Pendulum'))
+  if (pf.types.includes('Normal') && !pf.types.includes('Pendulum'))
     return O.none;
   const folder = scriptFolder(pf);
   const main =
@@ -183,7 +183,6 @@ const _scriptURL = (pf: PreFormatted): O.Option<string> => {
   );
 };
 
-// TODO: exclude non-cards
 const pediaURL = ({ card, konamiId }: PreFormatted) => {
   if (O.isSome(konamiId)) return O.some(URLS.YUGIPEDIA_WIKI + konamiId.value);
 
@@ -482,8 +481,8 @@ export const fuzzyMatches = (query: string) => (ctx: Ctx) => {
       return b.alias === a.id ? -1 : a.alias === b.id ? 1 : 0;
     if (a.name.includes(b.name) || b.name.includes(a.name))
       return (
-        Math.abs(a.name.length - query.length) -
-        Math.abs(b.name.length - query.length)
+        Math.abs(a.name.length - fullQuery.length) -
+        Math.abs(b.name.length - fullQuery.length)
       );
     return 0;
   });
@@ -501,7 +500,7 @@ const passcodeMatch =
         pipe(
           query,
           O.fromPredicate(str.startsWith('c')),
-          O.map((cid) => cid.substring(1)),
+          O.map((cid) => cid.substring(1).trim()),
           O.filter(isNumeric)
         )
       ),
@@ -519,7 +518,7 @@ const konamiIdMatch =
     pipe(
       query,
       O.fromPredicate(str.startsWith('#')),
-      O.map((kid) => kid.substring(1)),
+      O.map((kid) => kid.substring(1).trim()),
       O.filter(isNumeric),
       O.flatMap((kid) =>
         pipe(

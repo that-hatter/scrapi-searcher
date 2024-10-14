@@ -147,9 +147,13 @@ const initMinisearch = (cards: ReadonlyArray<Card>): MiniSearch<Card> => {
     searchOptions: {
       fuzzy: true,
       prefix: true,
-      weights: { fuzzy: 0.8, prefix: 0.3 },
+      maxFuzzy: 8,
     },
-    tokenize: (text) => text.split(/\s+/),
+    tokenize: (text) =>
+      text
+        .replaceAll('-', ' ')
+        .replaceAll(/[\p{P}\p{S}]/gu, '')
+        .split(/\s+/),
   });
 
   const added: { [name: string]: Card } = {};
