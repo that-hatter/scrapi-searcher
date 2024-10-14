@@ -330,6 +330,7 @@ const withCdbFile = (name: string) => (entries: ReadonlyArray<BabelData>) =>
           ...RNEA.replicate('')(16)
         );
       });
+      db.exec('VACUUM;');
       const buf = db.serialize();
       db.close();
       return new buffer.Blob([new Uint8Array(buf)]);
@@ -379,7 +380,8 @@ export const glFinishStage = Button.interaction({
               const id = s.staged.find(
                 (c) => O.isSome(c.enName) && c.enName.value === name
               )?.id;
-              if (!id) return RTE.left(Err.forDev('Failed to match id: ' + id));
+              if (!id)
+                return RTE.left(Err.forDev('Failed to match name: ' + name));
               return RTE.fromReader(toBabelData(+id, name, val));
             })
           ),
