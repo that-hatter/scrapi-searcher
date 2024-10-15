@@ -37,7 +37,10 @@ export const data: Data.Data<'shortcuts'> = {
 export const resolveShortcuts = (query: string) => (ctx: Ctx) =>
   pipe(
     query,
-    str.split(' '),
-    RNEA.map((s) => ctx.shortcuts[s] ?? s),
+    str.split(/\s+/),
+    RNEA.map((s) => {
+      const key = s.toLowerCase().replaceAll(/[\p{P}\p{S}]+/gu, '');
+      return ctx.shortcuts[key] ?? s;
+    }),
     str.intercalate(' ')
   );

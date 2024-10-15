@@ -1,16 +1,6 @@
 {
-  "/Assault Mode": [
-    "/am"
-  ],
-  "A Hero Lives": [
-    "ahl"
-  ],
   "Adamancipator": [
     "adam"
-  ],
-  "Advanced Chemical Beast": [
-    "achemb",
-    "achb"
   ],
   "Advanced Crystal Beast": [
     "acb"
@@ -30,6 +20,9 @@
   "Ancient Gear Gadjiltron Dragon": [
     "aggd"
   ],
+  "Arise-heart": [
+    "ariseheart"
+  ],
   "Assault Blackwing": [
     "abw"
   ],
@@ -37,8 +30,7 @@
     "apo"
   ],
   "Battlin' Boxer": [
-    "bb",
-    "b'b"
+    "bb"
   ],
   "Black Luster Soldier": [
     "bls"
@@ -52,16 +44,11 @@
   "Blackwing Tamer": [
     "bwt"
   ],
-  "Blue-Eyes": [
-    "b-e"
-  ],
   "Blue-Eyes Ultimate Dragon": [
-    "beud",
-    "b-eud"
+    "beud"
   ],
   "Blue-Eyes White Dragon": [
-    "bewd",
-    "b-ewd"
+    "bewd"
   ],
   "Book of Eclipse": [
     "boe"
@@ -81,18 +68,8 @@
   "Brilliant Fusion": [
     "brifu"
   ],
-  "Brionac, Dragon of the Ice Barrier": [
-    "brio",
-    "bdoftib",
-    "b,dib",
-    "b,doftb"
-  ],
-  "Brotherhood of the Fire First": [
-    "botff",
-    "bhotff",
-    "boff",
-    "bhoff",
-    "bff"
+  "Brionac": [
+    "brio"
   ],
   "Burning Abyss": [
     "ba"
@@ -114,10 +91,6 @@
   ],
   "Chaos Emperor Dragon": [
     "ced"
-  ],
-  "Chemical Beast": [
-    "chemb",
-    "chb"
   ],
   "Compulsory Evacuation Device": [
     "ced"
@@ -171,12 +144,10 @@
     "ddv"
   ],
   "Destiny Draw": [
-    "d-draw",
     "ddraw",
     "destdraw"
   ],
   "Destiny HERO": [
-    "d-hero",
     "dhero"
   ],
   "Destiny Hero - Malicious": [
@@ -186,12 +157,9 @@
     "dpe"
   ],
   "Different Dimension Reincarnation": [
-    "ddr",
-    "d.d.r.",
-    "d.d.r"
+    "ddr"
   ],
   "Dimensional Prison": [
-    "d-prison",
     "dprison"
   ],
   "Dimensional Fissure": [
@@ -202,15 +170,13 @@
     "dmk"
   ],
   "Earthbound Immortal": [
-    "ei",
-    "ebi"
+    "ei"
   ],
   "Earthbound Servant": [
     "es",
     "ebs"
   ],
   "Elemental HERO": [
-    "e-hero",
     "ehero"
   ],
   "Elemental HERO Absolute Zero": [
@@ -218,7 +184,6 @@
     "abz"
   ],
   "Emergency Teleport": [
-    "e-tele",
     "etele"
   ],
   "Emissary of Darkness": [
@@ -229,19 +194,16 @@
     "emwa"
   ],
   "Enemy Controller": [
-    "e-con",
     "econ"
   ],
   "Eradicator Epidemic Virus": [
     "eev"
   ],
   "Evil HERO": [
-    "ev-hero",
     "evhero"
   ],
   "Familiar-Posessed": [
-    "fp",
-    "f-p"
+    "fp"
   ],
   "Fiendsmith": [
     "fs"
@@ -277,15 +239,13 @@
     "gfk"
   ],
   "Galaxy-Eyes": [
-    "ge",
-    "g-e"
+    "ge"
   ],
   "Galaxy-Eyes Photon Dragon": [
     "gepd"
   ],
   "Gem-Knight": [
     "gemk",
-    "gem-k",
     "gemknight"
   ],
   "Gladiator Beast": [
@@ -298,7 +258,6 @@
   ],
   "Gravekeeper's": [
     "gk",
-    "gk's",
     "gks"
   ],
   "Halqifibrax": [
@@ -347,6 +306,12 @@
   "Light and Darkness Dragon": [
     "ladd"
   ],
+  "Light and Darkness Dragonlord": [
+    "laddlord"
+  ],
+  "Light-heart": [
+    "lightheart"
+  ],
   "Lightsworn": [
     "ls"
   ],
@@ -360,11 +325,16 @@
     "mw"
   ],
   "Masked HERO": [
-    "m-hero",
     "mhero"
   ],
   "Mecha Phantom Beast": [
     "mpb"
+  ],
+  "Mekk-Knight": [
+    "mekkknight",
+    "mekknight",
+    "meknight",
+    "mekk"
   ],
   "M-X-Saber": [
     "mxsaber",
@@ -386,8 +356,7 @@
     "udf"
   ],
   "Odd-Eyes": [
-    "oe",
-    "o-e"
+    "oe"
   ],
   "Pankratops": [
     "pank"
@@ -414,8 +383,14 @@
     "poe",
     "extrav"
   ],
+  "Pot of Prosperity": [
+    "prosp"
+  ],
   "Prank-Kids": [
     "pranks"
+  ],
+  "Prime-heart": [
+    "primeheart"
   ],
   "Psy-Frame": [
     "psyframe"
@@ -430,31 +405,19 @@
     "rr"
   ],
   "Rank-Up-Magic": [
-    "r-u-m",
-    "rum",
-    "r-um",
-    "ru-m"
+    "rum"
   ],
   "Red Dragon Archfiend": [
     "rda"
   ],
-  "Red-Eyes": [
-    "re",
-    "r-e"
-  ],
   "Red-Eyes B. Dragon": [
-    "rebd",
-    "r-eb.d",
-    "r-ebd",
-    "reb.d"
+    "rebd"
   ],
   "Red-Eyes Darkness Metal Dragon": [
-    "redmd",
-    "r-edmd"
+    "redmd"
   ],
   "Red-Eyes Flare Metal Dragon": [
-    "refmd",
-    "r-efmd"
+    "refmd"
   ],
   "Red-Eyes Fusion": [
     "ref"
@@ -463,7 +426,7 @@
     "rota"
   ],
   "Rescue-Ace": [
-    "r-ace"
+    "race"
   ],
   "Ritual Beast": [
     "rb"
@@ -473,6 +436,9 @@
   ],
   "S-Force": [
     "sforce"
+  ],
+  "Salamangreat": [
+    "salad"
   ],
   "Sarcophagus": [
     "sarc"
@@ -496,7 +462,6 @@
     "ssa"
   ],
   "Snake-Eye": [
-    "s-e",
     "se"
   ],
   "Solemn Judgment": [
@@ -537,6 +502,9 @@
     "shs",
     "susa"
   ],
+  "Supreme King": [
+    "sk"
+  ],
   "Supreme King Dragon Starving Venom": [
     "sksv",
     "skdsv"
@@ -547,8 +515,7 @@
   ],
   "Super Polymerization": [
     "spoly",
-    "superpoly",
-    "s-poly"
+    "superpoly"
   ],
   "The Huge Revolution is Over": [
     "thrio",
@@ -563,22 +530,19 @@
     "wra"
   ],
   "Theartening Roar": [
-    "t-roar",
     "troar"
   ],
   "There Can Be Only One": [
     "tcboo"
   ],
   "Thousand-Eyes Restrict": [
-    "ter",
-    "t-er"
+    "ter"
   ],
   "Thunder Dragon": [
     "thundra"
   ],
   "Thunder King Rai-Oh": [
-    "tkro",
-    "tkr-o"
+    "tkro"
   ],
   "Tour Guide from the Underworld": [
     "tgu",
@@ -591,15 +555,14 @@
   "Trap Hole": [
     "th"
   ],
+  "Tri-heart": [
+    "triheart"
+  ],
   "Tri-Brigade": [
     "tribrigade"
   ],
-  "Trishula, Dragon of the Ice Barrier": [
-    "trish",
-    "tdotib",
-    "t,dotib",
-    "t,dib",
-    "tdib"
+  "Trishula": [
+    "trish"
   ],
   "True King of all Calamities": [
     "vfd"
@@ -614,7 +577,6 @@
     "vw"
   ],
   "Vision HERO": [
-    "v-hero",
     "vhero"
   ],
   "Voiceless Voice": [
@@ -625,8 +587,7 @@
     "ww"
   ],
   "Wind-Up": [
-    "wu",
-    "w-u"
+    "wu"
   ],
   "X-Saber": [
     "xsaber"

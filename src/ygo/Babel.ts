@@ -152,7 +152,7 @@ const initMinisearch = (cards: ReadonlyArray<Card>): MiniSearch<Card> => {
     tokenize: (text) =>
       text
         .replaceAll('-', ' ')
-        .replaceAll(/[\p{P}\p{S}]/gu, '')
+        .replaceAll(/[\p{P}\p{S}]+/gu, '')
         .split(/\s+/),
   });
 
