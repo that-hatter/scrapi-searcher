@@ -4,7 +4,7 @@ import * as buffer from 'node:buffer';
 import { Ctx } from '../../Ctx';
 import { BitNames, Pedia } from '../../ygo';
 import { getState } from '../commands/dev/stage';
-import { Button, Decoder, Err, Interaction, str } from '../modules';
+import { Button, Decoder, Err, Interaction, Op, str } from '../modules';
 import { utils } from '../utils';
 
 const stringWithLinks = pipe(
@@ -337,7 +337,7 @@ const withCdbFile = (name: string) => (entries: ReadonlyArray<BabelData>) =>
     }),
     RTE.fromIOEither,
     RTE.mapError(Err.forDev),
-    RTE.map((blob) => ({ components: [], file: [{ name, blob }] }))
+    RTE.map((blob) => ({ content: '', components: [], file: [{ name, blob }] }))
   );
 
 const parameters = pipe(
@@ -362,13 +362,25 @@ const fetchAndValidate = (idx: number, names: ReadonlyArray<string>) =>
 export const glFinishStage = Button.interaction({
   name: 'glFinishStage',
   devOnly: true,
-  execute: (_, interaction) =>
-    pipe(
-      interaction.message,
-      getState,
-      RTE.flatMap((s) =>
+  execute: (_, interaction) => {
+    const message = interaction.message;
+    return pipe(
+      getState(message),
+      RTE.tap(({ filename }) =>
+        Interaction.sendUpdate(interaction)({
+          content: 'Creating ' + str.inlineCode(filename) + ' ⏳',
+          embeds: [
+            {
+              color: message.embeds[0]?.color,
+              description: message.embeds[0]?.description,
+            },
+          ],
+          components: [],
+        })
+      ),
+      RTE.flatMap(({ staged, filename }) =>
         pipe(
-          s.staged,
+          staged,
           RA.filterMap((c) => c.enName),
           RA.chunksOf(10),
           RA.mapWithIndex(fetchAndValidate),
@@ -377,18 +389,18 @@ export const glFinishStage = Button.interaction({
           RTE.map(RA.flatten),
           RTE.map(
             RA.map(([name, val]) => {
-              const id = s.staged.find(
+              const id = staged.find(
                 (c) => O.isSome(c.enName) && c.enName.value === name
               )?.id;
-              if (!id)
-                return RTE.left(Err.forDev('Failed to match name: ' + name));
-              return RTE.fromReader(toBabelData(+id, name, val));
+              if (id) return RTE.fromReader(toBabelData(+id, name, val));
+              return RTE.left(Err.forDev('Failed to match name: ' + name));
             })
           ),
           RTE.flatMap(RTE.sequenceArray),
-          RTE.flatMap(withCdbFile(s.filename)),
-          RTE.flatMap(Interaction.sendUpdate(interaction))
+          RTE.flatMap(withCdbFile(filename)),
+          RTE.flatMap(Op.editMessage(message.channelId)(message.id))
         )
       )
-    ),
+    );
+  },
 });
