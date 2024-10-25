@@ -1,4 +1,4 @@
-import type { RR } from '@that-hatter/scrapi-factory/fp';
+import type { O, RR } from '@that-hatter/scrapi-factory/fp';
 import type { Command, Data, dd, Github, Interaction } from './lib/modules';
 import type { BitNames } from './ygo';
 
@@ -15,6 +15,6 @@ export type Ctx = {
     readonly logs: string;
     readonly users: RR.ReadonlyRecord<string, string>;
   };
-  readonly picsSource: string;
-  readonly picsChannel: bigint;
+  readonly picsSource: O.Option<string>;
+  readonly picsChannel: O.Option<bigint>;
 } & Data.Loaded;

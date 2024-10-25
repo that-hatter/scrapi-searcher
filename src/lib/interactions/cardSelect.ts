@@ -81,30 +81,34 @@ const handleQuery = (query: string) =>
   pipe(query.substring(1, query.length - 1), str.trim, Card.bestMatch);
 
 const afterReply = (card: Babel.Card) => (msg: dd.Message) => {
-  const oldEmbed = msg.embeds[0];
-  if (!oldEmbed) return Op.noopReader;
-  const oldPic = oldEmbed.thumbnail?.url;
-  const oldKid = oldEmbed.footer?.text.split(' | Konami ID #')[1];
-  if (oldPic && oldKid) return Op.noopReader;
+  if (msg.components && msg.components.length > 0) return Op.noopReader;
+
+  const currEmbed = msg.embeds[0];
+  if (!currEmbed) return Op.noopReader;
+
+  const currPic = currEmbed.thumbnail?.url;
+  const currKid = currEmbed.footer?.text.split(' | Konami ID #')[1];
+  if (currPic && currKid) return Op.noopReader;
 
   return pipe(
     card,
     Card.itemEmbedWithFetch,
     RTE.mapError(Err.forDev),
     RTE.tap((embed) =>
-      msg.components && msg.components.length > 0
-        ? Op.noopReader
-        : Op.editMessage(msg.channelId)(msg.id)({ embeds: [embed] })
+      (embed.thumbnail && !currPic) ||
+      embed.footer?.text !== currEmbed.footer?.text
+        ? Op.editMessage(msg.channelId)(msg.id)({ embeds: [embed] })
+        : Op.noopReader
     ),
     RTE.bindTo('embed'),
     RTE.bindW('pics', ({ embed }) =>
-      embed.thumbnail && !oldPic
+      embed.thumbnail && !currPic
         ? Pics.addToFile(embed.thumbnail.url)
         : Pics.current
     ),
     RTE.bindW('konamiIds', ({ embed }) => {
       const newKid = embed.footer?.text.split(' | Konami ID #')[1];
-      return newKid && !oldKid
+      return newKid && !currKid
         ? KonamiIds.addToFile(card, +newKid)
         : KonamiIds.current;
     }),

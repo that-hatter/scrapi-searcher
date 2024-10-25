@@ -48,12 +48,13 @@ export const getExisting = (id: number) => (ctx: Ctx) =>
     O.map((pid) => `${URLS.DISCORD_MEDIA}/${pid}/${id}.jpg`)
   );
 
-const fetchAndUpload = (id: string) => (ctx: Ctx) =>
-  pipe(
+const fetchAndUpload = (id: string) => (ctx: Ctx) => {
+  const source = ctx.picsSource;
+  const channel = ctx.picsChannel;
+  if (O.isNone(source) || O.isNone(channel)) return TE.right(O.none);
+  return pipe(
     utils.taskify(() =>
-      fetch(ctx.picsSource.replace('%id%', id)).then((resp) =>
-        resp.arrayBuffer()
-      )
+      fetch(source.value.replace('%id%', id)).then((resp) => resp.arrayBuffer())
     ),
     TE.map(
       (arrayBuf): dd.FileContent => ({
@@ -63,7 +64,7 @@ const fetchAndUpload = (id: string) => (ctx: Ctx) =>
     ),
     TE.flatMap((file) =>
       pipe(
-        Op.sendMessage(ctx.picsChannel)({ file })(ctx),
+        Op.sendMessage(channel.value)({ file })(ctx),
         TE.mapError(Err.toAlertString)
       )
     ),
@@ -73,6 +74,7 @@ const fetchAndUpload = (id: string) => (ctx: Ctx) =>
     ),
     TE.map(O.some)
   );
+};
 
 export const addToFile = (url: string) => (ctx: Ctx) => {
   const [_, __, ___, ____, ch, att, _id] = url.split('/');

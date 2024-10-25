@@ -1,4 +1,4 @@
-import { E, pipe, RA, RNEA, RR, TE } from '@that-hatter/scrapi-factory/fp';
+import { E, O, pipe, RA, RNEA, RR, TE } from '@that-hatter/scrapi-factory/fp';
 import { collection as commands } from './lib/commands';
 import { list as events } from './lib/events';
 import { collection as componentInteractions } from './lib/interactions';
@@ -6,22 +6,27 @@ import { Data, dd, Decoder, Err, Event, Github, Op, str } from './lib/modules';
 import { utils } from './lib/utils';
 import { BitNames } from './ygo';
 
-const envDecoder = Decoder.struct({
-  DEV_ADMIN: Decoder.string,
-  DEV_GUILD: Decoder.string,
-  DEV_USERS: Decoder.string,
-  DEV_LOGS_CHANNEL: Decoder.string,
+const envDecoder = pipe(
+  Decoder.struct({
+    DEV_ADMIN: Decoder.string,
+    DEV_GUILD: Decoder.string,
+    DEV_USERS: Decoder.string,
+    DEV_LOGS_CHANNEL: Decoder.string,
 
-  BOT_PREFIX: Decoder.string,
-  BOT_TOKEN: Decoder.string,
+    BOT_PREFIX: Decoder.string,
+    BOT_TOKEN: Decoder.string,
 
-  GITHUB_ACCESS_TOKEN: Decoder.string,
-  GITHUB_WEBHOOK_PORT: Decoder.numString,
-  GITHUB_WEBHOOK_SECRET: Decoder.string,
-
-  PICS_DEFAULT_SOURCE: Decoder.string,
-  PICS_UPLOAD_CHANNEL: Decoder.bigintString,
-});
+    GITHUB_ACCESS_TOKEN: Decoder.string,
+    GITHUB_WEBHOOK_PORT: Decoder.numString,
+    GITHUB_WEBHOOK_SECRET: Decoder.string,
+  }),
+  Decoder.intersect(
+    Decoder.partial({
+      PICS_DEFAULT_SOURCE: Decoder.string,
+      PICS_UPLOAD_CHANNEL: Decoder.bigintString,
+    })
+  )
+);
 
 const program = pipe(
   TE.Do,
@@ -65,8 +70,8 @@ const program = pipe(
       componentInteractions,
       bitNames: BitNames.load(data.yard.api.constants.array, data.systrings),
       github: github.rest,
-      picsSource: env.PICS_DEFAULT_SOURCE,
-      picsChannel: env.PICS_UPLOAD_CHANNEL,
+      picsSource: O.fromNullable(env.PICS_DEFAULT_SOURCE),
+      picsChannel: O.fromNullable(env.PICS_UPLOAD_CHANNEL),
       ...data,
     };
 
