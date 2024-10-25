@@ -90,8 +90,8 @@ export const addToFile = (card: Babel.Card, kid: number) => {
       TE.tap((content) =>
         Github.updateFile(
           OWNER,
-          'updates-test',
-          'main',
+          REPO,
+          BRANCH,
           PATH,
           utils.stringify(content),
           'add konami id for ' + card.id

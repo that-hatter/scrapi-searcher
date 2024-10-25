@@ -1,11 +1,9 @@
 import { O, pipe, RR, TE } from '@that-hatter/scrapi-factory/fp';
 import fetch from 'node-fetch';
 import * as buffer from 'node:buffer';
-import fs from 'node:fs/promises';
-import path from 'node:path';
 import { Babel, Card } from '.';
 import { Ctx } from '../Ctx';
-import { PATHS, URLS } from '../lib/constants';
+import { URLS } from '../lib/constants';
 import type { Data, dd } from '../lib/modules';
 import { Decoder, Err, Github, Op } from '../lib/modules';
 import { utils } from '../lib/utils';
@@ -21,13 +19,7 @@ export type Pics = RR.ReadonlyRecord<string, string>;
 const decoder = Decoder.record(Decoder.string);
 
 const update = pipe(
-  utils.taskify(() =>
-    fs
-      .readFile(path.join(PATHS.DATA, 'pics.json'))
-      .then((buf) => buf.toString())
-      .then((str) => JSON.parse(str))
-  ),
-  // utils.taskify(() => fetch(URL).then((resp) => resp.json())),
+  utils.taskify(() => fetch(URL).then((resp) => resp.json())),
   TE.flatMapEither(Decoder.parse(decoder))
 );
 
@@ -87,8 +79,8 @@ export const addToFile = (url: string) => (ctx: Ctx) => {
     TE.tap((content) =>
       Github.updateFile(
         OWNER,
-        'updates-test',
-        'main',
+        REPO,
+        BRANCH,
         PATH,
         utils.stringify(content),
         'add pic for ' + id
