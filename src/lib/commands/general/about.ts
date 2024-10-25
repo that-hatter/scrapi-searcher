@@ -1,6 +1,5 @@
 import { pipe, RTE } from '@that-hatter/scrapi-factory/fp';
 import { Ctx } from '../../../Ctx';
-import { EMOJI } from '../../constants';
 import { Command, dd, Op, str } from '../../modules';
 import { helpMessage } from './help';
 
@@ -15,18 +14,18 @@ const description = (message: dd.Message, ctx: Ctx) =>
       '`scrapi` stands for **scr**ipting **API**, and each project is named ' +
       'after cards in the ["Scrap"](https://yugipedia.com/wiki/Scrap) archetype, ' +
       'except for `scrapi-book`, which instead plays on "scrapbook".',
-    EMOJI.YARD +
+    ctx.emojis.yard +
       ' [`scrapiyard`](https://github.com/ProjectIgnis/scrapiyard) - ' +
       "Documentation files for EDOPro's Card Scripting API.",
-    EMOJI.FACTORY +
+    ctx.emojis.factory +
       ' [`scrapi-factory`](https://github.com/that-hatter/scrapi-factory) - ' +
       'Validator and loader package for scrapiyard.',
     '📙 [`scrapi-book`](https://github.com/ProjectIgnis/scrapi-book) - ' +
       'EDOPro scripting guides and reference.',
-    EMOJI.SEARCHER +
+    ctx.emojis.searcher +
       ' [`scrapi-searcher`](https://github.com/that-hatter/scrapi-searcher) - ' +
       'Utility bot for EDOPro scripting and development.',
-    EMOJI.MIND_READER +
+    ctx.emojis.mind_reader +
       ' `scrapi-mind-reader` - Scripting auto-completion files *(coming soon™️)*.',
     '',
     helpMessage(message)(ctx),

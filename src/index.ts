@@ -41,16 +41,18 @@ const program = pipe(
     )
   ),
   TE.bind('data', () => Data.init),
-  TE.flatMap(({ env, github, data }) => {
-    const bot = dd.createBot({
+  TE.let('bot', ({ env }) =>
+    dd.createBot({
       intents:
         dd.GatewayIntents.Guilds |
         dd.GatewayIntents.GuildMessages |
         dd.GatewayIntents.MessageContent |
         dd.GatewayIntents.DirectMessages,
       token: env.BOT_TOKEN,
-    });
-
+    })
+  ),
+  TE.bind('emojis', ({ bot }) => Op.getAppEmojis(bot)),
+  TE.flatMap(({ bot, emojis, env, github, data }) => {
     const ctx = {
       bot,
       prefix: env.BOT_PREFIX,
@@ -72,6 +74,14 @@ const program = pipe(
       github: github.rest,
       picsSource: O.fromNullable(env.PICS_DEFAULT_SOURCE),
       picsChannel: O.fromNullable(env.PICS_UPLOAD_CHANNEL),
+      emojis: pipe(
+        emojis,
+        RA.filterMap(({ id, name }) => {
+          if (!id || !name) return O.none;
+          return O.some([name, `<:${name}:${id}>`] as const);
+        }),
+        RR.fromEntries
+      ),
       ...data,
     };
 

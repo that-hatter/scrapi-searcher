@@ -12,7 +12,7 @@ import {
 import { readerTask as RT } from 'fp-ts';
 import { Ctx } from '../../Ctx';
 import { Babel, Card, KonamiIds, Pics } from '../../ygo';
-import { EMOJI, LIMITS } from '../constants';
+import { LIMITS } from '../constants';
 import { Data, dd, Err, Interaction, Menu, Op, str } from '../modules';
 
 const MALISS: RR.ReadonlyRecord<string, string> = {
@@ -128,7 +128,7 @@ const sendFoundCards = (
     head,
     initMessage(uniqCards),
     RTE.flatMap(Op.sendReply(msg)),
-    head.id === 92901944 ? RTE.tap(Op.react(EMOJI.SEARCHER)) : identity,
+    head.id === 92901944 ? RTE.tap(Op.react('searcher')) : identity,
     RTE.flatMap(afterReply(head))
   );
 };

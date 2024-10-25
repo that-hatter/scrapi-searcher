@@ -32,13 +32,6 @@ export const URLS = {
   DISCORD_MEDIA: 'https://media.discordapp.net/attachments',
 } as const;
 
-export const EMOJI = {
-  FACTORY: '<:factory:1283971929769902131>',
-  SEARCHER: '<:searcher:1283971880885162130>',
-  MIND_READER: '<:mindreader:1283972011256975390>',
-  YARD: '<:yard:1283971971310293032>',
-};
-
 const CWD = process.cwd();
 export const PATHS = {
   CWD,

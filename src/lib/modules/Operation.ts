@@ -125,12 +125,30 @@ export const editBotStatus =
 export const react =
   (reaction: string) =>
   (message: dd.Message) =>
-  ({ bot }: Ctx) =>
-    asOperation(() =>
-      bot.helpers.addReaction(message.channelId, message.id, reaction)
+  ({ bot, emojis }: Ctx) => {
+    const emoji =
+      (reaction.startsWith(':') && reaction.endsWith(':')) ||
+      (reaction.startsWith('<') && reaction.endsWith('>'))
+        ? reaction
+        : emojis[reaction];
+    return asOperation(() =>
+      bot.helpers.addReaction(message.channelId, message.id, emoji ?? reaction)
     );
+  };
 
 export const sendLog =
   (payload: Payload<dd.CreateMessage>): Op<dd.Message> =>
   (ctx) =>
     sendMessage(ctx.dev.logs)(payload)(ctx);
+
+// discordeno v18 doesn't have helpers for application emojis
+export const getAppEmojis = (bot: dd.Bot) =>
+  utils.taskify(() =>
+    bot.rest
+      .runMethod<{ items: readonly dd.Emoji[] }>(
+        bot.rest,
+        'GET',
+        `/applications/${bot.applicationId}/emojis`
+      )
+      .then(({ items }) => items)
+  );

@@ -17,4 +17,5 @@ export type Ctx = {
   };
   readonly picsSource: O.Option<string>;
   readonly picsChannel: O.Option<bigint>;
+  readonly emojis: RR.ReadonlyRecord<string, string>;
 } & Data.Loaded;

@@ -1,5 +1,4 @@
 import { pipe, RTE } from '@that-hatter/scrapi-factory/fp';
-import { EMOJI } from '../constants';
 import { dd, Event, Op } from '../modules';
 
 export const ready: Event.Event<'ready'> = {
@@ -7,7 +6,7 @@ export const ready: Event.Event<'ready'> = {
   handle: () => (ctx) =>
     pipe(
       Op.sendMessage(ctx.dev.logs)(
-        EMOJI.SEARCHER + ' Bot successfully connected.'
+        ctx.emojis.searcher + ' Bot successfully connected.'
       ),
       RTE.flatMap(() =>
         Op.editBotStatus({
