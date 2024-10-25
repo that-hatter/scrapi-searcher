@@ -135,6 +135,7 @@
     "drnm"
   ],
   "Dark World": [
+    "darkworld",
     "dw"
   ],
   "Dark World Dealings": [
@@ -156,8 +157,8 @@
   "Destroyer Phoenix Enforcer": [
     "dpe"
   ],
-  "Different Dimension Reincarnation": [
-    "ddr"
+  "Different Dimension Ground": [
+    "ddg"
   ],
   "Dimensional Prison": [
     "dprison"
@@ -165,6 +166,9 @@
   "Dimensional Fissure": [
     "difi",
     "dimfi"
+  ],
+  "Dominus Impulse": [
+    "dimpulse"
   ],
   "Dragon Master Knight": [
     "dmk"
@@ -339,6 +343,9 @@
   "M-X-Saber": [
     "mxsaber",
     "mx"
+  ],
+  "Mo Ye": [
+    "moye"
   ],
   "Mystical Space Typhoon": [
     "mst"
