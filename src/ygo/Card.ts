@@ -149,6 +149,15 @@ const withUnofficialDisclaimer = (kid: O.Option<number>) => (text: string) => {
 // embeds
 // -----------------------------------------------------------------------------
 
+const emojify = (name: string) => (ctx: Ctx) =>
+  O.fromNullable(ctx.emojis[name.replaceAll(/\W+/g, '_').toLowerCase()]);
+
+const appendEmoji = (name: string) => (s: string) =>
+  pipe(
+    emojify(name),
+    R.map((emoji) => str.joinWords([s, emoji]))
+  );
+
 const labeled = (label: string) => str.prepend(str.bold(label + ':') + ' ');
 
 const labeledList = (label: string) =>
@@ -306,15 +315,62 @@ const passcodesFooter = (pf: PreFormatted) =>
 
 const ATKDEF = (n: bigint) => (n === -2n ? '?' : n.toString());
 
-const levelRank = (pf: PreFormatted) =>
-  (pf.types.includes('Pendulum')
+const embedStars = (pf: PreFormatted) => {
+  const value = pf.types.includes('Pendulum')
     ? pf.card.level & 0xffffn
-    : pf.card.level
-  ).toString();
+    : pf.card.level;
+  const emojiName = pf.archetypes.includes('Dark Synchro')
+    ? 'level_negative'
+    : pf.types.includes('Xyz')
+    ? 'rank'
+    : 'level';
+  return pipe(
+    emojify(emojiName),
+    R.map((e) => str.joinWords([value.toString(), e])),
+    R.map(labeled(emojiName === 'rank' ? 'Rank' : 'Level'))
+  );
+};
 
-const scales = (c: Card) => {
-  const bits = c.level >> 16n;
-  return (bits >> 8n) + '/' + (bits & 0xffn);
+const embedScales = (pf: PreFormatted) => (ctx: Ctx) => {
+  if (!pf.types.includes('Pendulum')) return O.none;
+  const bits = pf.card.level >> 16n;
+  return pipe(
+    [
+      emojify('scale_left')(ctx),
+      (bits >> 8n) + '/' + (bits & 0xffn),
+      emojify('scale_right')(ctx),
+    ],
+    str.joinWords,
+    labeled('Pendulum Scale'),
+    O.some
+  );
+};
+
+const embedAttributes = (pf: PreFormatted) =>
+  pipe(
+    BitNames.attribute(pf.card.attribute),
+    R.map(RA.map((a) => appendEmoji('attribute_' + a)(a))),
+    R.flatMap(R.sequenceArray),
+    R.map(labeledList('Attribute'))
+  );
+
+const embedRaces = (pf: PreFormatted) =>
+  pipe(
+    BitNames.race(pf.card.race),
+    R.map(RA.map((r) => appendEmoji('race_' + r)(r))),
+    R.flatMap(R.sequenceArray),
+    R.map(labeledList('Monster Type'))
+  );
+
+const embedCardTypes = (pf: PreFormatted) => {
+  if (pf.mainType === 'Monster')
+    return pipe(pf.types, labeledList('Card Type'), R.of);
+  return pipe(
+    pf.types,
+    RA.map((t) => appendEmoji('type_' + t)(t)),
+    R.sequenceArray,
+    R.map(labeledList('Card Type'))
+  );
 };
 
 const finalizeEmbed = (
@@ -332,13 +388,15 @@ const finalizeEmbed = (
 
 const commonEmbedDescription = (pf: PreFormatted) =>
   pipe(
-    limitsSection(pf),
-    R.map((limits) =>
+    R.Do,
+    R.bind('limits', () => limitsSection(pf)),
+    R.bind('types', () => embedCardTypes(pf)),
+    R.map(({ limits, types }) =>
       str.joinParagraphs([
         urlsSection(pf),
         limits,
-        labeledList('Archetype')(pf.archetypes),
-        labeledList('Card Type')(pf.types),
+        pipe(pf.archetypes, RA.map(str.doubleQuoted), labeledList('Archetype')),
+        types,
       ])
     )
   );
@@ -346,10 +404,11 @@ const commonEmbedDescription = (pf: PreFormatted) =>
 const rushMonsterEmbed = (pf: PreFormatted) =>
   pipe(
     R.Do,
-    R.bind('races', () => BitNames.race(pf.card.race)),
-    R.bind('attrs', () => BitNames.attribute(pf.card.attribute)),
+    R.bind('stars', () => embedStars(pf)),
+    R.bind('races', () => embedRaces(pf)),
+    R.bind('attrs', () => embedAttributes(pf)),
     R.bind('commonDesc', () => commonEmbedDescription(pf)),
-    R.map(({ races, attrs, commonDesc }) => {
+    R.map(({ stars, races, attrs, commonDesc }) => {
       const [maxATK, fields] = parseRushText(
         pf.card.desc,
         pf.types.includes('Normal') ? 'Flavor Text' : 'Card Text'
@@ -357,12 +416,9 @@ const rushMonsterEmbed = (pf: PreFormatted) =>
 
       const description = str.joinParagraphs([
         commonDesc,
+        str.joinWords([races, attrs]),
         str.joinWords([
-          labeledList('Monster Type')(races),
-          labeledList('Attribute')(attrs),
-        ]),
-        str.joinWords([
-          labeled('Level')(levelRank(pf)),
+          stars,
           labeled('ATK')(ATKDEF(pf.card.atk)),
           labeled('DEF')(ATKDEF(pf.card.def)),
           O.map(labeled('Maximum ATK'))(maxATK),
@@ -383,7 +439,7 @@ const rushNonMonsterEmbed = (pf: PreFormatted) =>
   );
 
 const rushEmbed = (pf: PreFormatted) =>
-  pf.types.includes('Monster') ? rushMonsterEmbed(pf) : rushNonMonsterEmbed(pf);
+  pf.mainType === 'Monster' ? rushMonsterEmbed(pf) : rushNonMonsterEmbed(pf);
 
 const skillEmbed = (pf: PreFormatted) =>
   pipe(
@@ -402,14 +458,16 @@ const skillEmbed = (pf: PreFormatted) =>
 const masterMonsterEmbed = (pf: PreFormatted) =>
   pipe(
     R.Do,
+    R.bind('stars', () => embedStars(pf)),
+    R.bind('scales', () => embedScales(pf)),
+    R.bind('races', () => embedRaces(pf)),
+    R.bind('attrs', () => embedAttributes(pf)),
     R.let('isLink', () => pf.types.includes('Link')),
     R.bind('arrows', ({ isLink }) =>
       isLink ? BitNames.linkArrows(pf.card.def) : R.of([])
     ),
     R.bind('commonDesc', () => commonEmbedDescription(pf)),
-    R.bind('races', () => BitNames.race(pf.card.race)),
-    R.bind('attrs', () => BitNames.attribute(pf.card.attribute)),
-    R.map(({ isLink, arrows, commonDesc, races, attrs }) => {
+    R.map(({ stars, scales, isLink, arrows, commonDesc, races, attrs }) => {
       const fields = pipe(
         pf.card.desc,
         withUnofficialDisclaimer(pf.konamiId),
@@ -419,23 +477,14 @@ const masterMonsterEmbed = (pf: PreFormatted) =>
 
       const description = str.joinParagraphs([
         commonDesc,
+        str.joinWords([races, attrs]),
         str.joinWords([
-          labeledList('Monster Type')(races),
-          labeledList('Attribute')(attrs),
-        ]),
-        str.joinWords([
-          isLink
-            ? labeled('Link Rating')(arrows.length.toString())
-            : pf.types.includes('Xyz')
-            ? labeled('Rank')(levelRank(pf))
-            : labeled('Level')(levelRank(pf)),
+          isLink ? labeled('Link Rating')(arrows.length.toString()) : stars,
           labeled('ATK')(ATKDEF(pf.card.atk)),
           isLink
             ? labeled('Link Arrows')(arrows.join(''))
             : labeled('DEF')(ATKDEF(pf.card.def)),
-          pf.types.includes('Pendulum')
-            ? labeled('Pendulum Scale')(scales(pf.card))
-            : '',
+          scales,
         ]),
       ]);
 
