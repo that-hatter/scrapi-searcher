@@ -92,7 +92,9 @@ const afterReply = (card: Babel.Card) => (msg: dd.Message) => {
     Card.itemEmbedWithFetch,
     RTE.mapError(Err.forDev),
     RTE.tap((embed) =>
-      Op.editMessage(msg.channelId)(msg.id)({ embeds: [embed] })
+      msg.components && msg.components.length > 0
+        ? Op.noopReader
+        : Op.editMessage(msg.channelId)(msg.id)({ embeds: [embed] })
     ),
     RTE.bindTo('embed'),
     RTE.bindW('pics', ({ embed }) =>
@@ -116,11 +118,11 @@ const sendFoundCards = (
   cards: ReadonlyArray<Babel.Card>
 ): Op.Op<unknown> => {
   if (!RA.isNonEmpty(cards)) return Op.noopReader;
-  const head = RNEA.head(cards);
-
+  const uniqCards = pipe(cards, RNEA.uniq({ equals: (c, d) => c.id === d.id }));
+  const head = RNEA.head(uniqCards);
   return pipe(
     head,
-    initMessage(cards),
+    initMessage(uniqCards),
     RTE.flatMap(Op.sendReply(msg)),
     head.id === 92901944 ? RTE.tap(Op.react(EMOJI.SEARCHER)) : identity,
     RTE.flatMap(afterReply(head))
