@@ -8,7 +8,7 @@ import {
   RTE,
   TE,
 } from '@that-hatter/scrapi-factory/fp';
-import { Babel, Banlists, BetaIds, KonamiIds, Shortcuts } from '.';
+import { Babel, Banlists, BetaIds, KonamiIds, Pics, Shortcuts } from '.';
 import { Ctx } from '../Ctx';
 import { COLORS, LIMITS, URLS } from '../lib/constants';
 import { dd, Err, Nav, Op, str } from '../lib/modules';
@@ -24,6 +24,7 @@ type PreFormatted = {
   readonly mainType: string;
   readonly aliases: ReadonlyArray<Card>;
   readonly konamiId: O.Option<number>;
+  readonly pic: O.Option<string>;
 };
 
 const mainType = flow(
@@ -33,20 +34,36 @@ const mainType = flow(
   O.getOrElse(() => 'Non-Card')
 );
 
-const preformat = (card: Card): Op.SubOp<PreFormatted> =>
+const preformatCommon = (card: Card) =>
   pipe(
     R.Do,
     R.let('card', () => card),
+    R.let('rush', () => isRush(card)),
     R.bind('scopes', () => BitNames.scopes(card.ot)),
-    R.let('rush', ({ scopes }) => scopes.includes('Rush')),
     R.bind('archetypes', () => BitNames.archetypes(card.setcode)),
     R.bind('types', () => BitNames.types(card.type)),
     R.let('mainType', ({ types }) => mainType(types)),
-    R.bind('aliases', () => Babel.getAliases(card)),
+    R.bind('aliases', () => Babel.getAliases(card))
+  );
+
+const preformatWithExisting = (card: Card): Op.SubOp<PreFormatted> =>
+  pipe(
+    preformatCommon(card),
+    R.bind('konamiId', ({ rush }) =>
+      KonamiIds.getExisting(card, rush ? 'rush' : 'master')
+    ),
+    R.bind('pic', () => Pics.getExisting(card.id)),
+    RTE.fromReader
+  );
+
+const preformatWithFetch = (card: Card): Op.SubOp<PreFormatted> =>
+  pipe(
+    preformatCommon(card),
     RTE.fromReader,
     RTE.bind('konamiId', ({ scopes, types }) =>
       KonamiIds.getOrFetchMissing(card, scopes, types)
-    )
+    ),
+    RTE.bind('pic', () => Pics.getOrFetchMissing(card))
   );
 
 // -----------------------------------------------------------------------------
@@ -187,8 +204,7 @@ const pediaURL = ({ card, konamiId }: PreFormatted) => {
   if (O.isSome(konamiId)) return O.some(URLS.YUGIPEDIA_WIKI + konamiId.value);
 
   if (
-    card.type === 0n ||
-    card.ot >= 0x800n || // Illegal/Non-card/Custom
+    isNonCard(card) ||
     card.name.endsWith(' (Goat)') ||
     card.name.endsWith(' (Pre-Errata)') ||
     card.name.endsWith(' (DM)') ||
@@ -304,6 +320,7 @@ const finalizeEmbed = (
   fields: dd.DiscordEmbedField[]
 ): dd.Embed => ({
   title: pf.card.name,
+  thumbnail: O.isSome(pf.pic) ? { url: pf.pic.value } : undefined,
   description,
   fields,
   color: frameColor_(pf.types),
@@ -453,17 +470,23 @@ const masterNonMonsterEmbed = (pf: PreFormatted) =>
     })
   );
 
+const embed = (pf: PreFormatted) =>
+  pf.rush
+    ? rushEmbed(pf)
+    : pf.mainType === 'Skill'
+    ? skillEmbed(pf)
+    : pf.mainType === 'Monster'
+    ? masterMonsterEmbed(pf)
+    : masterNonMonsterEmbed(pf);
+
 export const itemEmbed: (c: Card) => Op.SubOp<dd.Embed> = flow(
-  preformat,
-  RTE.flatMapReader((pf) =>
-    pf.rush
-      ? rushEmbed(pf)
-      : pf.mainType === 'Skill'
-      ? skillEmbed(pf)
-      : pf.mainType === 'Monster'
-      ? masterMonsterEmbed(pf)
-      : masterNonMonsterEmbed(pf)
-  )
+  preformatWithExisting,
+  RTE.flatMapReader(embed)
+);
+
+export const itemEmbedWithFetch: (c: Card) => Op.SubOp<dd.Embed> = flow(
+  preformatWithFetch,
+  RTE.flatMapReader(embed)
 );
 
 // -----------------------------------------------------------------------------
@@ -545,9 +568,12 @@ export const bestMatch =
 // -----------------------------------------------------------------------------
 // helpers for card-related commands
 // -----------------------------------------------------------------------------
+export const isNonCard = (c: Card) => c.type < 1n || c.ot >= 0x800n;
+
+export const isRush = (c: Card) => (c.ot & 0x200n) === 0x200n;
 
 export const scriptURL: (c: Card) => Op.Op<string> = flow(
-  preformat,
+  preformatWithExisting,
   RTE.mapError(Err.forDev),
   RTE.flatMapOption(_scriptURL, (pf) =>
     Err.forUser('There is no script for ' + str.bold(pf.card.name))

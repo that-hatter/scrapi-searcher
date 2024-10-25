@@ -7,5 +7,6 @@ export * as BitNames from './BitNames';
 export * as Card from './Card';
 export * as Greenlight from './Greenlight';
 export * as KonamiIds from './KonamiIds';
+export * as Pics from './Pics';
 export * as Shortcuts from './Shortcuts';
 export * as Systrings from './Systrings';

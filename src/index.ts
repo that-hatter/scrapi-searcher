@@ -18,6 +18,9 @@ const envDecoder = Decoder.struct({
   GITHUB_ACCESS_TOKEN: Decoder.string,
   GITHUB_WEBHOOK_PORT: Decoder.numString,
   GITHUB_WEBHOOK_SECRET: Decoder.string,
+
+  PICS_DEFAULT_SOURCE: Decoder.string,
+  PICS_UPLOAD_CHANNEL: Decoder.bigintString,
 });
 
 const program = pipe(
@@ -62,6 +65,8 @@ const program = pipe(
       componentInteractions,
       bitNames: BitNames.load(data.yard.api.constants.array, data.systrings),
       github: github.rest,
+      picsSource: env.PICS_DEFAULT_SOURCE,
+      picsChannel: env.PICS_UPLOAD_CHANNEL,
       ...data,
     };
 
@@ -78,6 +83,7 @@ const program = pipe(
       ctx.betaIds = update.betaIds ?? ctx.betaIds;
       ctx.konamiIds = update.konamiIds ?? ctx.konamiIds;
       ctx.shortcuts = update.shortcuts ?? ctx.shortcuts;
+      ctx.pics = update.pics ?? ctx.pics;
 
       if (!update.yard && !update.systrings) return;
       ctx.bitNames = BitNames.load(ctx.yard.api.constants.array, ctx.systrings);
@@ -97,8 +103,11 @@ const program = pipe(
 
     github.webhook.on('push', ({ payload }) => {
       if (payload.ref !== 'refs/heads/master') return;
+      const commits = payload.commits;
+      if (commits.length === 1 && commits[0]?.message.startsWith('[auto] '))
+        return;
       pipe(
-        payload.commits,
+        commits,
         RA.flatMap((c) => [...c.added, ...c.modified, ...c.removed]),
         (files) =>
           Data.autoUpdate(payload.compare, payload.repository.name, files),

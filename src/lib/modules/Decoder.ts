@@ -1,6 +1,7 @@
 import { E, flow, O, pipe, RA } from '@that-hatter/scrapi-factory/fp';
 import { nonEmptyArray } from 'fp-ts';
 import * as Decoder from 'io-ts/Decoder';
+import { utils } from '../utils';
 
 export const parse = <I, A>(dc: Decoder.Decoder<I, A>) =>
   flow(dc.decode, E.mapLeft(Decoder.draw));
@@ -21,6 +22,16 @@ export const numString = pipe(
   Decoder.refine((s): s is string => s.length > 0, 'proper number'),
   Decoder.map((n) => +n),
   Decoder.refine((n): n is number => n !== null && !isNaN(n), 'proper number')
+);
+
+export const bigintString = pipe(
+  Decoder.string,
+  Decoder.refine((s): s is string => s.length > 0, 'proper number'),
+  Decoder.parse((s) => {
+    const n = utils.safeBigInt(s);
+    if (n === 0n && +s !== 0) return Decoder.failure(s, 'proper number');
+    return Decoder.success(n);
+  })
 );
 
 export const head = flow(Decoder.array, Decoder.map(RA.head));

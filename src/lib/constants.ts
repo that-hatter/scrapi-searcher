@@ -28,6 +28,8 @@ export const URLS = {
   YGORESOURCES_DIFFS: 'https://texts.ygoresources.com/',
   KONAMI_DB_MASTER: 'https://www.db.yugioh-card.com/yugiohdb',
   KONAMI_DB_RUSH: 'https://www.db.yugioh-card.com/rushdb',
+  DISCORD_CDN: 'https://cdn.discordapp.net/attachments',
+  DISCORD_MEDIA: 'https://media.discordapp.net/attachments',
 } as const;
 
 export const EMOJI = {

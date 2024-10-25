@@ -3,7 +3,7 @@ import * as buffer from 'node:buffer';
 import { dd } from '.';
 import { utils } from '../utils';
 
-export const create = (name: string) =>
+export const text = (name: string) =>
   flow(
     utils.stringify,
     (content): dd.FileContent => ({

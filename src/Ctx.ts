@@ -15,4 +15,6 @@ export type Ctx = {
     readonly logs: string;
     readonly users: RR.ReadonlyRecord<string, string>;
   };
+  readonly picsSource: string;
+  readonly picsChannel: bigint;
 } & Data.Loaded;

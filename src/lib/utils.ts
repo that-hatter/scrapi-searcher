@@ -1,4 +1,4 @@
-import { Lazy, O, TE } from '@that-hatter/scrapi-factory/fp';
+import { flow, Lazy, O, TE } from '@that-hatter/scrapi-factory/fp';
 import { ioEither } from 'fp-ts';
 import { str } from './modules';
 
@@ -56,6 +56,8 @@ const taskify = <T>(fn: Lazy<Promise<T>>) => TE.tryCatch(fn, errorString);
 
 const fallibleIO = <T>(fn: Lazy<T>) => ioEither.tryCatch(fn, errorString);
 
+const taskifyIO = flow(fallibleIO, TE.fromIOEither);
+
 const safeBigInt = (v: bigint | boolean | number | string) => {
   try {
     return BigInt(v);
@@ -70,5 +72,6 @@ export const utils = {
   tapLogFn,
   taskify,
   fallibleIO,
+  taskifyIO,
   safeBigInt,
 };

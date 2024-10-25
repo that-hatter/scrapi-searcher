@@ -36,6 +36,9 @@ export const ignore = (): Err => ({
   userAlert: O.none,
 });
 
+export const toAlertString = (e: Err) =>
+  str.joinParagraphs([e.devAlert, e.userAlert]);
+
 export const reason =
   (reason: dd.Message) =>
   (err: Err): Err => ({
@@ -81,11 +84,7 @@ const formatDevAlert =
 
     return {
       embeds: [{ color, url, title, description, footer }],
-      file: pipe(
-        reason,
-        O.map(Attachment.create('reason.json')),
-        O.toUndefined
-      ),
+      file: pipe(reason, O.map(Attachment.text('reason.json')), O.toUndefined),
     };
   };
 

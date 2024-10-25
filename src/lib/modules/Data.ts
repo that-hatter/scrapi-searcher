@@ -8,6 +8,7 @@ import {
   Banlists,
   BetaIds,
   KonamiIds,
+  Pics,
   Shortcuts,
   Systrings,
 } from '../../ygo';
@@ -20,6 +21,7 @@ export const init = sequenceS(TE.ApplyPar)({
   betaIds: BetaIds.data.init,
   konamiIds: KonamiIds.data.init,
   shortcuts: Shortcuts.data.init,
+  pics: Pics.data.init,
 });
 
 export type Loaded = {
@@ -30,6 +32,7 @@ export type Loaded = {
   readonly betaIds: BetaIds.BetaIds;
   readonly konamiIds: KonamiIds.KonamiIds;
   readonly shortcuts: Shortcuts.Shortcuts;
+  readonly pics: Pics.Pics;
 };
 
 export type Data<K extends keyof Loaded> = {
@@ -57,6 +60,11 @@ const updateDecoder = Decoder.struct({
 
 export const isUpdate = (val: unknown): val is Update =>
   E.isRight(updateDecoder.decode(val));
+
+export const asUpdate = (data: Partial<Loaded>): Update => ({
+  _tag: UPDATE_SYMBOL,
+  ...data,
+});
 
 export const array = [
   Babel.data,
@@ -107,12 +115,7 @@ const performUpdates =
       RTE.fromOption(Err.ignore),
       RTE.map(RNEA.map((d) => getIndividualUpdate(trigger, d))),
       RTE.flatMap(RTE.sequenceArray),
-      RTE.map(
-        RA.reduce({ _tag: UPDATE_SYMBOL }, (agg, curr) => ({
-          ...agg,
-          ...curr,
-        }))
-      )
+      RTE.map(RA.reduce(asUpdate({}), (agg, curr) => ({ ...agg, ...curr })))
     );
 
 export const manualUpdate = (

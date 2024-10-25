@@ -11,9 +11,9 @@ import {
 } from '@that-hatter/scrapi-factory/fp';
 import { readerTask as RT } from 'fp-ts';
 import { Ctx } from '../../Ctx';
-import { Babel, Card } from '../../ygo';
+import { Babel, Card, KonamiIds, Pics } from '../../ygo';
 import { EMOJI, LIMITS } from '../constants';
-import { dd, Err, Interaction, Menu, Op, str } from '../modules';
+import { Data, dd, Err, Interaction, Menu, Op, str } from '../modules';
 
 const MALISS: RR.ReadonlyRecord<string, string> = {
   ['86993168']: 'Why is a raven like a writing desk?',
@@ -80,6 +80,37 @@ const initMessage =
 const handleQuery = (query: string) =>
   pipe(query.substring(1, query.length - 1), str.trim, Card.bestMatch);
 
+const afterReply = (card: Babel.Card) => (msg: dd.Message) => {
+  const oldEmbed = msg.embeds[0];
+  if (!oldEmbed) return Op.noopReader;
+  const oldPic = oldEmbed.thumbnail?.url;
+  const oldKid = oldEmbed.footer?.text.split(' | Konami ID #')[1];
+  if (oldPic && oldKid) return Op.noopReader;
+
+  return pipe(
+    card,
+    Card.itemEmbedWithFetch,
+    RTE.mapError(Err.forDev),
+    RTE.tap((embed) =>
+      Op.editMessage(msg.channelId)(msg.id)({ embeds: [embed] })
+    ),
+    RTE.bindTo('embed'),
+    RTE.bindW('pics', ({ embed }) =>
+      embed.thumbnail && !oldPic
+        ? Pics.addToFile(embed.thumbnail.url)
+        : Pics.current
+    ),
+    RTE.bindW('konamiIds', ({ embed }) => {
+      const newKid = embed.footer?.text.split(' | Konami ID #')[1];
+      return newKid && !oldKid
+        ? KonamiIds.addToFile(card, +newKid)
+        : KonamiIds.current;
+    }),
+    RTE.map(({ pics, konamiIds }) => Data.asUpdate({ pics, konamiIds })),
+    RTE.mapError((e) => (typeof e === 'string' ? Err.forDev(e) : e))
+  );
+};
+
 const sendFoundCards = (
   msg: dd.Message,
   cards: ReadonlyArray<Babel.Card>
@@ -91,7 +122,8 @@ const sendFoundCards = (
     head,
     initMessage(cards),
     RTE.flatMap(Op.sendReply(msg)),
-    head.id === 92901944 ? RTE.tap(Op.react(EMOJI.SEARCHER)) : identity
+    head.id === 92901944 ? RTE.tap(Op.react(EMOJI.SEARCHER)) : identity,
+    RTE.flatMap(afterReply(head))
   );
 };
 

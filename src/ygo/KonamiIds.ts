@@ -1,6 +1,6 @@
 import { O, pipe, RA, RR, TE } from '@that-hatter/scrapi-factory/fp';
 import fetch from 'node-fetch';
-import { Babel, Pedia } from '.';
+import { Babel, Card, Pedia } from '.';
 import { Ctx } from '../Ctx';
 import type { Data } from '../lib/modules';
 import { Decoder, Github, str } from '../lib/modules';
@@ -73,28 +73,32 @@ const fetchFromPedia = (key: Key, name: string) => {
     TE.mapError(
       str.prepend('Could not fetch konami id of ' + str.bold(name) + '\n\n')
     ),
-    TE.map((res) => res['Database ID'])
+    TE.map((res) => O.some(res['Database ID']))
   );
 };
 
-const addToFile = (key: Key, passcode: number, kid: number) => (ctx: Ctx) =>
-  pipe(
-    ctx.konamiIds,
-    RR.mapWithIndex((k, v) => {
-      if (k === key) return { ...v, [passcode.toString()]: kid };
-      return v;
-    }),
-    utils.stringify,
-    (content) =>
-      Github.updateFile(
-        OWNER,
-        'updates-test',
-        'main',
-        PATH,
-        content,
-        'add konami id for ' + passcode
-      )(ctx)
-  );
+export const addToFile = (card: Babel.Card, kid: number) => {
+  return (ctx: Ctx) =>
+    pipe(
+      ctx.konamiIds,
+      RR.mapWithIndex((k, v) =>
+        (Card.isRush(card) ? k === 'rush' : k === 'master')
+          ? { ...v, [card.id.toString()]: kid }
+          : v
+      ),
+      TE.right,
+      TE.tap((content) =>
+        Github.updateFile(
+          OWNER,
+          'updates-test',
+          'main',
+          PATH,
+          utils.stringify(content),
+          'add konami id for ' + card.id
+        )(ctx)
+      )
+    );
+};
 
 export const getOrFetchMissing =
   (
@@ -118,9 +122,7 @@ export const getOrFetchMissing =
     if (key !== 'rush' && !scopes.includes('OCG') && !scopes.includes('TCG'))
       return TE.right(O.none);
 
-    return pipe(
-      fetchFromPedia(key, card.name),
-      TE.tap((kid) => addToFile(key, card.id, kid)(ctx)),
-      TE.map(O.some)
-    );
+    return fetchFromPedia(key, card.name);
   };
+
+export const current = (ctx: Ctx) => TE.right(ctx.konamiIds);
