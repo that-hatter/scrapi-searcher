@@ -140,7 +140,7 @@ const sendNoMatches = (
       content.length > 0 ? Op.sendReply(msg)(content) : Op.noopReader
   );
 
-const bracketSearchFilter = (query: string) => {
+const queryFilter = (query: string) => {
   const s = query.toLowerCase();
   // Maximum [L] and [R] pieces have brackets in their names
   if (s === '[l]' || s === '[r]') return false;
@@ -150,12 +150,11 @@ const bracketSearchFilter = (query: string) => {
 };
 
 export const cardBracketSearch = (msg: dd.Message): Op.Op<unknown> => {
-  const texts = str.getTextParts(msg.content);
-  if (!RA.isNonEmpty(texts)) return Op.noopReader;
+  const queries = str.getTextParts(msg.content).match(/\[.+?\]/g) ?? [];
+  const validQueries = queries.filter(queryFilter);
+  if (validQueries.length === 0) return Op.noopReader;
   return pipe(
-    texts,
-    RA.flatMap((s) => s.match(/\[(.+?)\]/g) ?? []),
-    RA.filter(bracketSearchFilter),
+    validQueries,
     RA.map(handleQuery),
     RT.sequenceArray,
     RT.map(RA.separate),

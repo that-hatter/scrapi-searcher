@@ -132,7 +132,7 @@ export const fromAST = (
 const textParts = <T extends md.RootContent>(
   block: T
 ): ReadonlyArray<string> => {
-  if (block.type === 'text') return [block.value];
+  if (block.type === 'text' || block.type === 'html') return [block.value];
   if ('children' in block)
     return pipe([...block.children], RA.flatMap(textParts));
   return [];
@@ -156,7 +156,7 @@ const normalizeCodeBlocks = flow(
 
 export const getTextParts = (s: string) => {
   const ast = md.parse(normalizeCodeBlocks(s));
-  return pipe(ast.children, RA.flatMap(textParts));
+  return pipe(ast.children, RA.flatMap(textParts), string.intercalate(''));
 };
 
 // -----------------------------------------------------------------------------
