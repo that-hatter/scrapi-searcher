@@ -74,6 +74,7 @@ export const array = [
   BetaIds.data,
   KonamiIds.data,
   Shortcuts.data,
+  Pics.data,
 ] as const;
 
 const getIndividualUpdate = <K extends keyof Loaded>(

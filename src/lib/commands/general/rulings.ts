@@ -1,40 +1,7 @@
-import { identity, pipe, R, RTE } from '@that-hatter/scrapi-factory/fp';
-import { Babel, BitNames, Card, KonamiIds } from '../../../ygo';
+import { identity, O, pipe, RTE } from '@that-hatter/scrapi-factory/fp';
+import { BitNames, Card, KonamiIds } from '../../../ygo';
 import { URLS } from '../../constants';
-import { Command, Err, Op, str } from '../../modules';
-
-const msgContent = (c: Babel.Card) =>
-  pipe(
-    BitNames.scopes(c.ot),
-    R.bindTo('scopes'),
-    R.bind('types', () => BitNames.types(c.type)),
-    RTE.fromReader,
-    RTE.bind('konamiId', ({ scopes, types }) =>
-      pipe(
-        KonamiIds.getOrFetchMissing(c, scopes, types),
-        RTE.mapError(Err.forDev),
-        RTE.flatMapOption(identity, () =>
-          Err.forUser(
-            'There are no rulings for ' +
-              str.bold(c.name + ' ' + str.inlineCode(c.id.toString())) +
-              '.'
-          )
-        )
-      )
-    ),
-    RTE.map(({ scopes, konamiId }) => {
-      const rush = scopes.includes('Rush');
-      const db = rush ? URLS.KONAMI_DB_RUSH : URLS.KONAMI_DB_MASTER;
-      const konami =
-        `🇯🇵 Konami DB: ` +
-        `<${db}/faq_search.action?ope=2&request_locale=ja&cid=${konamiId}>`;
-      if (rush) return str.joinParagraphs([str.bold(c.name), konami]);
-
-      const ygoResources =
-        `🇬🇧 YGOResources: ` + `<${URLS.YGORESOURCES_DB}card#${konamiId}>`;
-      return str.joinParagraphs([str.bold(c.name), konami, ygoResources]);
-    })
-  );
+import { Command, Data, Err, Op, str } from '../../modules';
 
 export const rulings: Command.Command = {
   name: 'rulings',
@@ -43,8 +10,53 @@ export const rulings: Command.Command = {
   aliases: ['ruling'],
   execute: (parameters, message) =>
     pipe(
-      Card.bestMatch(parameters.join(' ')),
-      RTE.flatMap(msgContent),
-      RTE.flatMap(Op.sendReply(message))
+      RTE.Do,
+      RTE.bind('card', () => Card.bestMatch(parameters.join(' '))),
+      RTE.bindW('scopes', ({ card }) =>
+        pipe(BitNames.scopes(card.ot), RTE.fromReader)
+      ),
+      RTE.bindW('types', ({ card }) =>
+        pipe(BitNames.types(card.type), RTE.fromReader)
+      ),
+      RTE.bind('konamiId', ({ card, scopes, types }) =>
+        pipe(
+          KonamiIds.getOrFetchMissing(card, scopes, types),
+          RTE.mapError(Err.forDev),
+          RTE.flatMapOption(identity, () =>
+            Err.forUser(
+              'There are no rulings for ' +
+                str.bold(card.name + ' ' + str.inlineCode(card.id.toString())) +
+                '.'
+            )
+          )
+        )
+      ),
+      RTE.let('content', ({ card, scopes, konamiId }) => {
+        const rush = scopes.includes('Rush');
+        const db = rush ? URLS.KONAMI_DB_RUSH : URLS.KONAMI_DB_MASTER;
+        const konami =
+          `🇯🇵 Konami DB: ` +
+          `<${db}/faq_search.action?ope=2&request_locale=ja&cid=${konamiId}>`;
+        if (rush) return str.joinParagraphs([str.bold(card.name), konami]);
+
+        const ygoResources =
+          `🇬🇧 YGOResources: ` + `<${URLS.YGORESOURCES_DB}card#${konamiId}>`;
+        return str.joinParagraphs([str.bold(card.name), konami, ygoResources]);
+      }),
+      RTE.bind('reply', ({ content }) => Op.sendReply(message)(content)),
+      RTE.bindW('currKid', ({ card }) =>
+        pipe(
+          KonamiIds.getExisting(card, Card.isRush(card) ? 'rush' : 'master'),
+          RTE.fromReader
+        )
+      ),
+      RTE.flatMap(({ card, konamiId, currKid }) => {
+        if (O.isSome(currKid)) return Op.noopReader;
+        return pipe(
+          KonamiIds.addToFile(card, konamiId),
+          RTE.map((konamiIds) => Data.asUpdate({ konamiIds })),
+          RTE.mapError(Err.forDev)
+        );
+      })
     ),
 };
