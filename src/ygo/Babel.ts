@@ -141,7 +141,10 @@ const getAllCdbPaths = (dir: string) =>
     )
   );
 
-const initMinisearch = (cards: ReadonlyArray<Card>): MiniSearch<Card> => {
+const initMinisearch = (
+  array: ReadonlyArray<Card>,
+  record: RR.ReadonlyRecord<string, Card>
+): MiniSearch<Card> => {
   const minisearch = new MiniSearch<Card>({
     fields: ['name'],
     searchOptions: {
@@ -156,19 +159,18 @@ const initMinisearch = (cards: ReadonlyArray<Card>): MiniSearch<Card> => {
         .split(/\s+/),
   });
 
-  const added: { [name: string]: Card } = {};
-  cards.forEach((c) => {
-    const alreadyAdded = added[c.name];
-    if (
-      !alreadyAdded ||
-      c.alias !== alreadyAdded.id ||
-      c.ot !== alreadyAdded.ot ||
-      c.desc !== alreadyAdded.desc
-    ) {
-      minisearch.add(c);
-      added[c.name] = c;
-    }
-  });
+  minisearch.addAll(
+    array.filter((c) => {
+      if (c.alias === 0) return true;
+      const main = record[c.alias.toString()];
+      return (
+        !main ||
+        main.ot !== c.ot ||
+        main.name !== c.name ||
+        main.desc !== c.desc
+      );
+    })
+  );
 
   return minisearch;
 };
@@ -187,7 +189,7 @@ const loadBabel: TE.TaskEither<string, Babel> = pipe(
   ),
   TE.map((record): Babel => {
     const array = RR.values(record).toSorted((a, b) => Number(a.id - b.id));
-    const minisearch = initMinisearch(array);
+    const minisearch = initMinisearch(array, record);
     return { array, record, minisearch };
   })
 );

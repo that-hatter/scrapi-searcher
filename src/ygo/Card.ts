@@ -190,7 +190,10 @@ const scriptFolder = (pf: PreFormatted) => {
 };
 
 const _scriptURL = (pf: PreFormatted): O.Option<string> => {
-  if (pf.types.includes('Normal') && !pf.types.includes('Pendulum'))
+  if (
+    (pf.types.includes('Normal') || pf.types.includes('Token')) &&
+    !pf.types.includes('Pendulum')
+  )
     return O.none;
   const folder = scriptFolder(pf);
   const main =

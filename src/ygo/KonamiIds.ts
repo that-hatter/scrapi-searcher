@@ -110,17 +110,30 @@ export const getOrFetchMissing =
     const key = scopes.includes('Rush') ? 'rush' : 'master';
 
     const saved = ctx.konamiIds[key][card.id.toString()];
-    if (saved)
+    if (saved) {
       return pipe(
         saved,
         O.fromPredicate((n) => n > 0),
         TE.right
       );
+    }
 
     if (scopes.includes('Pre-release') || types.includes('Token'))
       return TE.right(O.none);
     if (key !== 'rush' && !scopes.includes('OCG') && !scopes.includes('TCG'))
       return TE.right(O.none);
+
+    if (card.alias > 0) {
+      const main = ctx.babel.record[card.alias.toString()];
+      if (
+        main &&
+        card.ot === main.ot &&
+        card.name === main.name &&
+        card.desc === main.desc
+      ) {
+        return TE.right(getExisting(main, key)(ctx));
+      }
+    }
 
     return fetchFromPedia(key, card.name);
   };
