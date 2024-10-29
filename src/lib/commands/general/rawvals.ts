@@ -49,7 +49,7 @@ export const rawDescEmbed = (c: Babel.Card) =>
     R.map((color) => ({
       color,
       title: title(c),
-      description: c.desc,
+      description: str.codeBlock(c.desc),
       footer: { text: c.cdb },
     }))
   );
@@ -63,7 +63,9 @@ export const rawStringsEmbed = (c: Babel.Card) =>
       description: pipe(
         c,
         Card.getCdbStrings,
-        RA.map(([_, i, s]) => str.bold('str' + (i + 1)) + ': ' + s),
+        RA.map(
+          ([_, i, s]) => str.bold('str' + (i + 1)) + ': ' + str.inlineCode(s)
+        ),
         str.joinParagraphs,
         str.unempty,
         O.getOrElseW(() => str.subtext('This card has no strings.'))
