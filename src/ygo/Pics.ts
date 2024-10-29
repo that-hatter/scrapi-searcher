@@ -92,12 +92,14 @@ export const addToFile = (url: string) => (ctx: Ctx) => {
 export const getOrFetchMissing = (c: Babel.Card) => (ctx: Ctx) => {
   const id = c.id.toString();
   const saved = ctx.pics[id];
-  if (saved)
+  if (saved) {
     return pipe(
       saved,
       O.fromPredicate((pid) => pid !== 'N/A'),
+      O.map((pid) => `${URLS.DISCORD_MEDIA}/${pid}/${id}.jpg`),
       TE.right
     );
+  }
 
   return Card.isNonCard(c) ? TE.right(O.none) : fetchAndUpload(id)(ctx);
 };
