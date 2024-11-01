@@ -20,9 +20,6 @@
   "Ancient Gear Gadjiltron Dragon": [
     "aggd"
   ],
-  "Arise-heart": [
-    "ariseheart"
-  ],
   "Assault Blackwing": [
     "abw"
   ],
@@ -85,9 +82,6 @@
   ],
   "Celtic Guard": [
     "cg"
-  ],
-  "Centur-Ion": [
-    "centurion"
   ],
   "Chaos Emperor Dragon": [
     "ced"
@@ -249,8 +243,7 @@
     "gepd"
   ],
   "Gem-Knight": [
-    "gemk",
-    "gemknight"
+    "gemk"
   ],
   "Gladiator Beast": [
     "gb",
@@ -283,9 +276,6 @@
     "htbfd",
     "hbfd"
   ],
-  "Hu-Li": [
-    "huli"
-  ],
   "Imperial Order": [
     "io"
   ],
@@ -295,17 +285,8 @@
   "Judgment Dragon": [
     "jd"
   ],
-  "Kairyu-Shin": [
-    "kairyushin"
-  ],
-  "Kaleido-heart": [
-    "kaleidoheart"
-  ],
   "Kashtira": [
     "kash"
-  ],
-  "Ki-sikil": [
-    "kisikil"
   ],
   "Light and Darkness Dragon": [
     "ladd"
@@ -313,14 +294,8 @@
   "Light and Darkness Dragonlord": [
     "laddlord"
   ],
-  "Light-heart": [
-    "lightheart"
-  ],
   "Lightsworn": [
     "ls"
-  ],
-  "Lil-la": [
-    "lilla"
   ],
   "Lunalight": [
     "ll"
@@ -335,13 +310,11 @@
     "mpb"
   ],
   "Mekk-Knight": [
-    "mekkknight",
     "mekknight",
     "meknight",
     "mekk"
   ],
   "M-X-Saber": [
-    "mxsaber",
     "mx"
   ],
   "Mo Ye": [
@@ -355,9 +328,6 @@
   ],
   "Nibiru": [
     "nib"
-  ],
-  "Ni-Ni": [
-    "nini"
   ],
   "Utopic Draco Future": [
     "udf"
@@ -395,15 +365,6 @@
   ],
   "Prank-Kids": [
     "pranks"
-  ],
-  "Prime-heart": [
-    "primeheart"
-  ],
-  "Psy-Frame": [
-    "psyframe"
-  ],
-  "Psy-Framegear": [
-    "psyframegear"
   ],
   "Pyschic End Punisher": [
     "pep"
@@ -562,12 +523,6 @@
   "Trap Hole": [
     "th"
   ],
-  "Tri-heart": [
-    "triheart"
-  ],
-  "Tri-Brigade": [
-    "tribrigade"
-  ],
   "Trishula": [
     "trish"
   ],
@@ -596,17 +551,8 @@
   "Wind-Up": [
     "wu"
   ],
-  "X-Saber": [
-    "xsaber"
-  ],
-  "XX-Saber": [
-    "xxsaber"
-  ],
   "Yang Zing": [
     "yz"
-  ],
-  "Z-ARC": [
-    "zarc"
   ],
   "of the Forest": [
     "otf"
