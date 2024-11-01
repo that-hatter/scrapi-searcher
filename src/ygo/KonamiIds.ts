@@ -15,9 +15,9 @@ const decoder = Decoder.struct({
 export type KonamiIds = DeepReadonly<Decoder.TypeOf<typeof decoder>>;
 
 const OWNER = 'that-hatter';
-const REPO = 'scrapi-searcher';
+const REPO = 'scrapi-searcher-data';
 const PATH = 'data/konamiIds.json';
-const BRANCH = 'master';
+const BRANCH = 'main';
 const URL = `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/${PATH}`;
 
 const update = pipe(

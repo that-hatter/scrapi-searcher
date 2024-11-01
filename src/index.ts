@@ -117,10 +117,11 @@ const program = pipe(
     );
 
     github.webhook.on('push', ({ payload }) => {
-      if (payload.ref !== 'refs/heads/master') return;
-      const commits = payload.commits;
+      const { ref, commits } = payload;
+      if (ref !== 'refs/heads/master' && ref !== 'refs/heads/main') return;
       if (commits.length === 1 && commits[0]?.message.startsWith('[auto] '))
         return;
+
       pipe(
         commits,
         RA.flatMap((c) => [...c.added, ...c.modified, ...c.removed]),

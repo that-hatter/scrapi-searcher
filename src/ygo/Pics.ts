@@ -9,9 +9,9 @@ import { Decoder, Err, Github, Op } from '../lib/modules';
 import { utils } from '../lib/utils';
 
 const OWNER = 'that-hatter';
-const REPO = 'scrapi-searcher';
+const REPO = 'scrapi-searcher-data';
 const PATH = 'data/pics.json';
-const BRANCH = 'master';
+const BRANCH = 'main';
 const URL = `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/${PATH}`;
 
 export type Pics = RR.ReadonlyRecord<string, string>;

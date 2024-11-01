@@ -18,7 +18,7 @@ export type Shortcuts = DeepReadonly<Decoder.TypeOf<typeof decoder>>;
 
 const URL =
   'https://raw.githubusercontent.com/that-hatter/' +
-  'scrapi-searcher/master/data/shortcuts.json';
+  'scrapi-searcher-data/main/data/shortcuts.json';
 
 const update = pipe(
   utils.taskify(() => fetch(URL).then((response) => response.json())),
