@@ -5,6 +5,7 @@ import { Ctx } from '../Ctx';
 import type { Data } from '../lib/modules';
 import { Decoder, Github, str } from '../lib/modules';
 import { DeepReadonly, utils } from '../lib/utils';
+import { isAltArt } from './Babel';
 
 const decoder = Decoder.struct({
   master: Decoder.record(Decoder.number),
@@ -125,12 +126,7 @@ export const getOrFetchMissing =
 
     if (card.alias > 0) {
       const main = ctx.babel.record[card.alias.toString()];
-      if (
-        main &&
-        card.ot === main.ot &&
-        card.name === main.name &&
-        card.desc === main.desc
-      ) {
+      if (main && isAltArt(main, card)) {
         return TE.right(getExisting(main, key)(ctx));
       }
     }

@@ -547,20 +547,7 @@ export const itemEmbedWithFetch: (c: Card) => Op.SubOp<dd.Embed> = flow(
 
 export const fuzzyMatches = (query: string) => (ctx: Ctx) => {
   const fullQuery = Shortcuts.resolveShortcuts(query)(ctx);
-  const results = ctx.babel.minisearch.search(fullQuery);
-  return pipe(
-    results,
-    RA.filterMap(({ id }) => O.fromNullable(ctx.babel.record[id.toString()]))
-  ).toSorted((a, b) => {
-    if (a.name === b.name)
-      return b.alias === a.id ? -1 : a.alias === b.id ? 1 : 0;
-    if (a.name.includes(b.name) || b.name.includes(a.name))
-      return (
-        Math.abs(a.name.length - fullQuery.length) -
-        Math.abs(b.name.length - fullQuery.length)
-      );
-    return 0;
-  });
+  return ctx.babel.search(fullQuery);
 };
 
 const isNumeric = (s: string) => (+s).toString() === s;
@@ -620,6 +607,7 @@ export const bestMatch =
 // -----------------------------------------------------------------------------
 // helpers for card-related commands
 // -----------------------------------------------------------------------------
+
 export const isNonCard = (c: Card) => c.type < 1n || c.ot >= 0x800n;
 
 export const isRush = (c: Card) => (c.ot & 0x200n) === 0x200n;

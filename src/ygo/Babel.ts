@@ -1,13 +1,13 @@
 import { O, pipe, RA, RNEA, RR, TE } from '@that-hatter/scrapi-factory/fp';
 import Database from 'better-sqlite3';
 import { ioEither } from 'fp-ts';
-import MiniSearch from 'minisearch';
+import MiniSearch, { SearchResult } from 'minisearch';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import { Ctx } from '../Ctx';
 import { PATHS } from '../lib/constants';
 import type { Data } from '../lib/modules';
-import { Collection, Decoder, Github } from '../lib/modules';
+import { Collection, Decoder, Github, str } from '../lib/modules';
 import { utils } from '../lib/utils';
 
 export type Card = Readonly<
@@ -16,7 +16,7 @@ export type Card = Readonly<
 >;
 
 export type Babel = Collection.Collection<Card> & {
-  readonly minisearch: MiniSearch<Card>;
+  readonly search: (query: string) => ReadonlyArray<Card>;
 };
 
 // -----------------------------------------------------------------------------
@@ -141,38 +141,117 @@ const getAllCdbPaths = (dir: string) =>
     )
   );
 
-const initMinisearch = (
+const WHITESPACE = /\s+/g;
+const NEWLINE = /[\r\n]+/g;
+const SPECIAL = /[^\p{L}\p{N}\p{M}\p{Z}]/gu;
+// whitespace character with a special character before or after it
+const WHITESPACE_AROUND_SPECIAL =
+  /(?<=[^\p{L}\p{N}\p{M}\p{Z}])\s+|\s+(?=[^\p{L}\p{N}\p{M}\p{Z}])/gu;
+
+const postSort =
+  (query: string, record: RR.ReadonlyRecord<string, Card>) =>
+  (results: Array<SearchResult>) => {
+    const q = query.toLowerCase();
+
+    const boost = (res: SearchResult) => {
+      const name = res.name.toLowerCase();
+      if (q === name) return 100;
+
+      let boost = 1;
+
+      const card = record[res.id.split(' ')[0]]!;
+      if (card.ot & 0x3n) boost *= 1.1;
+      if (card.alias === 0) boost *= 1.1;
+
+      if (name.includes(q)) {
+        boost *= 1.6 * (1 + (name.length - q.length) / name.length);
+        if (name.startsWith(q)) {
+          if (name.startsWith(q + ' ')) boost *= 1.4;
+          boost *= 1.4;
+        } else if (name.includes(q + ' ') || name.includes(' ' + q))
+          boost *= 1.4;
+      }
+
+      return boost;
+    };
+
+    return pipe(
+      results,
+      RA.map((res) => ({
+        ...res,
+        score: res.score * boost(res),
+      })),
+      (final) => final.toSorted((a, b) => b.score - a.score)
+    );
+  };
+
+const initSearch = (
   array: ReadonlyArray<Card>,
   record: RR.ReadonlyRecord<string, Card>
-): MiniSearch<Card> => {
-  const minisearch = new MiniSearch<Card>({
+): Babel['search'] => {
+  type Variant = {
+    readonly id: string;
+    readonly name: string;
+  };
+
+  const variants: ReadonlyArray<Variant> = pipe(
+    array,
+    RA.filter((c) => {
+      if (c.alias === 0) return true;
+      const main = record[c.alias.toString()];
+      return !main || !isAltArt(main, c);
+    }),
+    RA.flatMap((c) =>
+      pipe(
+        c.name.match(SPECIAL) ?? [],
+        RA.map((char) => c.name.replaceAll(char, ' ')),
+        RA.prepend(c.name),
+        RA.flatMap((s) => [s, s.replaceAll(SPECIAL, '')]),
+        RA.append(c.name.replaceAll(WHITESPACE_AROUND_SPECIAL, '')),
+        RA.map(str.trim),
+        (variants) => [...new Set(variants)],
+        RA.mapWithIndex((i, name) => ({ id: c.id + ' ' + i, name }))
+      )
+    )
+  );
+
+  const minisearch = new MiniSearch<Variant>({
     fields: ['name'],
     searchOptions: {
       fuzzy: true,
       prefix: true,
       maxFuzzy: 8,
+      boostDocument: (id, term) => {
+        // boost score of original exact matches
+        const original = record[id.split(' ')[0]]!.name;
+        if (original.toLowerCase().split(WHITESPACE).includes(term)) return 1.6;
+        return 1;
+      },
+      processTerm: (term) => {
+        const t = term.toLowerCase();
+        // this is fine to do in processTerm because there are no cards
+        // with both 'anime' and 'manga' in their name to skew the results
+        return t.includes('anime')
+          ? [t, t.replace('anime', 'manga')]
+          : t.includes('manga')
+          ? [t, t.replace('manga', 'anime')]
+          : t;
+      },
     },
-    tokenize: (text) =>
-      text
-        .replaceAll('-', ' ')
-        .replaceAll(/[\p{P}\p{S}]+/gu, '')
-        .split(/\s+/),
+    tokenize: (text) => text.split(WHITESPACE),
+    storeFields: ['name'],
   });
 
-  minisearch.addAll(
-    array.filter((c) => {
-      if (c.alias === 0) return true;
-      const main = record[c.alias.toString()];
-      return (
-        !main ||
-        main.ot !== c.ot ||
-        main.name !== c.name ||
-        main.desc !== c.desc
-      );
-    })
-  );
+  minisearch.addAll(variants);
 
-  return minisearch;
+  return (query) =>
+    pipe(
+      minisearch.search(query),
+      postSort(query, record),
+      RA.filterMap((s) => O.fromNullable(s.id.split(' ')[0])),
+      (ids) => [...new Set(ids)],
+      RA.filterMap((id) => O.fromNullable(record[id]))
+    );
 };
 
 const loadBabel: TE.TaskEither<string, Babel> = pipe(
@@ -189,8 +268,8 @@ const loadBabel: TE.TaskEither<string, Babel> = pipe(
   ),
   TE.map((record): Babel => {
     const array = RR.values(record).toSorted((a, b) => Number(a.id - b.id));
-    const minisearch = initMinisearch(array, record);
-    return { array, record, minisearch };
+    const search = initSearch(array, record);
+    return { array, record, search };
   })
 );
 
@@ -220,3 +299,9 @@ export const getAliases = (c: Card) => (ctx: Ctx) =>
     ctx.babel.array,
     RA.filter((a) => a.alias === c.id || c.alias === a.id)
   );
+
+export const isAltArt = (c: Card, alt: Card) =>
+  alt.alias === c.id &&
+  alt.ot === c.ot &&
+  alt.name === c.name &&
+  alt.desc.replaceAll(NEWLINE, '\n') === c.desc.replaceAll(NEWLINE, '\n');
