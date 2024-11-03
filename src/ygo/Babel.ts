@@ -148,42 +148,44 @@ const SPECIAL = /[^\p{L}\p{N}\p{M}\p{Z}]/gu;
 const WHITESPACE_AROUND_SPECIAL =
   /(?<=[^\p{L}\p{N}\p{M}\p{Z}])\s+|\s+(?=[^\p{L}\p{N}\p{M}\p{Z}])/gu;
 
-const postSort =
-  (query: string, record: RR.ReadonlyRecord<string, Card>) =>
-  (results: Array<SearchResult>) => {
-    const q = query.toLowerCase();
+const inclusionBoost = (a: string, b: string) => {
+  const ws = b.match(WHITESPACE);
+  const tokenBoost = ws && ws.length > 0 ? 1.7 - 1 / ws.length : 1;
+  const lengthBoost =
+    1 + Math.min(a.length, b.length) / (Math.max(a.length, b.length) * 2);
+  let boost = tokenBoost * lengthBoost;
 
-    const boost = (res: SearchResult) => {
-      const name = res.name.toLowerCase();
-      if (q === name) return 100;
+  if (a.startsWith(b)) return boost * (a.startsWith(b + ' ') ? 1.5 : 1.25);
+  if (a.includes(' ' + b + ' ')) return boost * 1.35;
+  if (a.endsWith(b)) return boost * (a.endsWith(' ' + b) ? 1.3 : 1.15);
+  if (a.includes(b + ' ') || a.includes(' ' + b)) return boost * 1.2;
 
-      let boost = 1;
+  return boost;
+};
 
-      const card = record[res.id.split(' ')[0]]!;
-      if (card.ot & 0x3n) boost *= 1.1;
-      if (card.alias === 0) boost *= 1.1;
+const postSort = (query: string) => (results: Array<SearchResult>) => {
+  const q = query.toLowerCase();
+  const qam = q.replace('anime', 'manga');
+  const qma = q.replace('manga', 'anime');
 
-      if (name.includes(q)) {
-        boost *= 1.6 * (1 + (name.length - q.length) / name.length);
-        if (name.startsWith(q)) {
-          if (name.startsWith(q + ' ')) boost *= 1.4;
-          boost *= 1.4;
-        } else if (name.includes(q + ' ') || name.includes(' ' + q))
-          boost *= 1.4;
-      }
+  const boost = (res: SearchResult) => {
+    const name: string = res.name.toLowerCase();
 
-      return boost;
-    };
+    if (q === name || qam === name || qma === name) return 100;
+    if (name.includes(q)) return 1.05 * inclusionBoost(name, q);
+    if (name.includes(qam)) return 1.05 * inclusionBoost(name, qam);
+    if (name.includes(qma)) return 1.05 * inclusionBoost(name, qma);
+    if (q.includes(name)) return inclusionBoost(q, name);
+    if (qam.includes(name)) return inclusionBoost(qam, name);
+    if (qma.includes(name)) return inclusionBoost(qma, name);
 
-    return pipe(
-      results,
-      RA.map((res) => ({
-        ...res,
-        score: res.score * boost(res),
-      })),
-      (final) => final.toSorted((a, b) => b.score - a.score)
-    );
+    return 1;
   };
+
+  return results
+    .map((res) => ({ ...res, score: res.score * boost(res) }))
+    .toSorted((a, b) => b.score - a.score);
+};
 
 const initSearch = (
   array: ReadonlyArray<Card>,
@@ -221,22 +223,6 @@ const initSearch = (
       fuzzy: true,
       prefix: true,
       maxFuzzy: 8,
-      boostDocument: (id, term) => {
-        // boost score of original exact matches
-        const original = record[id.split(' ')[0]]!.name;
-        if (original.toLowerCase().split(WHITESPACE).includes(term)) return 1.6;
-        return 1;
-      },
-      processTerm: (term) => {
-        const t = term.toLowerCase();
-        // this is fine to do in processTerm because there are no cards
-        // with both 'anime' and 'manga' in their name to skew the results
-        return t.includes('anime')
-          ? [t, t.replace('anime', 'manga')]
-          : t.includes('manga')
-          ? [t, t.replace('manga', 'anime')]
-          : t;
-      },
     },
     tokenize: (text) => text.split(WHITESPACE),
     storeFields: ['name'],
@@ -247,7 +233,7 @@ const initSearch = (
   return (query) =>
     pipe(
       minisearch.search(query),
-      postSort(query, record),
+      postSort(query),
       RA.filterMap((s) => O.fromNullable(s.id.split(' ')[0])),
       (ids) => [...new Set(ids)],
       RA.filterMap((id) => O.fromNullable(record[id]))
@@ -267,7 +253,9 @@ const loadBabel: TE.TaskEither<string, Babel> = pipe(
     )
   ),
   TE.map((record): Babel => {
-    const array = RR.values(record).toSorted((a, b) => Number(a.id - b.id));
+    const array = RR.values(record).toSorted(
+      (a, b) => Number(a.ot - b.ot) || a.alias - b.alias || a.id - b.id
+    );
     const search = initSearch(array, record);
     return { array, record, search };
   })
