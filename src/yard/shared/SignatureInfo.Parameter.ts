@@ -33,16 +33,18 @@ export const combinedPartialSignatures = flow(
   }
 );
 
-const preDescription = (param: sf.Parameter): O.Option<string> =>
-  pipe(
+const preDescription = (param: sf.Parameter): O.Option<string> => {
+  if (param.required) return O.none;
+  return pipe(
     param.defaultValue,
     O.map((def) => 'Defaults to ' + str.inlineCode(def.toString()) + '.'),
-    O.map((pre) => {
-      if (param.required) return pre;
-      return (pre.length > 0 ? 'Optional. ' : 'Optional.') + pre;
-    }),
-    O.map(str.italic)
+    RA.of,
+    RA.prependW('Optional.'),
+    str.joinWords,
+    str.italic,
+    O.some
   );
+};
 
 const section = (param: sf.Parameter) => {
   const desc = str.joinWords([
