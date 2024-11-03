@@ -25,7 +25,7 @@ const update = pipe(
 
 export const data: Data.Data<'pics'> = {
   key: 'pics',
-  description: 'Card artwork ids.',
+  description: 'Reuploaded card artwork urls saved in `pics.json.`',
   update,
   init: update,
   commitFilter: (repo, files) =>
