@@ -20,7 +20,7 @@ export const italic = string.surrounded('*');
 
 export const strikethrough = string.surrounded('~~');
 
-export const underling = string.surrounded('__');
+export const underline = string.surrounded('__');
 
 export const spoiler = string.surrounded('||');
 
@@ -174,6 +174,16 @@ export const join = (sep: string) =>
 export const joinWords = join(' ');
 
 export const joinParagraphs = join('\n');
+
+export const joinWithLimit = (sep: string, max: number) =>
+  flow(
+    RA.filterMap(normalizeOptional),
+    RA.reduce([''], (aggr, curr) => {
+      const s = aggr[aggr.length - 1]! + sep + curr;
+      if (s.length > max) return [...aggr, curr];
+      return [...aggr.slice(0, aggr.length - 1), s];
+    })
+  );
 
 export const unempty = flow(string.trim, O.fromPredicate(isUnempty));
 

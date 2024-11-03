@@ -70,22 +70,31 @@ const preformatWithFetch = (card: Card): Op.SubOp<PreFormatted> =>
 // card text parsing
 // -----------------------------------------------------------------------------
 
+const NEWLINE = /[\r\n]+/g;
+
 // splits desc fields into multiple parts if they exceed text field value limits
 const safeTextFields = (
   field: dd.DiscordEmbedField
 ): Array<dd.DiscordEmbedField> => {
   if (field.value.length <= LIMITS.EMBED_FIELD) return [field];
-  return field.value
-    .split('\n')
-    .reduce(
-      (aggr, curr) => {
-        const s = aggr[aggr.length - 1] + '\n' + curr;
-        if (s.length > LIMITS.EMBED_FIELD) return [...aggr, curr];
-        return [...aggr.slice(-1), s];
-      },
-      ['']
-    )
-    .map((v, i) => ({ name: i === 0 ? field.name : '\u200b', value: v }));
+  return pipe(
+    field.value,
+    str.split(NEWLINE),
+    RA.flatMap((line) => {
+      if (line.length <= LIMITS.EMBED_FIELD) return [line];
+      return pipe(
+        line,
+        str.split(/\s+/g),
+        str.joinWithLimit(' ', LIMITS.EMBED_FIELD)
+      );
+    }),
+    str.joinWithLimit('\n', LIMITS.EMBED_FIELD),
+    RA.mapWithIndex((i, v) => ({
+      name: i === 0 ? field.name : '\u200b',
+      value: v,
+    })),
+    RA.toArray
+  );
 };
 
 const textFields =
@@ -113,7 +122,7 @@ const textFields =
   };
 
 const parseTextLines = flow(
-  str.split('\n'),
+  str.split(NEWLINE),
   RNEA.map(str.trim),
   RA.filter(
     (s) =>
