@@ -19,12 +19,13 @@ const valueParagraphs = (
   { value }: sf.Constant,
   { bitmaskInt }: sf.Enum
 ): string => {
-  if (bitmaskInt && typeof value === 'bigint')
+  if (bitmaskInt && typeof value === 'bigint') {
     return str.joinParagraphs([
-      str.bold('HEX: ') + str.inlineCode(hexString(value)),
-      str.bold('DEC: ') + str.inlineCode(value.toString()),
+      str.bold('HEX:') + ' ' + str.inlineCode(hexString(value)),
+      str.bold('DEC:') + ' ' + str.inlineCode(value.toString()),
     ]);
-  return str.inlineCode(value.toString());
+  }
+  return str.bold('Value:') + ' ' + str.inlineCode(value.toString());
 };
 
 const enumLink =
