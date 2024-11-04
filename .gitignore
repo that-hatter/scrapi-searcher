@@ -2,6 +2,4 @@ node_modules/
 dist/
 .env*
 tsconfig.tsbuildinfo
-data/BabelCDB
-data/LFLists
-data/scrapiyard
+data/
