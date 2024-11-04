@@ -23,9 +23,11 @@ export type Collection = Collection.Collection<Command>;
 export const devCheck =
   (message: dd.Message) =>
   ({ dev }: Ctx): boolean => {
-    if (dev.admin === message.author.id.toString()) return true;
+    const authorId = message.author?.id.toString();
+    if (!authorId) return false;
+    if (dev.admin === authorId) return true;
     if (dev.guild.toString() === message.guildId?.toString()) return true;
-    return !!dev.users[message.author.id.toString()];
+    return !!dev.users[authorId];
   };
 
 const embedFields =

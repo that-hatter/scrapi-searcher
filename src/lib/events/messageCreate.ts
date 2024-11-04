@@ -6,7 +6,8 @@ import { Collection, Command, Err, Event, Op, str } from '../modules';
 export const messageCreate: Event.Event<'messageCreate'> = {
   name: 'messageCreate',
   handle: (message) => (ctx) => {
-    if (message.author.bot) return Op.noop;
+    if (message.author?.bot) return Op.noop;
+    if (!message.content || message.content.length === 0) return Op.noop;
 
     if (!message.content.startsWith(ctx.prefix)) {
       if (

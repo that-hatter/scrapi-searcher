@@ -156,6 +156,7 @@ const queryFilter = (query: string) => {
 };
 
 export const cardBracketSearch = (msg: dd.Message): Op.Op<unknown> => {
+  if (!msg.content) return Op.noopReader;
   const queries = str.getTextParts(msg.content).match(/\[.+?\]/g) ?? [];
   const validQueries = queries.filter(queryFilter);
   if (validQueries.length === 0) return Op.noopReader;
