@@ -61,7 +61,7 @@ const processClaim =
     );
 
 const getClaimer = (user: dd.User) => (ctx: Ctx) =>
-  TE.right(ctx.dev.users[user.id.toString()] ?? user.discriminator);
+  TE.right(ctx.dev.users[user.id?.toString()] ?? user.discriminator);
 
 export const glCardClaim = Menu.interaction({
   name: 'glCardClaim',

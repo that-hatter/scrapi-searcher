@@ -26,7 +26,7 @@ export const devCheck =
     const authorId = message.author?.id.toString();
     if (!authorId) return false;
     if (dev.admin === authorId) return true;
-    if (dev.guild.toString() === message.guildId?.toString()) return true;
+    if (dev.guild === message.guildId?.toString()) return true;
     return !!dev.users[authorId];
   };
 
