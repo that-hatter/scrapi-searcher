@@ -41,7 +41,8 @@ const program = pipe(
     )
   ),
   TE.bind('data', () => Data.init),
-  TE.let('bot', ({ env }) =>
+  TE.bind('dd', () => utils.taskify(() => import('@discordeno/bot'))),
+  TE.let('bot', ({ dd, env }) =>
     dd.createBot({
       intents:
         dd.GatewayIntents.Guilds |
@@ -49,6 +50,9 @@ const program = pipe(
         dd.GatewayIntents.MessageContent |
         dd.GatewayIntents.DirectMessages,
       token: env.BOT_TOKEN,
+      // TODO: pick actual desired properties once typing is safer
+      // for now, this sets all properties to be true
+      desiredProperties: dd.createDesiredPropertiesObject({}, true),
     })
   ),
   TE.bind('emojis', ({ bot }) => Op.getAppEmojis(bot)),
@@ -138,7 +142,7 @@ const program = pipe(
 
     return utils.taskify(() => {
       console.log('Starting bot...');
-      return dd.startBot(bot);
+      return bot.start();
     });
   }),
   TE.mapError(utils.tapLog)

@@ -31,7 +31,7 @@ export const noopReader = RTE.right(undefined);
 
 const asOperation = flow(utils.taskify, TE.mapError(Err.forDev));
 
-const normalizePayload = <T extends dd.EditMessage | dd.CreateMessage>(
+const normalizePayload = <T extends dd.EditMessage | dd.CreateMessageOptions>(
   payload: Payload<T>
 ): T =>
   typeof payload === 'string'
@@ -42,15 +42,13 @@ export const getMessage =
   (channelId: dd.BigString) =>
   (messageId: dd.BigString): Op<dd.Message> =>
   ({ bot }) =>
-    asOperation(() => dd.getMessage(bot, channelId, messageId));
+    asOperation(() => bot.helpers.getMessage(channelId, messageId));
 
 export const getMessages =
   (channelId: dd.BigString) =>
   (options: dd.GetMessagesOptions): Op<ReadonlyArray<dd.Message>> =>
   ({ bot }) =>
-    asOperation(() =>
-      dd.getMessages(bot, channelId, options).then((col) => col.array())
-    );
+    asOperation(() => bot.helpers.getMessages(channelId, options));
 
 export const getReplies =
   (channelId: dd.BigString) =>
@@ -62,15 +60,15 @@ export const getReplies =
 
 export const sendMessage =
   (channelId: dd.BigString) =>
-  (payload: Payload<dd.CreateMessage>): Op<dd.Message> =>
+  (payload: Payload<dd.CreateMessageOptions>): Op<dd.Message> =>
   ({ bot }) =>
     asOperation(() =>
-      dd.sendMessage(bot, channelId, normalizePayload(payload))
+      bot.helpers.sendMessage(channelId, normalizePayload(payload))
     );
 
 export const sendReply =
   (message: dd.Message) =>
-  (payload: Payload<dd.CreateMessage>): Op<dd.Message> =>
+  (payload: Payload<dd.CreateMessageOptions>): Op<dd.Message> =>
     sendMessage(message.channelId)({
       ...normalizePayload(payload),
       messageReference: {
@@ -85,7 +83,7 @@ export const editMessage =
   (payload: Payload<dd.EditMessage>): Op<dd.Message> =>
   ({ bot }) =>
     asOperation(() =>
-      dd.editMessage(bot, channelId, messageId, normalizePayload(payload))
+      bot.helpers.editMessage(channelId, messageId, normalizePayload(payload))
     );
 
 export const deleteMessage =
@@ -107,7 +105,7 @@ export const deleteMessages =
 export const sendInteractionResponse =
   (interactionId: dd.BigString) =>
   (token: string) =>
-  (payload: CanBeReadonly<dd.InteractionResponse>): Op<void> =>
+  (payload: CanBeReadonly<dd.InteractionResponse>): Op<unknown> =>
   ({ bot }) =>
     asOperation(() =>
       bot.helpers.sendInteractionResponse(
@@ -120,7 +118,7 @@ export const sendInteractionResponse =
 export const editBotStatus =
   (status: dd.StatusUpdate) =>
   ({ bot }: Ctx) =>
-    asOperation(() => bot.helpers.editBotStatus(status));
+    asOperation(() => bot.gateway.editBotStatus(status));
 
 export const react =
   (reaction: string) =>
@@ -137,18 +135,12 @@ export const react =
   };
 
 export const sendLog =
-  (payload: Payload<dd.CreateMessage>): Op<dd.Message> =>
+  (payload: Payload<dd.CreateMessageOptions>): Op<dd.Message> =>
   (ctx) =>
     sendMessage(ctx.dev.logs)(payload)(ctx);
 
-// discordeno v18 doesn't have helpers for application emojis
 export const getAppEmojis = (bot: dd.Bot) =>
-  utils.taskify(() =>
-    bot.rest
-      .runMethod<{ items: readonly dd.Emoji[] }>(
-        bot.rest,
-        'GET',
-        `/applications/${bot.applicationId}/emojis`
-      )
-      .then(({ items }) => items)
+  pipe(
+    utils.taskify(bot.helpers.getApplicationEmojis),
+    TE.map(({ items }) => items)
   );

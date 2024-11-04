@@ -102,7 +102,9 @@ export const getAliasCopies = <T extends Aliasable>(all: ReadonlyArray<T>) => {
 };
 
 // TODO: indicate if alias is deprecated/deleted
-export const aliasEmbed = <T extends Aliasable>(doc: T): Op.SubOp<dd.Embed> => {
+export const aliasEmbed = <T extends Aliasable>(
+  doc: T
+): Op.SubOp<dd.DiscordEmbed> => {
   if (!isAliasCopy(doc)) return RTE.left('Not an alias copy');
   return RTE.right({
     title: doc.name,

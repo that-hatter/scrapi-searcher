@@ -1,5 +1,4 @@
 import { flow, O, pipe, RA, RNEA, TE } from '@that-hatter/scrapi-factory/fp';
-import { SelectOption } from 'discordeno';
 import { Ctx } from '../Ctx';
 import { dd, Err, Menu, Op, str } from '../lib/modules';
 import { utils } from '../lib/utils';
@@ -295,7 +294,7 @@ export const formatIssue = (is: Issue) =>
     str.subtext
   );
 
-export const cardOption = (c: Card): SelectOption => ({
+export const cardOption = (c: Card): dd.SelectOption => ({
   label: c.id,
   value: c.id,
   description: pipe(

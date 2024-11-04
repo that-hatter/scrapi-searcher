@@ -16,7 +16,7 @@ const typetype = (tp: sf.Type): string =>
     ? 'table type'
     : 'type';
 
-const itemEmbed = (tp: sf.Type): Op.SubOp<dd.Embed> =>
+const itemEmbed = (tp: sf.Type): Op.SubOp<dd.DiscordEmbed> =>
   RTE.right({
     title: tp.name,
     url: Topic.url(tp),

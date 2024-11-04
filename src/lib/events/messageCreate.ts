@@ -5,15 +5,16 @@ import { Collection, Command, Err, Event, Op, str } from '../modules';
 
 export const messageCreate: Event.Event<'messageCreate'> = {
   name: 'messageCreate',
-  handle: (_, message) => (ctx) => {
-    if (message.isFromBot) return Op.noop;
+  handle: (message) => (ctx) => {
+    if (message.author.bot) return Op.noop;
 
     if (!message.content.startsWith(ctx.prefix)) {
       if (
         message.mentionedUserIds.includes(ctx.bot.id) &&
         message.content.trim() === str.mention(ctx.bot.id)
-      )
+      ) {
         return about.execute([], message)(ctx);
+      }
 
       return pipe(
         cardBracketSearch(message)(ctx),

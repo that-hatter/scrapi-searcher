@@ -1,5 +1,5 @@
 import type { O, RR } from '@that-hatter/scrapi-factory/fp';
-import type { Command, Data, dd, Github, Interaction } from './lib/modules';
+import type { Command, Data, Github, Interaction, dd } from './lib/modules';
 import type { BitNames } from './ygo';
 
 export type Ctx = {

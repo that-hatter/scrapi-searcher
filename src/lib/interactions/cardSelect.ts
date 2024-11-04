@@ -69,7 +69,7 @@ const initMessage =
       RTE.mapError(Err.forDev),
       RTE.map((embed) => [embed]),
       RTE.map(
-        (embeds): dd.CreateMessage => ({
+        (embeds): dd.CreateMessageOptions => ({
           content: content(c.id.toString()),
           embeds,
           components: cs.length > 1 ? [initMenu(cs[0], cs)] : undefined,
@@ -83,7 +83,7 @@ const handleQuery = (query: string) =>
 const afterReply = (card: Babel.Card) => (msg: dd.Message) => {
   if (msg.components && msg.components.length > 0) return Op.noopReader;
 
-  const currEmbed = msg.embeds[0];
+  const currEmbed = msg.embeds?.at(0);
   if (!currEmbed) return Op.noopReader;
 
   const currPic = currEmbed.thumbnail?.url;

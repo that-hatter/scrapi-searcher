@@ -1,6 +1,8 @@
 import { flow, O, pipe, RA, RNEA } from '@that-hatter/scrapi-factory/fp';
-import { dd, Interaction, Op, str } from '.';
+import { ActionRow, dd, Interaction, Op, str } from '.';
 import { CanBeReadonly } from '../utils';
+
+export const MessageComponentType: dd.MessageComponentTypes.SelectMenu = 3;
 
 export type Menu = dd.SelectMenuComponent;
 
@@ -23,7 +25,7 @@ export const menu = (params: Params): Menu => {
   if (params.options.length === 0) return dummy(params);
   return {
     ...params,
-    type: dd.MessageComponentTypes.SelectMenu,
+    type: MessageComponentType,
     options: safeOptions(params.options),
     maxValues: Math.min(params.maxValues ?? 1, params.options.length),
     minValues: Math.max(params.minValues ?? 1, 1),
@@ -31,7 +33,7 @@ export const menu = (params: Params): Menu => {
 };
 
 export const row = (params: Params): Row => ({
-  type: dd.MessageComponentTypes.ActionRow,
+  type: ActionRow.MessageComponentType,
   components: [menu(params)],
 });
 
@@ -45,12 +47,12 @@ export const dummy = (params: Omit<Params, 'options' | 'disabled'>): Menu =>
 export const dummyRow = flow(dummy, row);
 
 export const extract = (row: dd.Component): O.Option<Menu> => {
-  if (row.type !== dd.MessageComponentTypes.ActionRow) return O.none;
+  if (row.type !== ActionRow.MessageComponentType) return O.none;
   if (!row.components || row.components.length !== 1) return O.none;
 
   const menu = row.components[0]!;
   if (!('type' in menu) || !('customId' in menu)) return O.none;
-  if (menu.type !== dd.MessageComponentTypes.SelectMenu) return O.none;
+  if (menu.type !== MessageComponentType) return O.none;
 
   return O.some(menu as dd.SelectMenuComponent);
 };
@@ -74,7 +76,7 @@ export const interaction = (ev: {
   readonly devOnly?: boolean;
 }): Interaction.Component => ({
   ...ev,
-  type: dd.MessageComponentTypes.SelectMenu,
+  type: MessageComponentType,
   execute: (parameters, interaction) =>
     pipe(
       O.Do,

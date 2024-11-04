@@ -45,7 +45,7 @@ const singleArchEmbed = (s: Systrings.Systring) =>
   );
 
 const hexBreakDownEmbed =
-  (val: bigint): Op.Op<dd.Embed> =>
+  (val: bigint): Op.Op<dd.DiscordEmbed> =>
   (ctx: Ctx) => {
     if (val < 0n) return TE.left(Err.forUser('Value must not be negative.'));
     if (val >> 64n > 0n)

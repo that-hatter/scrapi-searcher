@@ -14,7 +14,7 @@ const quickLinksSection = (nm: sf.Namespace) =>
   );
 
 const embed =
-  (nm: sf.Namespace): Op.SubOp<dd.Embed> =>
+  (nm: sf.Namespace): Op.SubOp<dd.DiscordEmbed> =>
   (ctx) =>
     TE.right({
       title: nm.name,

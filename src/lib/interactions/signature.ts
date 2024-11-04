@@ -15,7 +15,7 @@ const findFunction = (name: string) => (ctx: Ctx) =>
 
 const functionUpdate =
   (name: string, ixn: Interaction.WithMsg) =>
-  (sig: number): Op.Op<void> =>
+  (sig: number): Op.Op<unknown> =>
     pipe(
       RTE.Do,
       RTE.bind('fn', () => findFunction(name)),
@@ -29,8 +29,8 @@ const functionUpdate =
 
 const update =
   (ixn: Interaction.WithMsg) =>
-  (sig: number): Op.Op<void> => {
-    const embed = ixn.message.embeds[0];
+  (sig: number): Op.Op<unknown> => {
+    const embed = ixn.message.embeds?.at(0);
     const name = embed?.title;
     if (!name) return RTE.left(Err.forDev('Failed to parse name'));
 

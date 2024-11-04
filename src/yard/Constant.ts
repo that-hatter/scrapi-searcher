@@ -64,7 +64,7 @@ const quickLinksSection = (ct: sf.Constant) =>
   );
 
 const embed =
-  (ct: sf.Constant): Op.SubOp<dd.Embed> =>
+  (ct: sf.Constant): Op.SubOp<dd.DiscordEmbed> =>
   (ctx) =>
     pipe(
       ctx.yard.api.enums.record,
@@ -91,7 +91,7 @@ const embed =
       }))
     );
 
-export const itemEmbed = (ct: sf.Constant): Op.SubOp<dd.Embed> =>
+export const itemEmbed = (ct: sf.Constant): Op.SubOp<dd.DiscordEmbed> =>
   pipe(
     Topic.aliasEmbed(ct),
     RTE.orElse(() => embed(ct))

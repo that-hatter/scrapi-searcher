@@ -371,8 +371,8 @@ export const glFinishStage = Button.interaction({
           content: 'Creating ' + str.inlineCode(filename) + ' ⏳',
           embeds: [
             {
-              color: message.embeds[0]?.color,
-              description: message.embeds[0]?.description,
+              color: message.embeds?.at(0)?.color,
+              description: message.embeds?.at(0)?.description,
             },
           ],
           components: [],

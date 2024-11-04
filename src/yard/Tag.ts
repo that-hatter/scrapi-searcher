@@ -8,7 +8,7 @@ import * as Topic from './shared/Topic';
 const quickLinksSection = (tag: sf.Tag): O.Option<string> =>
   pipe(Topic.editLink(tag), O.flatMap(str.unempty), O.map(str.subtext));
 
-const itemEmbed = (tag: sf.Tag): Op.SubOp<dd.Embed> =>
+const itemEmbed = (tag: sf.Tag): Op.SubOp<dd.DiscordEmbed> =>
   RTE.right({
     title: tag.name,
     url: Topic.url(tag),

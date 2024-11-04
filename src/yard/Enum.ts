@@ -8,7 +8,7 @@ import * as Topic from './shared/Topic';
 const quickLinksSection = (en: sf.Enum): O.Option<string> =>
   pipe([Topic.editLink(en)], str.join(' | '), str.unempty, O.map(str.subtext));
 
-const itemEmbed = (en: sf.Enum): Op.SubOp<dd.Embed> =>
+const itemEmbed = (en: sf.Enum): Op.SubOp<dd.DiscordEmbed> =>
   RTE.right({
     title: en.name,
     url: Topic.url(en),

@@ -56,12 +56,12 @@ const fetchAndUpload = (id: string) => (ctx: Ctx) => {
     ),
     TE.flatMap((file) =>
       pipe(
-        Op.sendMessage(channel.value)({ file })(ctx),
+        Op.sendMessage(channel.value)({ files: [file] })(ctx),
         TE.mapError(Err.toAlertString)
       )
     ),
     TE.flatMapNullable(
-      (msg) => msg.attachments[0]?.url.split('?ex')[0],
+      (msg) => msg.attachments?.at(0)?.url.split('?ex')[0],
       () => 'Failed to upload pic'
     ),
     TE.map(O.some)

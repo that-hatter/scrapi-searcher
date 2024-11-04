@@ -1,5 +1,5 @@
 import { pipe, RTE } from '@that-hatter/scrapi-factory/fp';
-import { dd, Event, Op } from '../modules';
+import { Event, Op } from '../modules';
 
 export const ready: Event.Event<'ready'> = {
   name: 'ready',
@@ -13,9 +13,8 @@ export const ready: Event.Event<'ready'> = {
           status: 'online',
           activities: [
             {
-              type: dd.ActivityTypes.Watching,
+              type: 3, // dd.ActivityTypes.Watching,
               name: 'for ' + ctx.prefix + 'help',
-              createdAt: new Date().getTime(),
             },
           ],
         })

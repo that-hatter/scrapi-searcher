@@ -22,6 +22,7 @@
   "author": "that-hatter",
   "license": "AGPL-3.0-or-later",
   "devDependencies": {
+    "@discordeno/types": "^19.0.0-next.2d02c32",
     "@types/better-sqlite3": "^7.6.11",
     "@types/node": "^20.2.1",
     "@types/node-fetch": "^2.6.11",
@@ -36,15 +37,18 @@
     "typescript": "^5.1.6"
   },
   "dependencies": {
+    "@discordeno/bot": "^19.0.0-next.2d02c32",
     "@octokit/rest": "^19.0.7",
     "@octokit/webhooks": "^12.2.0",
     "@that-hatter/scrapi-factory": "^0.3.3",
     "better-sqlite3": "^11.2.1",
-    "discordeno": "^18.0.1",
     "fp-ts": "^2.13.1",
     "io-ts": "^2.2.21",
     "minisearch": "^7.1.0",
     "node-fetch": "^2.7.0",
     "simple-git": "^3.25.0"
+  },
+  "overrides": {
+    "whatwg-url": "14.x"
   }
 }

@@ -3,7 +3,7 @@ import { Collection, Event, Interaction, Op, str } from '../modules';
 
 export const interactionCreate: Event.Event<'interactionCreate'> = {
   name: 'interactionCreate',
-  handle: (_, interaction) => (ctx) =>
+  handle: (interaction) => (ctx) =>
     pipe(
       interaction.data?.customId,
       O.fromNullable,

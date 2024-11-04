@@ -386,7 +386,7 @@ const finalizeEmbed = (
   pf: PreFormatted,
   description: string,
   fields: dd.DiscordEmbedField[]
-): dd.Embed => ({
+): dd.DiscordEmbed => ({
   title: pf.card.name,
   thumbnail: O.isSome(pf.pic) ? { url: pf.pic.value } : undefined,
   description,
@@ -540,12 +540,12 @@ const embed = (pf: PreFormatted) =>
     ? masterMonsterEmbed(pf)
     : masterNonMonsterEmbed(pf);
 
-export const itemEmbed: (c: Card) => Op.SubOp<dd.Embed> = flow(
+export const itemEmbed: (c: Card) => Op.SubOp<dd.DiscordEmbed> = flow(
   preformatWithExisting,
   RTE.flatMapReader(embed)
 );
 
-export const itemEmbedWithFetch: (c: Card) => Op.SubOp<dd.Embed> = flow(
+export const itemEmbedWithFetch: (c: Card) => Op.SubOp<dd.DiscordEmbed> = flow(
   preformatWithFetch,
   RTE.flatMapReader(embed)
 );

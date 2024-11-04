@@ -19,7 +19,7 @@ export type Formatter<T, R> = (item: T) => Op.SubOp<R>;
 export type Formatters<T> = {
   readonly itemName?: Formatter<T, string>;
   readonly itemMenuDescription?: Formatter<T, string>;
-  readonly itemEmbed?: Formatter<T, dd.Embed>;
+  readonly itemEmbed?: Formatter<T, dd.DiscordEmbed>;
   readonly itemComponents?: Formatter<T, dd.MessageComponents>;
   readonly itemListDescription?: (
     pageItems: RNEA.ReadonlyNonEmptyArray<T>
@@ -83,7 +83,7 @@ const formatAll = <T, R>(fn: Formatter<T, R>) =>
 // -----------------------------------------------------------------------------
 
 const prevButton = (currentPage: number): Button.Params => ({
-  style: dd.ButtonStyles.Secondary,
+  style: Button.Styles.Secondary,
   label: '',
   emoji: { name: '⬅️' },
   customId: 'navPageSwitch ' + (currentPage - 1),
@@ -91,7 +91,7 @@ const prevButton = (currentPage: number): Button.Params => ({
 });
 
 const nextButton = (currentPage: number, maxPage: number): Button.Params => ({
-  style: dd.ButtonStyles.Secondary,
+  style: Button.Styles.Secondary,
   label: '',
   emoji: { name: '➡️' },
   customId: 'navPageSwitch ' + (currentPage + 1),
@@ -102,7 +102,7 @@ const currentPageButton = (
   currentPage: number,
   maxPage: number
 ): Button.Params => ({
-  style: dd.ButtonStyles.Primary,
+  style: Button.Styles.Primary,
   label: `Page ${currentPage}/${maxPage}`,
   customId: 'navPageCurrent',
   disabled: true,
@@ -154,18 +154,6 @@ const selectMenu = <T>(nav: Nav<T>) =>
 
 const maxPage = <T>(nav: Nav<T>) => Math.ceil(nav.items.length / ITEM_PER_PAGE);
 
-const parseCurrentPage = (msg: dd.Message): Op.Op<number> =>
-  pipe(
-    msg.components,
-    O.fromNullable,
-    O.map(Button.extractAll),
-    O.flatMap(RA.findFirst((b) => b.label?.startsWith('Page '))),
-    O.chainNullableK((b) => b.label?.substring('Page '.length).split('/')[0]),
-    O.map((pageStr) => +pageStr),
-    O.filter((page) => page > 0 && !isNaN(page)),
-    RTE.fromOption(() => Err.forDev('Could not parse current page'))
-  );
-
 const getPageItems = <T>(pageNum: number, nav: Nav<T>) =>
   pipe(
     pageNum,
@@ -207,7 +195,7 @@ const listPageContent = <T>(
 export const listPageMessage = <T>(
   pageNum: number,
   nav: Nav<T>
-): Op.Op<dd.CreateMessage> =>
+): Op.Op<dd.CreateMessageOptions> =>
   pipe(
     RTE.Do,
     RTE.bind('pageItems', () => getPageItems(pageNum, nav)),
@@ -233,7 +221,7 @@ export const listPageMessage = <T>(
 // and remove the menu component
 const withSoleResult =
   <T>(nav: Nav<T>) =>
-  (msg: dd.CreateMessage): Op.Op<dd.CreateMessage> => {
+  (msg: dd.CreateMessageOptions): Op.Op<dd.CreateMessageOptions> => {
     if (nav.items.length !== 1) return RTE.right(msg);
     const item = nav.items[0]!;
     return pipe(
@@ -273,22 +261,22 @@ const asNavComponent = (select?: string) => (row: dd.ActionRow) =>
         Button.extract,
         RNEA.fromReadonlyArray,
         O.filter((bs) => bs.length === 3),
-        O.map(RA.every((b) => b.label?.startsWith('nav'))),
+        O.map(RA.every((b) => !!b.label?.startsWith('nav'))),
         O.map(() => row)
       )
     )
   );
 
 export const updateDisplay =
-  (embed?: dd.Embed, comps?: dd.MessageComponents, select?: string) =>
-  (ixn: Interaction.WithMsg): Op.Op<void> =>
+  (embed?: dd.DiscordEmbed, comps?: dd.MessageComponents, select?: string) =>
+  (ixn: Interaction.WithMsg): Op.Op<unknown> =>
     pipe(
       ixn.message.components ?? [],
       ActionRow.rows,
       RA.filterMap(asNavComponent(select)),
       (navComps) => ({
         content: ixn.message.content,
-        embeds: embed ? [embed] : ixn.message.embeds,
+        embeds: embed ? [embed] : undefined,
         components: ActionRow.rows([...(navComps ?? []), ...(comps ?? [])]),
       }),
       Interaction.sendUpdate(ixn)

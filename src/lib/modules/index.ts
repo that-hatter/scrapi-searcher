@@ -6,7 +6,8 @@ export const str = { ...string, ...str_ };
 
 export * as Github from './Github';
 
-export * as dd from 'discordeno';
+export type * as dd from '@discordeno/bot' with { "resolution-mode": "import" };
+
 export * as ActionRow from './ActionRow';
 export * as Attachment from './Attachment';
 export * as Button from './Button';
@@ -23,5 +24,7 @@ export * as Op from './Operation';
 export * as SearchCommand from './SearchCommand';
 
 export * as Data from './Data';
+
+
 
 export { Decoder };

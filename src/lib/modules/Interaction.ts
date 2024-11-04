@@ -24,7 +24,7 @@ export type WithMsg = Omit<dd.Interaction, 'message'> & {
 export const asUpdateResponse = (
   data: CanBeReadonly<UpdateData>
 ): CanBeReadonly<dd.InteractionResponse> => ({
-  type: dd.InteractionResponseTypes.UpdateMessage,
+  type: 7, //dd.InteractionResponseTypes.UpdateMessage,
   data,
 });
 
@@ -37,7 +37,7 @@ export const sendResponse = (ixn: dd.Interaction) =>
 
 export const deferredUpdate = (ixn: dd.Interaction) =>
   sendResponse(ixn)({
-    type: dd.InteractionResponseTypes.DeferredUpdateMessage,
+    type: 6, // dd.InteractionResponseTypes.DeferredUpdateMessage,
   });
 
 export const sendUpdate = (ixn: dd.Interaction) =>

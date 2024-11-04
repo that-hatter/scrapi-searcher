@@ -36,7 +36,7 @@ const description = (message: dd.Message, ctx: Ctx) =>
 
 const aboutMessage =
   (message: dd.Message) =>
-  (ctx: Ctx): dd.CreateMessage => ({
+  (ctx: Ctx): dd.CreateMessageOptions => ({
     embeds: [
       {
         title: 'scrapi-searcher',

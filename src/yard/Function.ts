@@ -96,7 +96,7 @@ const quickLinksSection = (fn: sf.Function) =>
 
 export const embed =
   (signature: number) =>
-  (fn: sf.Function): Op.SubOp<dd.Embed> =>
+  (fn: sf.Function): Op.SubOp<dd.DiscordEmbed> =>
   (ctx) => {
     const variant = signature > 0 ? fn.overloads[signature - 1] ?? fn : fn;
     const synopsis = SignatureInfo.synopsis(variant, fn.name);

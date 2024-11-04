@@ -65,7 +65,7 @@ const separateFooter = (s: string): [string, O.Option<string>] => {
 
 const formatDevAlert =
   (reason: O.Option<Reason>) =>
-  (content: string): dd.CreateMessage => {
+  (content: string): dd.CreateMessageOptions => {
     const color = COLORS.DISCORD_ERROR_RED;
     const url = pipe(reason, O.flatMap(reasonLink), O.toUndefined);
     const title = 'Encountered an error';
@@ -84,7 +84,12 @@ const formatDevAlert =
 
     return {
       embeds: [{ color, url, title, description, footer }],
-      file: pipe(reason, O.map(Attachment.text('reason.json')), O.toUndefined),
+      files: pipe(
+        reason,
+        O.map(Attachment.text('reason.json')),
+        O.map((file) => [file]),
+        O.toUndefined
+      ),
     };
   };
 

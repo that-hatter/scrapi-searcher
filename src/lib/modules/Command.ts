@@ -23,9 +23,9 @@ export type Collection = Collection.Collection<Command>;
 export const devCheck =
   (message: dd.Message) =>
   ({ dev }: Ctx): boolean => {
-    if (dev.admin === message.authorId.toString()) return true;
+    if (dev.admin === message.author.id.toString()) return true;
     if (dev.guild.toString() === message.guildId?.toString()) return true;
-    return !!dev.users[message.authorId.toString()];
+    return !!dev.users[message.author.id.toString()];
   };
 
 const embedFields =
@@ -45,7 +45,7 @@ const embedFields =
     return [syntaxField, aliasField];
   };
 
-export const embed = (cmd: Command): R.Reader<Ctx, dd.Embed> =>
+export const embed = (cmd: Command): R.Reader<Ctx, dd.DiscordEmbed> =>
   pipe(
     embedFields(cmd),
     R.map((fields) => ({

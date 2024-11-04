@@ -28,7 +28,7 @@ const getUpdate = (id: number, mode: string) => (ctx: Ctx) => {
 export const rawvalMode = Menu.interaction({
   name: 'rawvalMode',
   execute: (_, interaction, [mode]) => {
-    const t = interaction.message.embeds[0]?.title;
+    const t = interaction.message.embeds?.at(0)?.title;
     if (!t) return RTE.left(Err.forDev('Could not find title'));
 
     const id_ = str.split(' ')(t)[0];

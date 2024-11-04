@@ -6,10 +6,10 @@ import { Menu } from '../modules';
 export const glStatusSelect = Menu.interaction({
   name: 'glStatusSelect',
   devOnly: true,
-  execute: (_, interaction, statuses) => {
+  execute: (_, ixn, statuses) => {
     const ss = Greenlight.asStatusSteps(statuses);
-    if (interaction.message.embeds[0]?.title?.startsWith('Staging cards for '))
-      return staging(ss)(interaction);
-    return claiming(ss)(interaction);
+    if (ixn.message.embeds?.at(0)?.title?.startsWith('Staging cards for '))
+      return staging(ss)(ixn);
+    return claiming(ss)(ixn);
   },
 });

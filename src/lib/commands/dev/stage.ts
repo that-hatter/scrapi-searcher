@@ -21,7 +21,7 @@ export type State = {
 const finishButton = (staged: ReadonlyArray<Greenlight.Card>) =>
   Button.row([
     {
-      style: dd.ButtonStyles.Success,
+      style: Button.Styles.Success,
       customId: 'glFinishStage',
       label: 'Finish',
       disabled: staged.length === 0,
@@ -89,7 +89,7 @@ export const page =
 export const getState = (message: dd.Message): Op.Op<State> =>
   pipe(
     O.Do,
-    O.bind('embed', () => O.fromNullable(message.embeds[0])),
+    O.bind('embed', () => O.fromNullable(message.embeds?.at(0))),
     O.bind('filename', ({ embed }) =>
       pipe(
         embed.title,

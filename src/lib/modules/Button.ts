@@ -1,6 +1,17 @@
 import { O, pipe, RA, RNEA } from '@that-hatter/scrapi-factory/fp';
-import { dd, Interaction, Op } from '.';
+import { ActionRow, Button, dd, Interaction, Op } from '.';
 import { CanBeReadonly } from '../utils';
+
+export const MessageComponentType: dd.MessageComponentTypes.Button = 2;
+
+export const Styles = {
+  Primary: 1,
+  Secondary: 2,
+  Success: 3,
+  Danger: 4,
+  Link: 5,
+  Premium: 6,
+};
 
 export type Button = dd.ButtonComponent;
 
@@ -10,19 +21,19 @@ export type Row = dd.ActionRow;
 
 export const button = (opts: Params): Button => ({
   ...opts,
-  type: dd.MessageComponentTypes.Button,
+  type: Button.MessageComponentType,
 });
 
 export const row = (opts: RNEA.ReadonlyNonEmptyArray<Params>): Row => ({
-  type: dd.MessageComponentTypes.ActionRow,
+  type: ActionRow.MessageComponentType,
   components: pipe(opts, RA.takeLeft(5), RA.map(button)) as Row['components'],
 });
 
 export const isButton = (comp: dd.Component): comp is Button =>
-  'type' in comp && comp.type === dd.MessageComponentTypes.Button;
+  'type' in comp && comp.type === MessageComponentType;
 
 export const extract = (row: dd.Component): ReadonlyArray<Button> => {
-  if (row.type !== dd.MessageComponentTypes.ActionRow) return [];
+  if (row.type !== ActionRow.MessageComponentType) return [];
   if (!row.components || row.components.length < 1) return [];
   return row.components.filter(isButton);
 };
@@ -40,7 +51,7 @@ export const interaction = (ev: {
   readonly devOnly?: boolean;
 }): Interaction.Component => ({
   ...ev,
-  type: dd.MessageComponentTypes.Button,
+  type: MessageComponentType,
   execute: (parameters, interaction) =>
     pipe(
       interaction,
