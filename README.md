@@ -20,7 +20,7 @@ For further inquiries, you can reach out to [@that-hatter](https://github.com/th
 
 ## Contributing
 
-The project is written in [Typescript](https://www.typescriptlang.org/) with the [`discordeno`](https://github.com/discordeno/discordeno) Discord API library and targets [Node.js](https://nodejs.org/en/) v20. The codebase also heavily employs functional programming using [`fp-ts`](https://gcanti.github.io/fp-ts/).
+The project is written in [Typescript](https://www.typescriptlang.org/) with the [`discordeno`](https://github.com/discordeno/discordeno) Discord API library and targets [Node.js](https://nodejs.org/en/) v22. The codebase also heavily employs functional programming using [`fp-ts`](https://gcanti.github.io/fp-ts/).
 
 ### Building
 

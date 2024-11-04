@@ -1,4 +1,4 @@
-FROM node:20-alpine AS base
+FROM node:22-alpine AS base
 
 # install dependencies
 COPY package*.json ./
@@ -9,7 +9,7 @@ COPY tsconfig.json ./
 COPY ./src ./src
 RUN npm run build
 
-FROM node:20-alpine AS prod
+FROM node:22-alpine AS prod
 
 # install git and create data folder for auto-updates
 RUN apk add --no-cache git
