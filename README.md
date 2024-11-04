@@ -59,6 +59,6 @@ It can also be ran via Docker, either by building the image locally or pulling [
 
 - **Lilac** (Satellaa), for thoroughly testing the bot before public release and writing the [documentation for the commands](https://github.com/that-hatter/scrapi-searcher/blob/master/docs/commands.md).
 - **DyXel** and **edo9300**, for helping with the bot's hosting and deployment setup, as well as other early feedback and suggestions.
-- **AlphaKretin**, for their work on [old Bastion](https://github.com/AlphaKretin/bastion-bot). A good portion of Searcher's initial functionality are reimplementations of old Bastion commands. The initial versions of the [card search shortcuts](https://github.com/that-hatter/scrapi-searcher/blob/master/data/shortcuts.json) and scrapiyard entries were also generated from old Bastion's data files.
+- **AlphaKretin**, for their work on [old Bastion](https://github.com/AlphaKretin/bastion-bot). A good portion of Searcher's initial functionality are reimplementations of old Bastion commands. The initial versions of the [card search shortcuts](https://github.com/that-hatter/scrapi-searcher-data/blob/master/data/shortcuts.json) and scrapiyard entries were also generated from old Bastion's data files.
 - **oldfishstick**, **Risk**, and **JustPassingThru** for additional pre-release testing and feedback.
 - The rest of the Project Ignis staff and outside contributors helping out in the `scrapi` group of projects (including Lilac, oldfishstick, and Risk).
