@@ -52,7 +52,14 @@ const program = pipe(
       token: env.BOT_TOKEN,
       // TODO: pick actual desired properties once typing is safer
       // for now, this sets all properties to be true
-      desiredProperties: dd.createDesiredPropertiesObject({}, true),
+      desiredProperties: dd.createDesiredPropertiesObject(
+        {
+          // exception to the above, since it causes discordeno to throw an error
+          // https://github.com/discordeno/discordeno/pull/3961
+          messageSnapshot: { message: false },
+        },
+        true
+      ),
     })
   ),
   TE.bind('emojis', ({ bot }) => Op.getAppEmojis(bot)),
