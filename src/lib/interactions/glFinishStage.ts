@@ -337,7 +337,11 @@ const withCdbFile = (name: string) => (entries: ReadonlyArray<BabelData>) =>
     }),
     RTE.fromIOEither,
     RTE.mapError(Err.forDev),
-    RTE.map((blob) => ({ content: '', components: [], file: [{ name, blob }] }))
+    RTE.map((blob) => ({
+      content: '',
+      components: [],
+      files: [{ name, blob }],
+    }))
   );
 
 const parameters = pipe(
