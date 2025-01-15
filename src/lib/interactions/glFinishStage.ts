@@ -49,7 +49,7 @@ const monsterProps = {
   ['Card type']: Decoder.headReq(
     pipe(fulltext, Decoder.compose(Decoder.literal('Monster Card')))
   ),
-  ['Types']: pipe(
+  ['Types string']: pipe(
     Decoder.headReq(Decoder.string),
     Decoder.map(str.split(' / '))
   ),
@@ -212,9 +212,9 @@ const toBabelData =
       return { ...defaults, type };
     }
 
-    const typeStrs = ['Monster', ...c.Types.slice(1)];
+    const typeStrs = ['Monster', ...c['Types string'].slice(1)];
     const type = BitNames.toInt('types')(typeStrs)(ctx);
-    const race = BitNames.toInt('races')([c.Types[0]])(ctx);
+    const race = BitNames.toInt('races')([c['Types string'][0]])(ctx);
     const atk = c['ATK string'];
     const def = pipe(
       c['DEF string'],
