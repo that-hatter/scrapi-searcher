@@ -27,6 +27,7 @@ const fulltext = pipe(
 );
 
 const commonProps = {
+  ['English name']: Decoder.headReq(Decoder.string),
   ['Password']: Decoder.head(Decoder.string),
   ['Medium']: Decoder.array(Decoder.string),
   // ['OCG Status']: Decoder.head(Decoder.string),
@@ -49,7 +50,7 @@ const monsterProps = {
   ['Card type']: Decoder.headReq(
     pipe(fulltext, Decoder.compose(Decoder.literal('Monster Card')))
   ),
-  ['Types']: pipe(
+  ['Types string']: pipe(
     Decoder.headReq(Decoder.string),
     Decoder.map(str.split(' / '))
   ),
@@ -136,7 +137,7 @@ type BabelData = {
 };
 
 const toBabelData =
-  (id: number, name: string, c: Record[string]) =>
+  (id: number, c: Record[string]) =>
   (ctx: Ctx): BabelData => {
     // TODO: support non-prerelease later
     const ot = BitNames.toInt('scopes')([...c.Medium, 'Pre-release'])(ctx);
@@ -159,7 +160,7 @@ const toBabelData =
       attribute: 0n,
       category: 0n,
       desc: c.Lore,
-      name,
+      name: c['English name'],
     };
 
     if (c['Card type'] === 'Spell Card') {
@@ -212,9 +213,9 @@ const toBabelData =
       return { ...defaults, type };
     }
 
-    const typeStrs = ['Monster', ...c.Types.slice(1)];
+    const typeStrs = ['Monster', ...c['Types string'].slice(1)];
     const type = BitNames.toInt('types')(typeStrs)(ctx);
-    const race = BitNames.toInt('races')([c.Types[0]])(ctx);
+    const race = BitNames.toInt('races')([c['Types string'][0]])(ctx);
     const atk = c['ATK string'];
     const def = pipe(
       c['DEF string'],
@@ -355,12 +356,12 @@ const parameters = pipe(
   RA.uniq(str.Eq)
 );
 
-const fetchAndValidate = (idx: number, names: ReadonlyArray<string>) =>
+const fetchAndValidate = (idx: number, pages: ReadonlyArray<string>) =>
   pipe(
-    Pedia.fetchCards(idx, Pedia.url(10, 0)(names)(parameters)),
+    Pedia.fetchCards(idx, Pedia.url(10, 0)(pages)(parameters)),
     TE.flatMapEither(Decoder.parse(decoder)),
     TE.mapError(Err.forDev),
-    TE.map(RR.toEntries)
+    TE.map(RR.values)
   );
 
 export const glFinishStage = Button.interaction({
@@ -385,18 +386,27 @@ export const glFinishStage = Button.interaction({
       RTE.flatMap(({ staged, filename }) =>
         pipe(
           staged,
-          RA.filterMap((c) => c.enName),
+          RA.filterMap((c) =>
+            pipe(
+              c.link,
+              // remove 'https://yugipedia.com/wiki/' from link
+              O.map((link) => decodeURIComponent(link.substring(27))),
+              O.orElse(() => c.enName)
+            )
+          ),
           RA.chunksOf(10),
           RA.mapWithIndex(fetchAndValidate),
           TE.sequenceArray,
           RTE.fromTaskEither,
           RTE.map(RA.flatten),
           RTE.map(
-            RA.map(([name, val]) => {
+            RA.map((val) => {
+              const name = val['English name'];
               const id = staged.find(
                 (c) => O.isSome(c.enName) && c.enName.value === name
               )?.id;
-              if (id) return RTE.fromReader(toBabelData(+id, name, val));
+
+              if (id) return RTE.fromReader(toBabelData(+id, val));
               return RTE.left(Err.forDev('Failed to match name: ' + name));
             })
           ),
