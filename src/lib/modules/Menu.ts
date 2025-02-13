@@ -10,14 +10,18 @@ export type Params = CanBeReadonly<Omit<Menu, 'type'>>;
 
 export type Row = dd.ActionRow;
 
+const limitStr100 = str.limit('...', 100);
+
 const safeOptions = flow(
   RA.uniq<dd.SelectOption>({ equals: (a, b) => a.value === b.value }),
   RA.takeLeft(25),
-  RA.map((opt): dd.SelectOption => {
-    const desc = opt.description;
-    if (!desc || desc.length <= 100) return opt;
-    return { ...opt, description: str.limit('...', 100)(desc) };
-  }),
+  RA.map(
+    (opt): dd.SelectOption => ({
+      ...opt,
+      label: limitStr100(opt.label),
+      description: opt.description ? limitStr100(opt.description) : undefined,
+    })
+  ),
   RA.toArray
 );
 

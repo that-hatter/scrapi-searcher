@@ -191,6 +191,22 @@ export const unempty = flow(string.trim, O.fromPredicate(isUnempty));
 // additional helpers
 // -----------------------------------------------------------------------------
 
+export const crop =
+  (left: number, right: number = left) =>
+  (s: string) =>
+    s.substring(left, s.length - right);
+
+export const before = (sep: string) => (s: string) => s.split(sep).at(0) ?? s;
+
+export const after = (sep: string) => (s: string) =>
+  s.split(sep).slice(1).join(sep);
+
+export const afterLast = (sep: string) => (s: string) => {
+  const parts = s.split(sep);
+  if (parts.length === 1) return '';
+  return parts.at(parts.length - 1);
+};
+
 export const limit = (indicator: string, max: number) => (s: string) =>
   s.length <= max ? s : s.substring(0, max - indicator.length) + indicator;
 
