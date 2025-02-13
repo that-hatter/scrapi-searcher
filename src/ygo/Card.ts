@@ -8,6 +8,7 @@ import {
   RTE,
   TE,
 } from '@that-hatter/scrapi-factory/fp';
+import { sequenceT } from 'fp-ts/lib/Apply';
 import { Babel, Banlists, BetaIds, KonamiIds, Pics, Shortcuts } from '.';
 import { Ctx } from '../Ctx';
 import { COLORS, LIMITS, URLS } from '../lib/constants';
@@ -657,6 +658,40 @@ export const getCdbStrings = (c: Card) =>
     )
   );
 
+const itemListDescription = () =>
+  flow(
+    preformatWithExisting,
+    RTE.flatMapReader((pf) => {
+      if (pf.mainType === 'Skill') return R.of(pf.card.name);
+
+      if (pf.mainType === 'Spell' || pf.mainType === 'Trap') {
+        return pipe(
+          pf.types,
+          RA.map(str.prepend('type_')),
+          RA.map(emojify),
+          R.sequenceArray,
+          R.map(str.join('')),
+          R.map(str.append(' ' + pf.card.name))
+        );
+      }
+
+      return pipe(
+        sequenceT(R.Apply)(
+          BitNames.attribute(pf.card.attribute),
+          BitNames.race(pf.card.race)
+        ),
+        R.map(([attrs, races]) => [
+          ...attrs.map(str.prepend('attribute_')),
+          ...races.map(str.prepend('race_')),
+        ]),
+        R.map(RA.map(emojify)),
+        R.flatMap(R.sequenceArray),
+        R.map(str.join('')),
+        R.map(str.append(' ' + pf.card.name))
+      );
+    })
+  );
+
 export const nav = (
   title: string,
   items: ReadonlyArray<Card>,
@@ -669,7 +704,7 @@ export const nav = (
   selectHint: 'Select card to display',
   itemId: (c: Card) => c.id.toString(),
   itemName: (c: Card) => RTE.right(c.name),
-  itemListDescription: () => (c: Card) => RTE.right(c.name),
+  itemListDescription,
   itemMenuDescription: (c: Card) => RTE.right(c.id.toString()),
   itemEmbed,
 });
