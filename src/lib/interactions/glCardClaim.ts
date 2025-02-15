@@ -1,7 +1,7 @@
-import { pipe, RA, RTE, TE } from '@that-hatter/scrapi-factory/fp';
+import { pipe, RA, RNEA, RTE, TE } from '@that-hatter/scrapi-factory/fp';
 import { Ctx } from '../../Ctx';
 import { Greenlight } from '../../ygo';
-import { createPageFromIds, currentPageIds, Ids } from '../commands/dev/claim';
+import { currentState, page, State } from '../commands/dev/claim';
 import { dd, Err, Interaction, Menu, Op, str } from '../modules';
 
 const splitOn = (lines: ReadonlyArray<string>, start: string, incl: string) =>
@@ -14,49 +14,59 @@ const splitOn = (lines: ReadonlyArray<string>, start: string, incl: string) =>
     }
   );
 
-const prepareEdit =
-  (pack: string, theme: string, card: string, user: string) =>
-  (s: string): Op.Op<string> => {
-    const lines = s.split('\n');
-    const [prePack, postPack] = splitOn(lines, '# ', pack);
-    if (postPack.length === 0) return RTE.left(Err.ignore());
+const prepareEdit = (
+  current: string,
+  pack: string,
+  theme: string,
+  card: string,
+  user: string
+): string => {
+  const lines = current.split('\n');
+  const [prePack, postPack] = splitOn(lines, '# ', pack);
+  if (postPack.length === 0) return current;
 
-    const [preTheme, postTheme] =
-      theme === '???' ? [[], postPack] : splitOn(postPack, '## ', theme);
-    if (postTheme.length === 0) return RTE.left(Err.ignore());
+  const [preTheme, postTheme] =
+    theme === '???' ? [[], postPack] : splitOn(postPack, '## ', theme);
+  if (postTheme.length === 0) return current;
 
-    const [preCard, postCard] = splitOn(postTheme, '### ', card);
-    if (postCard.length === 0) return RTE.left(Err.ignore());
+  const [preCard, postCard] = splitOn(postTheme, '### ', card);
+  if (postCard.length === 0) return current;
 
-    const [toEdit_, rest] = splitOn(postCard, '#', '');
-    const toEdit = toEdit_.join('\n');
+  const [toEdit_, rest] = splitOn(postCard, '#', '');
+  const toEdit = toEdit_.join('\n');
 
-    const edit = toEdit
-      .replace('- [ ] Claimed [ ]', `- [ ] Claimed []`)
-      .replace('- [ ] Claimed []', `- [x] Claimed [${user}]`);
+  const edit = toEdit
+    .replace('- [ ] Claimed [ ]', `- [ ] Claimed []`)
+    .replace('- [ ] Claimed []', `- [x] Claimed [${user}]`);
 
-    if (toEdit === edit) return RTE.left(Err.ignore());
+  if (toEdit === edit) return current;
 
-    return pipe(
-      [prePack, preTheme, preCard, [edit], rest],
-      RA.flatten,
-      str.intercalate('\n'),
-      RTE.right
-    );
-  };
+  return pipe(
+    [prePack, preTheme, preCard, [edit], rest],
+    RA.flatten,
+    str.intercalate('\n')
+  );
+};
 
-const processClaim =
-  (ids: Ids, card: string) =>
+const processClaims =
+  (state: State, cards: RNEA.ReadonlyNonEmptyArray<string>) =>
   (user: string): Op.Op<unknown> =>
     pipe(
       Greenlight.fetchRawIssues,
       RTE.flatMapOption(
-        RA.findFirst(({ number }) => ids.issue === number),
+        RA.findFirst(({ number }) => state.issue === number),
         Err.ignore
       ),
       RTE.flatMapNullable(({ body }) => body, Err.ignore),
-      RTE.flatMap(prepareEdit(ids.pack, ids.theme, card, user)),
-      RTE.flatMap((edit) => Greenlight.editIssue(ids.issue, edit)),
+      RTE.map((body) =>
+        pipe(
+          cards,
+          RA.reduce(body, (curr, card) =>
+            prepareEdit(curr, state.pack, state.theme, card, user)
+          )
+        )
+      ),
+      RTE.flatMap((edit) => Greenlight.editIssue(state.issue, edit)),
       RTE.orElseW(RTE.right) // always return as success even if it fails
     );
 
@@ -66,17 +76,14 @@ const getClaimer = (user: dd.User) => (ctx: Ctx) =>
 export const glCardClaim = Menu.interaction({
   name: 'glCardClaim',
   devOnly: true,
-  execute: (_, interaction, [card]) => {
-    const statuses = Greenlight.pageStatuses(interaction.message);
+  execute: (_, interaction, cards) => {
     return pipe(
-      currentPageIds(interaction.message),
-      RTE.flatMap((ids) =>
+      currentState(interaction.message),
+      RTE.flatMap((state) =>
         pipe(
           getClaimer(interaction.user),
-          RTE.flatMap(processClaim(ids, card)),
-          RTE.flatMap(() =>
-            createPageFromIds(statuses)(interaction.message)(ids)
-          )
+          RTE.flatMap(processClaims(state, cards)),
+          RTE.flatMap(() => page(state))
         )
       ),
       RTE.flatMap(Interaction.sendUpdate(interaction))

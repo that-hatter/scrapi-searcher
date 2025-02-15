@@ -1,13 +1,74 @@
-import { flow, O, pipe, RA, RNEA, RTE } from '@that-hatter/scrapi-factory/fp';
+import { O, pipe, RA, RNEA, RTE } from '@that-hatter/scrapi-factory/fp';
 import { Greenlight } from '../../../ygo';
 import { COLORS } from '../../constants';
-import { Command, dd, Err, Interaction, Menu, Op, str } from '../../modules';
+import {
+  Button,
+  Command,
+  dd,
+  Err,
+  Interaction,
+  Menu,
+  Op,
+  str,
+} from '../../modules';
 
-export type Ids = {
+export type State = {
   readonly issue: number;
   readonly pack: string;
   readonly theme: string;
+  readonly displayClaimed: boolean;
 };
+
+const getMenuState = (
+  index: number,
+  customId: string,
+  components: ReadonlyArray<dd.Component>
+): Op.Op<string> =>
+  pipe(
+    components.at(index),
+    O.fromNullable,
+    O.flatMap(Menu.extract),
+    O.filter((m) => m.customId.startsWith(customId + ' ')),
+    O.map((a) => str.split(' ')(a.customId)),
+    O.map(RNEA.unprepend),
+    O.map(([_, params]) => params.join(' ')),
+    O.flatMap(str.unempty),
+    RTE.fromOption(() =>
+      Err.forDev('Failed to parse claiming menu state: ' + index)
+    )
+  );
+
+export const currentState = (message: dd.Message): Op.Op<State> =>
+  pipe(
+    O.Do,
+    O.bind('comps', () => O.fromNullable(message.components)),
+    O.bind('displayClaimed', ({ comps }) =>
+      pipe(
+        comps.at(0),
+        O.fromNullable,
+        O.map(Button.extract),
+        O.chainNullableK((buttons) => buttons.at(1)?.customId),
+        O.filter((id) => id.startsWith('glDisplayClaimed ')),
+        O.map((id) => id.endsWith(' true'))
+      )
+    ),
+    RTE.fromOption(() =>
+      Err.forDev('Could not parse claiming interface state.')
+    ),
+    RTE.bind('issues', () => Greenlight.getIssues),
+    RTE.bind('issue', ({ comps }) =>
+      pipe(
+        getMenuState(1, 'glIssueSelect', comps),
+        RTE.map((n) => +n),
+        RTE.filterOrElse(
+          (n) => !isNaN(n) && n > 0,
+          () => Err.forDev('Invalid issue number')
+        )
+      )
+    ),
+    RTE.bind('pack', ({ comps }) => getMenuState(2, 'glPackSelect', comps)),
+    RTE.bind('theme', ({ comps }) => getMenuState(3, 'glThemeSelect', comps))
+  );
 
 export type Section = {
   readonly issues: Greenlight.Issues;
@@ -16,55 +77,43 @@ export type Section = {
   readonly issue: Greenlight.Issue;
 };
 
-const sectionFromIds =
-  (message: dd.Message) =>
-  (newIds: Partial<Ids>): Op.Op<Section> =>
-    pipe(
-      RTE.Do,
-      RTE.bind('issues', () => Greenlight.getIssues),
-      RTE.bind('currentIds', () => currentPageIds(message)),
-      RTE.flatMap(({ issues, currentIds }) => {
-        if (!RA.isNonEmpty(issues))
-          return RTE.left(Err.forAll('No open issues in the repository'));
+const sectionFromState = (
+  state: Partial<State>,
+  issues: RNEA.ReadonlyNonEmptyArray<Greenlight.Issue>
+): Section => {
+  const issue = issues.find((is) => is.id === state.issue) ?? RNEA.head(issues);
+  const pack =
+    issue.packs.find((pk) => pk.name === state.pack) ?? RNEA.head(issue.packs);
+  const theme =
+    pack.themes.find((th) => th.name === state.theme) ?? RNEA.head(pack.themes);
+  return { issues, issue, pack, theme };
+};
 
-        const actualIssueId = newIds.issue ?? currentIds.issue;
-        const issue = issues.find((is) => is.id === actualIssueId);
-        if (!issue)
-          return RTE.left(Err.forAll('Could not find issue: ' + newIds.issue));
+const buttonRow = ({ displayClaimed }: State): dd.ActionRow =>
+  Button.row([
+    Button.button({
+      label: 'Refresh',
+      style: Button.Styles.Secondary,
+      customId: 'glClaimRefresh',
+    }),
+    Button.button({
+      label: (displayClaimed ? 'Exclude' : 'Show') + ' claimed cards',
+      style: displayClaimed ? Button.Styles.Secondary : Button.Styles.Primary,
+      customId: 'glDisplayClaimed ' + displayClaimed,
+    }),
+  ]);
 
-        const actualPackId = newIds.pack ?? currentIds.pack;
-        const pack = newIds.issue
-          ? RNEA.head(issue.packs)
-          : issue.packs.find((p) => p.name === actualPackId);
-        if (!pack)
-          return RTE.left(Err.forAll('Could not find pack: ' + newIds.pack));
-
-        const actualThemeId = newIds.theme ?? currentIds.theme;
-        const theme =
-          newIds.issue || newIds.pack
-            ? RNEA.head(pack.themes)
-            : pack.themes.find((th) => th.name === actualThemeId);
-        if (!theme)
-          return RTE.left(Err.forAll('Could not find theme: ' + newIds.theme));
-
-        return RTE.right({ theme, pack, issue, issues });
-      })
-    );
-
-const issueMenu = (
-  current: Greenlight.Issue,
-  issues: Greenlight.Issues
-): dd.ActionRow =>
+const issueMenu = ({ issues, issue }: Section): dd.ActionRow =>
   pipe(
     issues,
     RA.map((is) => ({
       label: 'Issue #' + is.id,
       value: is.id.toString(),
       description: is.title,
-      default: current.id === is.id,
+      default: issue.id === is.id,
     })),
     (options) => ({
-      customId: 'glIssueSelect ' + current.id,
+      customId: 'glIssueSelect ' + issue.id,
       options,
       placeholder: 'Select issue to display',
       disabled: options.length < 2,
@@ -72,10 +121,7 @@ const issueMenu = (
     Menu.row
   );
 
-const packMenu = (
-  pack: Greenlight.Pack,
-  issue: Greenlight.Issue
-): dd.ActionRow =>
+const packMenu = ({ issue, pack }: Section): dd.ActionRow =>
   pipe(
     issue.packs,
     RA.map((p) => ({
@@ -93,10 +139,7 @@ const packMenu = (
     Menu.row
   );
 
-const themeMenu = (
-  theme: Greenlight.Theme,
-  pack: Greenlight.Pack
-): dd.ActionRow =>
+const themeMenu = ({ pack, theme }: Section): dd.ActionRow =>
   pipe(
     pack.themes,
     RA.map(
@@ -115,110 +158,55 @@ const themeMenu = (
     Menu.row
   );
 
-const cardMenu = (section: Section): dd.ActionRow =>
+const cardMenu = ({ theme }: Section): dd.ActionRow =>
   pipe(
-    section.theme.cards,
+    theme.cards,
     RA.filter((c) => O.isNone(c.status)),
     RA.map(Greenlight.cardOption),
     (options) => ({
       customId: 'glCardClaim',
       options,
-      placeholder: 'Select card to claim',
+      placeholder: 'Select card(s) to claim',
+      maxValues: options.length || 1,
+      disabled: options.length === 0,
     }),
     Menu.row
   );
 
-const page =
-  (statuses: Greenlight.StatusSteps) =>
-  (section: Section): Interaction.UpdateData => {
-    const title = section.theme.name === '???' ? undefined : section.theme.name;
-    const cardStrs = pipe(
-      section.theme.cards,
-      RA.filter(Greenlight.cardHasStatus(statuses)),
-      RA.map(Greenlight.formatCard),
-      RNEA.fromReadonlyArray,
-      O.getOrElseW(() => [str.subtext('No cards match the current filters.')])
-    );
-    const description = str.joinParagraphs([
-      ...cardStrs,
-      '',
-      Greenlight.formatPack(section.pack),
-      Greenlight.formatIssue(section.issue),
-    ]);
-
-    const components = [
-      Greenlight.statusMenu(statuses),
-      issueMenu(section.issue, section.issues),
-      packMenu(section.pack, section.issue),
-      themeMenu(section.theme, section.pack),
-      cardMenu(section),
-    ];
-
-    const color = COLORS.GREENLIGHT_GREEN;
-
-    return { embeds: [{ color, title, description }], components };
-  };
-
-export const createPageFromIds =
-  (statuses: Greenlight.StatusSteps) => (message: dd.Message) =>
-    flow(sectionFromIds(message), RTE.map(page(statuses)));
-
-export const switchSection = (ixn: Interaction.WithMsg) =>
-  flow(
-    sectionFromIds(ixn.message),
-    RTE.map(page(Greenlight.pageStatuses(ixn.message))),
-    RTE.flatMap(Interaction.sendUpdate(ixn))
-  );
-
-const getMenuParam = (
-  customId: string,
-  menus: ReadonlyArray<dd.SelectMenuComponent>
-) =>
+export const page = (state: State): Op.Op<Interaction.UpdateData> =>
   pipe(
-    menus,
-    RA.findFirst((m) => m.customId.startsWith(customId + ' ')),
-    O.map((a) => str.split(' ')(a.customId)),
-    O.map(RNEA.unprepend),
-    O.map(([_, params]) => params.join(' ')),
-    O.flatMap(str.unempty)
-  );
+    Greenlight.getIssues,
+    RTE.map((issues) => {
+      const section = sectionFromState(state, issues);
+      const title = section.theme.name;
 
-export const currentPageIds = (message: dd.Message): Op.Op<Ids> =>
-  pipe(
-    O.Do,
-    O.bind('components', () => O.fromNullable(message.components)),
-    O.let('menus', ({ components }) => RA.filterMap(Menu.extract)(components)),
-    O.bind('issue', ({ menus }) =>
-      pipe(
-        getMenuParam('glIssueSelect', menus),
-        O.map((is) => +is),
-        O.filter((is) => !isNaN(is) && is > 0)
-      )
-    ),
-    O.bind('pack', ({ menus }) => getMenuParam('glPackSelect', menus)),
-    O.bind('theme', ({ menus }) => getMenuParam('glThemeSelect', menus)),
-    RTE.fromOption(() => Err.forAll('Could not parse page ids'))
-  );
+      const cardStrings = pipe(
+        section.theme.cards,
+        RA.filter((c) => state.displayClaimed || O.isNone(c.status)),
+        RA.map(Greenlight.formatCard),
+        RNEA.fromReadonlyArray,
+        O.getOrElseW(() => [str.subtext('No cards match the current filters.')])
+      );
+      const description = str.joinParagraphs([
+        ...cardStrings,
+        '',
+        Greenlight.formatPack(section.pack),
+        Greenlight.formatIssue(section.issue),
+      ]);
 
-export const filterStatus =
-  (statuses: Greenlight.StatusSteps) => (ixn: Interaction.WithMsg) =>
-    pipe(
-      currentPageIds(ixn.message),
-      RTE.flatMap(createPageFromIds(statuses)(ixn.message)),
-      RTE.flatMap(Interaction.sendUpdate(ixn))
-    );
+      const components = [
+        buttonRow(state),
+        issueMenu(section),
+        packMenu(section),
+        themeMenu(section),
+        cardMenu(section),
+      ];
 
-const initialPage = (issues: RNEA.ReadonlyNonEmptyArray<Greenlight.Issue>) => {
-  const issue = RNEA.head(issues);
-  const pack = RNEA.head(issue.packs);
-  const theme = RNEA.head(pack.themes);
-  const statuses = pipe(
-    theme.cards[0].status,
-    O.map(({ step }) => ['Unclaimed', step] as const),
-    O.getOrElseW(() => ['Unclaimed'] as const)
+      const color = COLORS.GREENLIGHT_GREEN;
+
+      return { embeds: [{ color, title, description }], components };
+    })
   );
-  return page(statuses)({ theme, pack, issue, issues });
-};
 
 export const claim: Command.Command = {
   name: 'claim',
@@ -228,11 +216,8 @@ export const claim: Command.Command = {
   devOnly: true,
   execute: (_, message) =>
     pipe(
-      Greenlight.getIssues,
-      RTE.flatMapOption(RNEA.fromReadonlyArray, () =>
-        Err.forUser('There are currently no applicable Greenlight issues.')
-      ),
-      RTE.map(initialPage),
+      // dummy state that will default to the first issue, pack, and theme
+      page({ issue: -1, pack: '', theme: '', displayClaimed: false }),
       RTE.flatMap(Op.sendReply(message))
     ),
 };

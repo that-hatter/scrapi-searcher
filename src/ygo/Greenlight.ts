@@ -20,7 +20,7 @@ export const fetchRawIssues = (ctx: Ctx) =>
     TE.mapError(Err.forDev)
   );
 
-export const getIssues: Op.Op<ReadonlyArray<Issue>> = flow(
+export const getIssues: Op.Op<RNEA.ReadonlyNonEmptyArray<Issue>> = flow(
   fetchRawIssues,
   TE.map(
     RA.filterMap(({ title, body, number }) => {
@@ -33,6 +33,9 @@ export const getIssues: Op.Op<ReadonlyArray<Issue>> = flow(
         parseIssue(number, title)
       );
     })
+  ),
+  TE.flatMapOption(RNEA.fromReadonlyArray, () =>
+    Err.forUser('There are currently no applicable Greenlight issues.')
   )
 );
 

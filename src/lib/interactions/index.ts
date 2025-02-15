@@ -12,10 +12,11 @@ import { navSelect } from './navSelect';
 import { glCardClaim } from './glCardClaim';
 import { glCardStage } from './glCardStage';
 import { glCardUnstage } from './glCardUnstage';
+import { glClaimRefresh } from './glClaimRefresh';
+import { glDisplayClaimed } from './glDisplayClaimed';
 import { glFinishStage } from './glFinishStage';
 import { glIssueSelect } from './glIssueSelect';
 import { glPackSelect } from './glPackSelect';
-import { glStatusSelect } from './glStatusSelect';
 import { glThemeSelect } from './glThemeSelect';
 
 import { update } from './update';
@@ -30,13 +31,14 @@ const list = [
   navSelect,
 
   glCardClaim,
+  glCardStage,
+  glCardUnstage,
+  glClaimRefresh,
+  glDisplayClaimed,
   glFinishStage,
   glIssueSelect,
   glPackSelect,
   glThemeSelect,
-  glCardStage,
-  glCardUnstage,
-  glStatusSelect,
 
   update,
 ] as const;
