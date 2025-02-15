@@ -570,10 +570,10 @@ const passcodeMatch =
       O.fromPredicate(isNumeric),
       O.orElse(() =>
         pipe(
-          query,
-          O.fromPredicate(str.startsWith('c')),
-          O.map((cid) => cid.substring(1).trim()),
-          O.filter(isNumeric)
+          query.startsWith('c') ? query.substring(1) : query,
+          (q) => (q.endsWith('.lua') ? q.substring(0, q.length - 4) : q),
+          str.trim,
+          O.fromPredicate(isNumeric)
         )
       ),
       O.flatMap((id) =>
