@@ -671,7 +671,7 @@ const itemListDescription = () =>
           RA.map(emojify),
           R.sequenceArray,
           R.map(str.join('')),
-          R.map(str.append(' ' + pf.card.name))
+          R.map(str.prepend(pf.card.name + ' '))
         );
       }
 
@@ -687,7 +687,7 @@ const itemListDescription = () =>
         R.map(RA.map(emojify)),
         R.flatMap(R.sequenceArray),
         R.map(str.join('')),
-        R.map(str.append(' ' + pf.card.name))
+        R.map(str.prepend(pf.card.name + ' '))
       );
     })
   );
