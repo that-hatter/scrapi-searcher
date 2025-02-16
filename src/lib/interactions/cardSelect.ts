@@ -192,7 +192,8 @@ const queryFilter = (query: string) => {
 };
 
 const getQueries = (msg: dd.Message): ReadonlyArray<string> =>
-  msg.content
+  str
+    .getTextParts(msg.content)
     .toLowerCase()
     .match(/\[.+?\]/g)
     ?.map((q) => str.crop(1)(q).trim())
