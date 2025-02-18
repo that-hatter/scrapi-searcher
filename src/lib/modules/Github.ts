@@ -1,5 +1,6 @@
-import { Octokit } from '@octokit/rest';
-import { createNodeMiddleware, Webhooks } from '@octokit/webhooks';
+import type { Octokit } from '@octokit/rest' with { "resolution-mode": "import" };
+import type { Webhooks } from '@octokit/webhooks' with { "resolution-mode": "import" };
+
 import { pipe, TE } from '@that-hatter/scrapi-factory/fp';
 import * as buffer from 'node:buffer';
 import * as fs from 'node:fs/promises';
@@ -16,23 +17,36 @@ export type Github = {
   readonly webhookServer: http.Server;
 };
 
+const ghRestImport = import('@octokit/rest');
+const ghWebhooksImport = import('@octokit/webhooks');
+
 export const init = (
   accessToken: string,
   webhookPort: number,
   webhookSecret: string
-) =>
-  TE.fromIOEither(
-    utils.fallibleIO((): Github => {
-      const rest = new Octokit({ auth: accessToken });
-      const webhook = new Webhooks({ secret: webhookSecret });
-      const webhookServer = http
-        .createServer(
-          createNodeMiddleware(webhook, { path: '/api/webhook/github' })
+): TE.TaskEither<string, Github> =>
+  pipe(
+    TE.Do,
+    TE.bind('ghWebhooks', () => utils.taskify(() => ghWebhooksImport)),
+    TE.let(
+      'webhook',
+      ({ ghWebhooks }) => new ghWebhooks.Webhooks({ secret: webhookSecret })
+    ),
+    TE.let('middleWare', ({ webhook, ghWebhooks }) =>
+      ghWebhooks.createNodeMiddleware(webhook, { path: '/api/webhook/github' })
+    ),
+    TE.bind('rest', () =>
+      utils.taskify(() =>
+        ghRestImport.then(({ Octokit }) => new Octokit({ auth: accessToken }))
+      )
+    ),
+    TE.bind('webhookServer', ({ middleWare }) =>
+      TE.fromIOEither(
+        utils.fallibleIO(() =>
+          http.createServer(middleWare).listen(webhookPort)
         )
-        .listen(webhookPort);
-
-      return { rest, webhook, webhookServer };
-    })
+      )
+    )
   );
 
 const git = simpleGit();
