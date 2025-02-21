@@ -39,6 +39,9 @@ export const resolveShortcuts = (query: string) => (ctx: Ctx) =>
     query,
     str.split(/\s+/),
     RNEA.map((s) => {
+      // TODO: instead of replacing the original string then searching,
+      // use shortcuts as alternative search results
+      if (s.startsWith('(') && s.endsWith(')')) return s;
       const key = s.toLowerCase().replaceAll(/[\p{P}\p{S}]+/gu, '');
       return ctx.shortcuts[key] ?? s;
     }),
