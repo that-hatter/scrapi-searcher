@@ -46,6 +46,7 @@
     "io-ts": "^2.2.21",
     "minisearch": "^7.1.0",
     "node-fetch": "^2.7.0",
+    "sharp": "^0.33.5",
     "simple-git": "^3.25.0"
   },
   "overrides": {

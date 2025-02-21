@@ -204,7 +204,7 @@ export const after = (sep: string) => (s: string) =>
 export const afterLast = (sep: string) => (s: string) => {
   const parts = s.split(sep);
   if (parts.length === 1) return '';
-  return parts.at(parts.length - 1);
+  return parts.at(parts.length - 1) ?? '';
 };
 
 export const limit = (indicator: string, max: number) => (s: string) =>

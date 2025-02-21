@@ -1,4 +1,5 @@
 import { O, pipe, TE } from '@that-hatter/scrapi-factory/fp';
+import { Deck } from '../../ygo';
 import { about } from '../commands/general/about';
 import { cardBracketSearch } from '../interactions/cardSelect';
 import { Collection, Command, Err, Event, Op, str } from '../modules';
@@ -7,7 +8,6 @@ export const messageCreate: Event.Event<'messageCreate'> = {
   name: 'messageCreate',
   handle: (message) => (ctx) => {
     if (message.author?.bot) return Op.noop;
-    if (!message.content || message.content.length === 0) return Op.noop;
 
     if (!message.content.startsWith(ctx.prefix)) {
       if (
@@ -19,6 +19,7 @@ export const messageCreate: Event.Event<'messageCreate'> = {
 
       return pipe(
         cardBracketSearch(message)(ctx),
+        TE.tap(() => Deck.breakdown(message)(ctx)),
         TE.mapError(Err.reason(message))
       );
     }

@@ -86,6 +86,7 @@ const formatDevAlert =
       embeds: [{ color, url, title, description, footer }],
       files: pipe(
         reason,
+        O.map(utils.stringify),
         O.map(Attachment.text('reason.json')),
         O.map((file) => [file]),
         O.toUndefined
