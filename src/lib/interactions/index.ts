@@ -4,6 +4,9 @@ import { Collection } from '../modules';
 import { cardSelect } from './cardSelect';
 import { rawvalMode } from './rawValMode';
 
+import { deckCardNames } from './deckCardNames';
+import { deckImport } from './deckImport';
+
 import { signature } from './signature';
 
 import { navPageSwitch } from './navPageSwitch';
@@ -24,6 +27,9 @@ import { update } from './update';
 const list = [
   cardSelect,
   rawvalMode,
+
+  deckCardNames,
+  deckImport,
 
   signature,
 

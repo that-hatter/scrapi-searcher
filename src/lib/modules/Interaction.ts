@@ -24,7 +24,14 @@ export type WithMsg = Omit<dd.Interaction, 'message'> & {
 export const asUpdateResponse = (
   data: CanBeReadonly<UpdateData>
 ): CanBeReadonly<dd.InteractionResponse> => ({
-  type: 7, //dd.InteractionResponseTypes.UpdateMessage,
+  type: 7, // dd.InteractionResponseTypes.UpdateMessage,
+  data,
+});
+
+export const asMessageResponse = (
+  data: CanBeReadonly<UpdateData>
+): CanBeReadonly<dd.InteractionResponse> => ({
+  type: 4, // dd.InteractionResponseTypes.ChannelMessageWithSource
   data,
 });
 

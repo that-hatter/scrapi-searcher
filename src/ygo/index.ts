@@ -1,4 +1,5 @@
 export * as Babel from './Babel';
+export * as Deck from './Deck';
 export * as Pedia from './Pedia';
 
 export * as Banlists from './Banlists';

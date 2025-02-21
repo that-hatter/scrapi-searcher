@@ -50,16 +50,8 @@ const program = pipe(
         dd.GatewayIntents.MessageContent |
         dd.GatewayIntents.DirectMessages,
       token: env.BOT_TOKEN,
-      // TODO: pick actual desired properties once typing is safer
-      // for now, this sets all properties to be true
-      desiredProperties: dd.createDesiredPropertiesObject(
-        {
-          // exception to the above, since it causes discordeno to throw an error
-          // https://github.com/discordeno/discordeno/pull/3961
-          messageSnapshot: { message: false },
-        },
-        true
-      ),
+      desiredPropertiesBehavior: dd.DesiredPropertiesBehavior.RemoveKey,
+      desiredProperties: dd.createDesiredPropertiesObject({}, true),
     })
   ),
   TE.bind('emojis', ({ bot }) => Op.getAppEmojis(bot)),
@@ -135,7 +127,11 @@ const program = pipe(
 
       pipe(
         commits,
-        RA.flatMap((c) => [...c.added, ...c.modified, ...c.removed]),
+        RA.flatMap((c) => [
+          ...(c.added ?? []),
+          ...(c.modified ?? []),
+          ...(c.removed ?? []),
+        ]),
         (files) =>
           Data.autoUpdate(payload.compare, payload.repository.name, files),
         runHandler

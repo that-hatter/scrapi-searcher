@@ -11,6 +11,9 @@ RUN npm run build
 
 FROM node:22-alpine AS prod
 
+# install fonts
+RUN apk add font-inconsolata
+
 # install git and create data folder for auto-updates
 RUN apk add --no-cache git
 RUN mkdir -p ./data
