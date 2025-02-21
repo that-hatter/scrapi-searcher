@@ -662,9 +662,7 @@ const itemListDescription = () =>
   flow(
     preformatWithExisting,
     RTE.flatMapReader((pf) => {
-      if (pf.mainType === 'Skill') return R.of(pf.card.name);
-
-      if (pf.mainType === 'Spell' || pf.mainType === 'Trap') {
+      if (pf.mainType !== 'Monster') {
         return pipe(
           pf.types,
           RA.map(str.prepend('type_')),
