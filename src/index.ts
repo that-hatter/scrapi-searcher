@@ -24,6 +24,8 @@ const envDecoder = pipe(
     Decoder.partial({
       PICS_DEFAULT_SOURCE: Decoder.string,
       PICS_UPLOAD_CHANNEL: Decoder.bigintString,
+
+      GIT_REF: Decoder.string,
     })
   )
 );
@@ -85,6 +87,7 @@ const program = pipe(
         }),
         RR.fromEntries
       ),
+      gitRef: O.fromNullable(env.GIT_REF),
       ...data,
     };
 

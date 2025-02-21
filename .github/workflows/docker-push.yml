@@ -26,3 +26,4 @@ jobs:
           push: true
           tags: ghcr.io/${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: GIT_REF=${{ github.sha }}

@@ -23,4 +23,7 @@ RUN npm ci --omit=dev
 # copy compiled js code
 COPY --from=base ./dist ./dist
 
+ARG GIT_REF
+ENV GIT_REF=${GIT_REF}
+
 ENTRYPOINT ["node", "dist"]

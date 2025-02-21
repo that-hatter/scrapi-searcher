@@ -1,10 +1,24 @@
-import { pipe, RTE } from '@that-hatter/scrapi-factory/fp';
+import { O, pipe, RTE } from '@that-hatter/scrapi-factory/fp';
 import { Ctx } from '../../../Ctx';
 import { Command, dd, Op, str } from '../../modules';
 import { helpMessage } from './help';
 
 const description = (message: dd.Message, ctx: Ctx) =>
   str.joinParagraphs([
+    pipe(
+      ctx.gitRef,
+      O.map(
+        (sha) =>
+          'Version: [`' +
+          sha.substring(0, 7) +
+          '`]' +
+          '(https://github.com/that-hatter/scrapi-searcher/commit/' +
+          sha +
+          ')'
+      ),
+      O.map(str.subtext)
+    ),
+    '',
     str.mention(ctx.bot.id) +
       ' displays scripting library documentation and card information, ' +
       'and provides useful commands for EDOPro-related development.',

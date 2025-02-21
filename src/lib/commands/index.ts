@@ -36,6 +36,7 @@ import { claim } from './dev/claim';
 import { stage } from './dev/stage';
 
 import { update } from './dev/update';
+import { version } from './dev/version';
 
 const list = [
   card,
@@ -73,6 +74,7 @@ const list = [
   stage,
 
   update,
+  version,
 ];
 
 export const collection = pipe(
