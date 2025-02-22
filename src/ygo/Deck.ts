@@ -15,6 +15,7 @@ import fetch from 'node-fetch';
 import * as buffer from 'node:buffer';
 import sharp from 'sharp';
 import { Babel, Pics } from '.';
+import { Ctx } from '../Ctx';
 import { LIMITS } from '../lib/constants';
 import { Attachment, Button, dd, Err, Op, str } from '../lib/modules';
 import { utils } from '../lib/utils';
@@ -377,28 +378,33 @@ const sendTextualBreakdown = (deck: Deck, msg: dd.Message, index: number) =>
     RTE.flatMap(Op.sendReply(msg))
   );
 
-export const breakdown =
-  (msg: dd.Message): Op.Op<ReadonlyArray<dd.Message>> =>
-  (ctx) => {
-    const sendBreakdown =
-      O.isSome(ctx.picsSource) && O.isSome(ctx.picsChannel)
-        ? sendImageBreakdown
-        : sendTextualBreakdown;
-    return pipe(
-      msg,
-      parseDecks,
-      RTE.mapError(Err.forDev),
-      RTE.tap(() => Op.react('⌛')(msg)),
-      RTE.map(
-        RA.mapWithIndex((i, deck) => {
-          const size = deck.main.length + deck.extra.length + deck.side.length;
-          if (size <= 200) return sendBreakdown(deck, msg, i);
-          return Op.sendReply(msg)(
-            'Deck contains too many cards (' + size + ' / 200)'
-          );
-        })
-      ),
-      RTE.flatMap(RTE.sequenceSeqArray),
-      RT.tap(() => Op.deleteOwnReaction('⌛')(msg))
-    )(ctx);
-  };
+export const breakdown = (msg: dd.Message) => (ctx: Ctx) =>
+  pipe(
+    msg,
+    parseDecks,
+    RTE.mapError(Err.forDev),
+    RTE.flatMap((decks) => {
+      if (decks.length === 0) return Op.noopReader;
+      const sendBreakdown =
+        O.isSome(ctx.picsSource) && O.isSome(ctx.picsChannel)
+          ? sendImageBreakdown
+          : sendTextualBreakdown;
+
+      return pipe(
+        RTE.right(decks),
+        RTE.tap(() => Op.react('⌛')(msg)),
+        RTE.map(
+          RA.mapWithIndex((i, deck) => {
+            const size =
+              deck.main.length + deck.extra.length + deck.side.length;
+            if (size <= 200) return sendBreakdown(deck, msg, i);
+            return Op.sendReply(msg)(
+              'Deck contains too many cards (' + size + ' / 200)'
+            );
+          })
+        ),
+        RTE.flatMap(RTE.sequenceSeqArray),
+        RT.tap(() => Op.deleteOwnReaction('⌛')(msg))
+      );
+    })
+  )(ctx);
