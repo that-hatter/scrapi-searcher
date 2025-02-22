@@ -135,7 +135,7 @@ export const archetype: Command.Command = {
   syntax: 'archetype <query>',
   aliases: ['arch', 'set'],
   execute: (parameters, message) => {
-    const query = parameters.join(' ');
+    const query = parameters.join(' ').toLowerCase();
     const asBigInt = utils.safeBigInt(query);
     if (asBigInt > 0n)
       return pipe(

@@ -17,7 +17,7 @@ export const search: Command.Command = {
   syntax: 'search <query>',
   aliases: ['cardsearch'],
   execute: (parameters, message) => {
-    const query = parameters.join(' ');
+    const query = parameters.join(' ').toLowerCase();
     return pipe(
       getMatches(query),
       R.map(RNEA.fromReadonlyArray),

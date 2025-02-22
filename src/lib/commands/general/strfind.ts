@@ -26,7 +26,7 @@ export const strfind: Command.Command = {
   syntax: 'strfind <query>',
   aliases: [],
   execute: (parameters, message) => {
-    const query = parameters.join(' ');
+    const query = parameters.join(' ').toLowerCase();
     return pipe(
       getMatches(query),
       R.map(RNEA.fromReadonlyArray),

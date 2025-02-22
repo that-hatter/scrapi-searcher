@@ -601,18 +601,20 @@ const konamiIdMatch =
     );
 
 export const bestMatch =
-  (query: string): Op.Op<Babel.Card> =>
-  (ctx) =>
-    pipe(
+  (input: string): Op.Op<Babel.Card> =>
+  (ctx) => {
+    const query = input.toLowerCase();
+    return pipe(
       passcodeMatch(query)(ctx),
       O.orElse(() => konamiIdMatch(query)(ctx)),
       O.orElse(() => RA.head(fuzzyMatches(query)(ctx))),
       TE.fromOption(() =>
         Err.forUser(
-          'No matches found for ' + str.inlineCode(str.limit('...', 50)(query))
+          'No matches found for ' + str.inlineCode(str.limit('...', 50)(input))
         )
       )
     );
+  };
 
 // -----------------------------------------------------------------------------
 // helpers for card-related commands

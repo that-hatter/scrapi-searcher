@@ -6,6 +6,7 @@ export const version: Command.Command = {
   description: "Check the bot's deployed version.",
   syntax: 'version',
   aliases: ['v'],
+  devOnly: true,
   execute: (_, message) => (ctx) =>
     pipe(
       ctx.gitRef,

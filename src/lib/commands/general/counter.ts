@@ -9,7 +9,7 @@ export const counter: Command.Command = {
   syntax: 'counter <query>',
   aliases: [],
   execute: (parameters, message) => {
-    const query = parameters.join(' ');
+    const query = parameters.join(' ').toLowerCase();
     return pipe(
       Systrings.findMatches('counter')(query),
       R.map(RNEA.fromReadonlyArray),

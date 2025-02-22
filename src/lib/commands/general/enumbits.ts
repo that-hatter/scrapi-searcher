@@ -120,9 +120,9 @@ export const enumbits: Command.Command = {
         Err.forUser('You must specify a positive integer value.')
       );
 
-    const nameQuery = name_.join(' ');
+    const nameQuery = name_.join(' ').toLowerCase();
     return pipe(
-      getEnumsWithName(name_.join(' ')),
+      getEnumsWithName(nameQuery),
       RTE.map(
         (items): Nav.Nav<sf.Enum> => ({
           title: 'Bit enums matching ' + nameQuery,

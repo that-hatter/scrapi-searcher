@@ -35,6 +35,7 @@ import { ping } from './general/ping';
 import { claim } from './dev/claim';
 import { stage } from './dev/stage';
 
+import { removepics } from './dev/removepics';
 import { update } from './dev/update';
 import { version } from './dev/version';
 
@@ -73,6 +74,7 @@ const list = [
   claim,
   stage,
 
+  removepics,
   update,
   version,
 ];

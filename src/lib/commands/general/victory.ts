@@ -10,7 +10,7 @@ export const victory: Command.Command = {
   syntax: 'victory <query>',
   aliases: ['win'],
   execute: (parameters, message) => {
-    const query = parameters.join(' ');
+    const query = parameters.join(' ').toLowerCase();
     return pipe(
       Systrings.findMatches('victory')(query),
       R.map(RNEA.fromReadonlyArray),

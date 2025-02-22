@@ -9,7 +9,7 @@ export const systrings: Command.Command = {
   syntax: 'systrings <query>',
   aliases: [],
   execute: (parameters, message) => {
-    const query = parameters.join(' ');
+    const query = parameters.join(' ').toLowerCase();
     return pipe(
       Systrings.findMatches('system')(query),
       R.map(RNEA.fromReadonlyArray),

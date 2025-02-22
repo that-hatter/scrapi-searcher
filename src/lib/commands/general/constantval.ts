@@ -11,7 +11,7 @@ const searchCmd = SearchCommand.searchCommand<sf.Constant>({
   itemCollection: (ctx) => TE.right(ctx.yard.api.constants),
   itemId: ({ name }) => name,
   customFilter: (params) => (ct) => {
-    const query = params.join(' ');
+    const query = params.join(' ').toLowerCase();
     if (typeof ct.value === 'string')
       return ct.value.toLowerCase().includes(query);
     const b = utils.safeBigInt(query);

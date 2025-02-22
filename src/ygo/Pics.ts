@@ -13,8 +13,7 @@ import * as buffer from 'node:buffer';
 import { Babel, Card } from '.';
 import { Ctx } from '../Ctx';
 import { URLS } from '../lib/constants';
-import type { Data, dd } from '../lib/modules';
-import { Decoder, Err, Github, Op, str } from '../lib/modules';
+import { Data, dd, Decoder, Err, Github, Op, str } from '../lib/modules';
 import { utils } from '../lib/utils';
 
 const OWNER = 'that-hatter';
@@ -34,7 +33,7 @@ const update = pipe(
 
 export const data: Data.Data<'pics'> = {
   key: 'pics',
-  description: 'Reuploaded card artwork urls saved in `pics.json.`',
+  description: 'Reuploaded card pic urls saved in pics.json.',
   update,
   init: update,
   commitFilter: (repo, files) =>
@@ -79,6 +78,19 @@ const fetchFromSourceAndReupload = (id: number) => (ctx: Ctx) => {
   );
 };
 
+const updateGithubFile = (
+  newRecord: RR.ReadonlyRecord<string, string>,
+  message: string
+) =>
+  Github.updateFile(
+    OWNER,
+    REPO,
+    BRANCH,
+    PATH,
+    utils.stringify(newRecord),
+    message
+  );
+
 export const addToFile = (url: string) => (ctx: Ctx) => {
   const [_, __, ___, ____, ch, att, _id] = url.split('/');
   if (!ch || !att || !_id) return TE.left('Invalid pic url: ' + url);
@@ -87,16 +99,7 @@ export const addToFile = (url: string) => (ctx: Ctx) => {
     ctx.pics,
     RR.upsertAt(id, ch + '/' + att),
     TE.right,
-    TE.tap((content) =>
-      Github.updateFile(
-        OWNER,
-        REPO,
-        BRANCH,
-        PATH,
-        utils.stringify(content),
-        'add pic for ' + id
-      )(ctx)
-    )
+    TE.tap((content) => updateGithubFile(content, 'add pic for ' + id)(ctx))
   );
 };
 
@@ -208,3 +211,12 @@ export const getMultipleRaws = (ids: ReadonlyArray<number>) => (ctx: Ctx) => {
     TE.map(RR.fromEntries)
   );
 };
+
+export const remove = (ids: ReadonlyArray<number>) => (ctx: Ctx) =>
+  pipe(
+    ctx.pics,
+    RR.filterWithIndex((key) => !ids.includes(+key)),
+    TE.right,
+    TE.tap((pics) => updateGithubFile(pics, 'remove card pic(s)')(ctx)),
+    TE.map((pics) => Data.asUpdate({ pics }))
+  );

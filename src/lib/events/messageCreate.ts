@@ -26,7 +26,6 @@ export const messageCreate: Event.Event<'messageCreate'> = {
 
     return pipe(
       message.content.substring(ctx.prefix.length),
-      str.toLowerCase,
       str.split(' '),
       ([cmdName, ...parameters]) =>
         pipe(

@@ -8,7 +8,7 @@ export const card: Command.Command = {
   syntax: 'card <query>',
   aliases: [],
   execute: (parameters, message) => {
-    const query = parameters.join(' ');
+    const query = parameters.join(' ').toLowerCase();
     return pipe(
       Card.fuzzyMatches(query),
       R.map(RNEA.fromReadonlyArray),
