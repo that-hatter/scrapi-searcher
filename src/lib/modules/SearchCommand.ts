@@ -32,7 +32,7 @@ export const searchCommand = <T>(opts: Options<T>): Command.Command => ({
   syntax: opts.name + ' <query>',
   aliases: opts.aliases,
   execute: (parameters, message) => {
-    const query = parameters.join(' ');
+    const query = parameters.join(' ').toLowerCase();
     const filterFn = opts.customFilter
       ? opts.customFilter(parameters)
       : (t: T) => opts.itemId(t).toLowerCase().includes(query);
