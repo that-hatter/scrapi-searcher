@@ -37,7 +37,7 @@ export const data: Data.Data<'pics'> = {
   update,
   init: update,
   commitFilter: (repo, files) =>
-    repo === 'scrapi-searcher' && files.includes('data/pics.json'),
+    repo === 'scrapi-searcher-data' && files.includes('data/pics.json'),
 };
 
 export const getExisting = (id: number) => (ctx: Ctx) =>

@@ -31,7 +31,7 @@ export const data: Data.Data<'konamiIds'> = {
   update,
   init: update,
   commitFilter: (repo, files) =>
-    repo === 'scrapi-searcher' && files.includes('data/konamiIds.json'),
+    repo === 'scrapi-searcher-data' && files.includes('data/konamiIds.json'),
 };
 
 type Key = 'master' | 'rush';
