@@ -134,6 +134,24 @@ export const react =
     );
   };
 
+export const deleteOwnReaction =
+  (reaction: string) =>
+  (message: dd.Message) =>
+  ({ bot, emojis }: Ctx) => {
+    const emoji =
+      (reaction.startsWith(':') && reaction.endsWith(':')) ||
+      (reaction.startsWith('<') && reaction.endsWith('>'))
+        ? reaction
+        : emojis[reaction];
+    return asOperation(() =>
+      bot.helpers.deleteOwnReaction(
+        message.channelId,
+        message.id,
+        emoji ?? reaction
+      )
+    );
+  };
+
 export const sendLog =
   (payload: Payload<dd.CreateMessageOptions>): Op<dd.Message> =>
   (ctx) =>

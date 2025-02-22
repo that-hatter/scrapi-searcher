@@ -10,7 +10,7 @@ import {
   RTE,
   TE,
 } from '@that-hatter/scrapi-factory/fp';
-import { array as A } from 'fp-ts';
+import { array as A, readerTask as RT } from 'fp-ts';
 import fetch from 'node-fetch';
 import * as buffer from 'node:buffer';
 import sharp from 'sharp';
@@ -388,7 +388,9 @@ export const breakdown =
       msg,
       parseDecks,
       RTE.mapError(Err.forDev),
+      RTE.tap(() => Op.react('⌛')(msg)),
       RTE.map(RA.mapWithIndex((i, deck) => sendBreakdown(deck, msg, i))),
-      RTE.flatMap(RTE.sequenceSeqArray)
+      RTE.flatMap(RTE.sequenceSeqArray),
+      RT.tap(() => Op.deleteOwnReaction('⌛')(msg))
     )(ctx);
   };
