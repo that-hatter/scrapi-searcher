@@ -12,9 +12,9 @@ const description = (message: dd.Message, ctx: Ctx) =>
           'Version: [`' +
           sha.substring(0, 7) +
           '`]' +
-          '(https://github.com/that-hatter/scrapi-searcher/commit/' +
+          '(<https://github.com/that-hatter/scrapi-searcher/commit/' +
           sha +
-          ')'
+          '>)'
       ),
       O.map(str.subtext)
     ),

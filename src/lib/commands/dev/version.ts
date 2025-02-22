@@ -15,9 +15,9 @@ export const version: Command.Command = {
           'Version: [`' +
           sha.substring(0, 7) +
           '`]' +
-          '(https://github.com/that-hatter/scrapi-searcher/commit/' +
+          '(<https://github.com/that-hatter/scrapi-searcher/commit/' +
           sha +
-          ')'
+          '>)'
       ),
       O.getOrElse(() => 'Version unknown'),
       Op.sendReply(message)
