@@ -1,4 +1,4 @@
-import { O, RA, RTE } from '@that-hatter/scrapi-factory/fp';
+import { RA, RTE, TE } from '@that-hatter/scrapi-factory/fp';
 import { pipe } from 'fp-ts/lib/function';
 import { Deck, Pics } from '../../../ygo';
 import { LIMITS } from '../../constants';
@@ -9,16 +9,19 @@ const parseParam = (param: string) => {
     return pipe(
       param,
       Deck.fromYdkeString,
-      O.fromEither,
-      O.map((deck) => [deck.main, deck.extra, deck.side]),
-      O.map(RA.flatten)
+      TE.mapError(Err.ignore),
+      TE.map((deck) => [deck.main, deck.extra, deck.side]),
+      TE.map(RA.flatten)
     );
   }
 
   return pipe(
     +param,
-    O.fromPredicate((a) => !isNaN(a) && a > 0),
-    O.map(RA.of)
+    TE.fromPredicate(
+      (a) => !isNaN(a) && a > 0,
+      () => Err.ignore()
+    ),
+    TE.map(RA.of)
   );
 };
 
@@ -40,10 +43,12 @@ export const removepics: Command.Command = {
   execute: (params, message) =>
     pipe(
       params,
-      RA.filterMap(parseParam),
-      RA.flatten,
-      (ids) => [...new Set(ids)],
-      RTE.fromPredicate(
+      RA.map(parseParam),
+      TE.sequenceArray,
+      TE.map(RA.flatten),
+      TE.map((ids) => [...new Set(ids)]),
+      RTE.fromTaskEither,
+      RTE.filterOrElse(
         (s) => s.length > 0,
         () => Err.forUser('Must include at least one id or ydke string.')
       ),

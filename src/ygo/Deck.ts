@@ -27,27 +27,33 @@ export type Deck = {
   readonly side: ReadonlyArray<number>;
 };
 
-export const fromYdkeString = (ydke: string): E.Either<string, Deck> =>
+export const fromYdkeString = (ydke: string): TE.TaskEither<string, Deck> =>
   pipe(
     ydke,
-    E.fromPredicate(
+    TE.fromPredicate(
       str.startsWith('ydke://'),
       () => 'Invalid ydke string: ' + ydke
     ),
-    E.map((y) => y.slice(7)),
-    E.map(str.split('!')),
-    E.filterOrElse(
+    TE.map((y) => y.slice(7)),
+    TE.map(str.split('!')),
+    TE.filterOrElse(
       (parts) => parts.length >= 3,
       () => 'Missing ydke component'
     ),
-    E.map(
+    TE.map(
       RNEA.map((base64) =>
-        Array.from(
-          new Uint32Array(Uint8Array.from(Buffer.from(base64, 'base64')).buffer)
+        utils.fallibleIO(() =>
+          Array.from(
+            new Uint32Array(
+              Uint8Array.from(Buffer.from(base64, 'base64')).buffer
+            )
+          )
         )
       )
     ),
-    E.map(([main, extra, side]) => ({
+    TE.map(RNEA.map(TE.fromIOEither)),
+    TE.flatMap(TE.sequenceArray),
+    TE.map(([main, extra, side]) => ({
       name: O.none,
       createdBy: O.none,
       main: main!,
@@ -301,8 +307,8 @@ const parseFromMessageContent = (msg: dd.Message) =>
       /ydke:\/\/[A-Za-z0-9+/=]*?![A-Za-z0-9+/=]*?![A-Za-z0-9+/=]*?!/g
     ) ?? [],
     RA.map(fromYdkeString),
-    E.sequenceArray,
-    RTE.fromEither
+    TE.sequenceArray,
+    RTE.fromTaskEither
   );
 
 const parseFromMessageFiles = (msg: dd.Message) =>
@@ -327,20 +333,6 @@ export const parseDecks = (msg: dd.Message) =>
     RTE.sequenceArray,
     RTE.map(RA.flatten)
   );
-
-const deckButtons = (index: number) =>
-  Button.row([
-    {
-      style: Button.Styles.Primary,
-      label: 'View card names',
-      customId: 'deckCardNames ' + index,
-    },
-    {
-      style: Button.Styles.Primary,
-      label: 'Import',
-      customId: 'deckImport ' + index,
-    },
-  ]);
 
 const sendImageBreakdown = (deck: Deck, msg: dd.Message, index: number) =>
   pipe(
