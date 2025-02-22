@@ -389,7 +389,15 @@ export const breakdown =
       parseDecks,
       RTE.mapError(Err.forDev),
       RTE.tap(() => Op.react('⌛')(msg)),
-      RTE.map(RA.mapWithIndex((i, deck) => sendBreakdown(deck, msg, i))),
+      RTE.map(
+        RA.mapWithIndex((i, deck) => {
+          const size = deck.main.length + deck.extra.length + deck.side.length;
+          if (size <= 200) return sendBreakdown(deck, msg, i);
+          return Op.sendReply(msg)(
+            'Deck contains too many cards (' + size + ' / 200)'
+          );
+        })
+      ),
       RTE.flatMap(RTE.sequenceSeqArray),
       RT.tap(() => Op.deleteOwnReaction('⌛')(msg))
     )(ctx);
