@@ -3,6 +3,7 @@ import { Collection } from '../modules';
 
 import { cardSelect } from './cardSelect';
 import { rawvalMode } from './rawValMode';
+import { showScript } from './showScript';
 
 import { deckCardNames } from './deckCardNames';
 import { deckImport } from './deckImport';
@@ -27,6 +28,7 @@ import { update } from './update';
 const list = [
   cardSelect,
   rawvalMode,
+  showScript,
 
   deckCardNames,
   deckImport,

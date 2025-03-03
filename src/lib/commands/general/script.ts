@@ -1,6 +1,14 @@
 import { pipe, RTE } from '@that-hatter/scrapi-factory/fp';
 import { Card } from '../../../ygo';
-import { Command, Op, str } from '../../modules';
+import { Button, Command, Op, str } from '../../modules';
+
+const showScriptButton = Button.row([
+  {
+    style: Button.Styles.Primary,
+    label: 'Show script',
+    customId: 'showScript',
+  },
+]);
 
 export const script: Command.Command = {
   name: 'script',
@@ -17,6 +25,11 @@ export const script: Command.Command = {
           RTE.map(str.prepend(str.bold(c.name) + '\n'))
         )
       ),
-      RTE.flatMap(Op.sendReply(message))
+      RTE.flatMap((content) =>
+        Op.sendReply(message)({
+          content,
+          components: [showScriptButton],
+        })
+      )
     ),
 };
