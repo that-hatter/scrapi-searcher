@@ -104,6 +104,7 @@ const archetypeOverrides: RR.ReadonlyRecord<string, string> = {
   ['Bonding']: 'Bonding -',
   ['Exodd']: 'Exodd|Obliterate!!!',
   ['Fusion']: 'Fusion|Polymerization',
+  ['Polymerization']: 'Fusion|Polymerization',
   ['Ritual Beast Ulti']: 'Ritual Beast Ulti-',
   ['sphinx']: 'Sphinx',
   ['True Draco']: 'True Draco|True King',
