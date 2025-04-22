@@ -62,7 +62,7 @@ const fetchAndParse = (repo: string) => {
 };
 
 const update: TE.TaskEither<string, Systrings> = pipe(
-  fetchAndParse('DeltaPuppetOfStrings'),
+  fetchAndParse('DeltaBagooska'),
   TE.flatMap((delta) =>
     pipe(
       fetchAndParse('Distribution'),
@@ -83,7 +83,7 @@ export const data: Data.Data<'systrings'> = {
   update,
   init: update,
   commitFilter: (repo, files) =>
-    (repo === 'DeltaPuppetOfStrings' && files.includes('strings.conf')) ||
+    (repo === 'DeltaBagooska' && files.includes('strings.conf')) ||
     (repo === 'Distribution' && files.includes('config/strings.conf')),
 };
 

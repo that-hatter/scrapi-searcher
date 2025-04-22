@@ -19,7 +19,7 @@ export type BetaIds = DeepReadonly<Decoder.TypeOf<typeof decoder>>;
 
 const URL =
   'https://raw.githubusercontent.com/ProjectIgnis/' +
-  'DeltaPuppetOfStrings/master/mappings.json';
+  'DeltaBagooska/master/mappings.json';
 
 const update = pipe(
   utils.taskify(() => fetch(URL).then((response) => response.json())),
@@ -32,7 +32,7 @@ export const data: Data.Data<'betaIds'> = {
   update,
   init: update,
   commitFilter: (repo, files) =>
-    repo === 'DeltaPuppetOfStrings' && files.includes('mappings.json'),
+    repo === 'DeltaBagooska' && files.includes('mappings.json'),
 };
 
 export const toBabelCard =
