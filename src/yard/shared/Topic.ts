@@ -49,6 +49,7 @@ export const editLink = (doc: sf.Topic): O.Option<string> =>
   pipe(
     doc.filepath,
     O.map((p) => p.replaceAll('(', '\\(').replaceAll(')', '\\)')),
+    O.map((p) => p.replaceAll('\\', '/')),
     O.map(
       (p) => `https://github.com/ProjectIgnis/scrapiyard/edit/master/api/${p}`
     ),

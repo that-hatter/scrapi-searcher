@@ -16,7 +16,7 @@ const itemEmbed = (tag: sf.Tag): Op.SubOp<dd.DiscordEmbed> =>
       DescInfo.nonPlaceholder(str.fromAST(tag.description)),
       quickLinksSection(tag),
     ]),
-    color: COLORS.BOOK_ORANGE,
+    color: COLORS.DISCORD_TRANSPARENT,
     footer: { text: 'tag' },
   });
 

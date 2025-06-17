@@ -17,7 +17,7 @@ const itemEmbed = (en: sf.Enum): Op.SubOp<dd.DiscordEmbed> =>
       DescInfo.nonPlaceholder(str.fromAST(en.description)),
       quickLinksSection(en),
     ]),
-    color: COLORS.BOOK_ORANGE,
+    color: COLORS.DISCORD_TRANSPARENT,
     footer: { text: 'enum' },
   });
 

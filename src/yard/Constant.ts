@@ -81,7 +81,7 @@ const embed =
         title: ct.name,
         url: Topic.url(ct),
         description,
-        color: COLORS.BOOK_ORANGE,
+        color: COLORS.DISCORD_TRANSPARENT,
         fields: pipe(
           [Topic.aliasesField(ct)(ctx.yard.api.constants.record)],
           RA.compact,

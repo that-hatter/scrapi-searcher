@@ -23,7 +23,7 @@ const embed =
         DescInfo.nonPlaceholder(str.fromAST(nm.description)),
         quickLinksSection(nm),
       ]),
-      color: COLORS.BOOK_ORANGE,
+      color: COLORS.DISCORD_TRANSPARENT,
       fields: pipe(
         [Topic.aliasesField(nm)(ctx.yard.api.namespaces.record)],
         RA.compact,

@@ -24,7 +24,7 @@ const itemEmbed = (tp: sf.Type): Op.SubOp<dd.DiscordEmbed> =>
       DescInfo.nonPlaceholder(str.fromAST(tp.description)),
       quickLinksSection(tp),
     ]),
-    color: COLORS.BOOK_ORANGE,
+    color: COLORS.DISCORD_TRANSPARENT,
     footer: { text: typetype(tp) },
   });
 

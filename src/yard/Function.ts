@@ -111,7 +111,7 @@ export const embed =
       title: fn.name,
       url: Topic.url(fn),
       description,
-      color: COLORS.BOOK_ORANGE,
+      color: COLORS.DISCORD_TRANSPARENT,
       fields: pipe(
         [
           Topic.aliasesField(fn)(ctx.yard.api.functions.record),
