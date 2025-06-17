@@ -42,7 +42,6 @@ const program = pipe(
       env.GITHUB_WEBHOOK_SECRET
     )
   ),
-  TE.bind('data', () => Data.init),
   TE.bind('dd', () => utils.taskify(() => import('@discordeno/bot'))),
   TE.let('bot', ({ dd, env }) =>
     dd.createBot({
@@ -57,38 +56,58 @@ const program = pipe(
     })
   ),
   TE.bind('emojis', ({ bot }) => Op.getAppEmojis(bot)),
-  TE.flatMap(({ bot, emojis, env, github, data }) => {
-    const ctx = {
-      bot,
-      prefix: env.BOT_PREFIX,
-      dev: {
-        admin: env.DEV_ADMIN,
-        guild: env.DEV_GUILD,
-        users: pipe(
-          env.DEV_USERS,
-          str.split(', '),
-          RNEA.map(str.split(':')),
-          RNEA.map(([name, id]) => [String(id), name] as const),
-          RR.fromEntries
-        ),
-        logs: env.DEV_LOGS_CHANNEL,
-      },
-      commands,
-      componentInteractions,
-      bitNames: BitNames.load(data.yard.api.constants.array, data.systrings),
-      github: github.rest,
-      picsSource: O.fromNullable(env.PICS_DEFAULT_SOURCE),
-      picsChannel: O.fromNullable(env.PICS_UPLOAD_CHANNEL),
-      emojis: pipe(
-        emojis,
-        RA.filterMap(({ id, name }) => {
-          if (!id || !name) return O.none;
-          return O.some([name, `<:${name}:${id}>`] as const);
-        }),
+  TE.map(({ bot, emojis, env, github }) => ({
+    bot,
+
+    prefix: env.BOT_PREFIX,
+    dev: {
+      admin: env.DEV_ADMIN,
+      guild: env.DEV_GUILD,
+      users: pipe(
+        env.DEV_USERS,
+        str.split(', '),
+        RNEA.map(str.split(':')),
+        RNEA.map(([name, id]) => [String(id), name] as const),
         RR.fromEntries
       ),
-      gitRef: O.fromNullable(env.GIT_REF),
-      ...data,
+      logs: env.DEV_LOGS_CHANNEL,
+    },
+
+    commands,
+    componentInteractions,
+
+    gitRef: O.fromNullable(env.GIT_REF),
+    github: github.rest,
+    webhook: github.webhook,
+    webhookServer: github.webhookServer,
+
+    picsSource: O.fromNullable(env.PICS_DEFAULT_SOURCE),
+    picsChannel: O.fromNullable(env.PICS_UPLOAD_CHANNEL),
+
+    emojis: pipe(
+      emojis,
+      RA.filterMap(({ id, name }) => {
+        if (!id || !name) return O.none;
+        return O.some([name, `<:${name}:${id}>`] as const);
+      }),
+      RR.fromEntries
+    ),
+  })),
+  TE.flatMap((preCtx) =>
+    pipe(
+      preCtx,
+      Data.init,
+      TE.map((data) => ({ ...preCtx, ...data }))
+    )
+  ),
+  TE.flatMap((preCtx) => {
+    // TODO: clean up unused properties such (webhook, webhookServer)
+    const ctx = {
+      ...preCtx,
+      bitNames: BitNames.load(
+        preCtx.yard.api.constants.array,
+        preCtx.systrings
+      ),
     };
 
     const runHandler = async (handler: Op.Op<unknown>) => {
@@ -105,6 +124,7 @@ const program = pipe(
       ctx.konamiIds = update.konamiIds ?? ctx.konamiIds;
       ctx.shortcuts = update.shortcuts ?? ctx.shortcuts;
       ctx.pics = update.pics ?? ctx.pics;
+      ctx.scripts = update.scripts ?? ctx.scripts;
 
       if (!update.yard && !update.systrings) return;
       ctx.bitNames = BitNames.load(ctx.yard.api.constants.array, ctx.systrings);
@@ -117,12 +137,12 @@ const program = pipe(
         runHandler(event.handle(...params)),
     });
 
-    bot.events = events.reduce(
+    ctx.bot.events = events.reduce(
       (acc, ev) => ({ ...acc, ...toDiscordHandler(ev) }),
-      bot.events
+      ctx.bot.events
     );
 
-    github.webhook.on('push', ({ payload }) => {
+    preCtx.webhook.on('push', ({ payload }) => {
       const { ref, commits } = payload;
       if (ref !== 'refs/heads/master' && ref !== 'refs/heads/main') return;
       if (commits.length === 1 && commits[0]?.message.startsWith('[auto] '))
@@ -142,13 +162,13 @@ const program = pipe(
     });
 
     process.on('SIGINT', () => {
-      github.webhookServer.close();
+      preCtx.webhookServer.close();
       process.exit(1);
     });
 
     return utils.taskify(() => {
       console.log('Starting bot...');
-      return bot.start();
+      return ctx.bot.start();
     });
   }),
   TE.mapError(utils.tapLog)

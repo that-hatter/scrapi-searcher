@@ -7,7 +7,6 @@ export type CtxWithoutData = {
   readonly commands: Command.Collection;
   readonly componentInteractions: Interaction.ComponentCollection;
   readonly github: Github.Github['rest'];
-  readonly bitNames: BitNames.BitNames;
   readonly prefix: string;
   readonly dev: {
     readonly admin: string;
@@ -21,4 +20,7 @@ export type CtxWithoutData = {
   readonly gitRef: O.Option<string>;
 };
 
-export type Ctx = CtxWithoutData & Data.Loaded;
+export type Ctx = {
+  readonly bitNames: BitNames.BitNames;
+} & CtxWithoutData &
+  Data.Loaded;
