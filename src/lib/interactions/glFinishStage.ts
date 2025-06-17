@@ -112,12 +112,12 @@ const archetypeOverrides: RR.ReadonlyRecord<string, string> = {
 
 const arrowNames: RR.ReadonlyRecord<string, string> = {
   'Top-Left': '↖',
-  'Top': '⬆',
+  'Top-Center': '↑',
   'Top-Right': '↗',
-  'Right': '➡',
-  'Left': '⬅',
+  'Middle-Right': '→',
+  'Middle-Left': '←',
   'Bottom-Left': '↙',
-  'Bottom': '⬇',
+  'Bottom-Center': '↓',
   'Bottom-Right': '↘',
 };
 
@@ -224,7 +224,8 @@ const toBabelData =
         pipe(
           c['Link Arrows'],
           RA.filterMap((n) => O.fromNullable(arrowNames[n])),
-          (arrows) => BitNames.toInt('linkArrows')(arrows)(ctx)
+          (arrows) => BitNames.toInt('linkArrows')(arrows)(ctx),
+          utils.tapLog
         )
       )
     );
