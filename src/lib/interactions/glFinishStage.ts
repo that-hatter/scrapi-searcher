@@ -224,8 +224,7 @@ const toBabelData =
         pipe(
           c['Link Arrows'],
           RA.filterMap((n) => O.fromNullable(arrowNames[n])),
-          (arrows) => BitNames.toInt('linkArrows')(arrows)(ctx),
-          utils.tapLog
+          (arrows) => BitNames.toInt('linkArrows')(arrows)(ctx)
         )
       )
     );
@@ -238,7 +237,7 @@ const toBabelData =
         pipe(
           c['Pendulum Scale'],
           O.map(utils.safeBigInt),
-          O.map((sc) => (lvl << 16n) | (sc << 8n) | sc),
+          O.map((sc) => (sc << 24n) | (sc << 16n) | lvl),
           O.getOrElse(() => lvl)
         )
     );
