@@ -208,6 +208,27 @@ export const page = (state: State): Op.Op<Interaction.UpdateData> =>
     })
   );
 
+const getInitialState = (issues: Greenlight.Issues): State => {
+  // find the first section that has at least one unclaimed card
+  for (const issue of issues) {
+    for (const pack of issue.packs) {
+      for (const theme of pack.themes) {
+        if (theme.cards.some(Greenlight.cardHasStatus(['Unclaimed']))) {
+          return {
+            issue: issue.id,
+            pack: pack.name,
+            theme: theme.name,
+            displayClaimed: false,
+          };
+        }
+      }
+    }
+  }
+  // if there are no unclaimed cards, use a dummy invalid state
+  // (which will make it default to the first section)
+  return { issue: -1, pack: '', theme: '', displayClaimed: false };
+};
+
 export const claim: Command.Command = {
   name: 'claim',
   description: 'View and claim cards in open Greenlight issues.',
@@ -216,8 +237,9 @@ export const claim: Command.Command = {
   devOnly: true,
   execute: (_, message) =>
     pipe(
-      // dummy state that will default to the first issue, pack, and theme
-      page({ issue: -1, pack: '', theme: '', displayClaimed: false }),
+      Greenlight.getIssues,
+      RTE.map(getInitialState),
+      RTE.flatMap(page),
       RTE.flatMap(Op.sendReply(message))
     ),
 };
