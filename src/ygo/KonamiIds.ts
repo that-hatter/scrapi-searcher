@@ -1,4 +1,4 @@
-import { O, pipe, RA, RR, TE } from '@that-hatter/scrapi-factory/fp';
+import { O, pipe, RA, RR, RTE, TE } from '@that-hatter/scrapi-factory/fp';
 import fetch from 'node-fetch';
 import { Babel, Card, Pedia } from '.';
 import { Ctx } from '../Ctx';
@@ -22,7 +22,8 @@ const URL = `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/${PATH
 
 const update = pipe(
   utils.taskify(() => fetch(URL).then((response) => response.json())),
-  TE.flatMapEither(Decoder.parse(decoder))
+  TE.flatMapEither(Decoder.parse(decoder)),
+  RTE.fromTaskEither
 );
 
 export const data: Data.Data<'konamiIds'> = {

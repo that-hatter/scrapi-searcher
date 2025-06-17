@@ -28,7 +28,8 @@ const decoder = Decoder.record(Decoder.string);
 
 const update = pipe(
   utils.taskify(() => fetch(URL).then((resp) => resp.json())),
-  TE.flatMapEither(Decoder.parse(decoder))
+  TE.flatMapEither(Decoder.parse(decoder)),
+  RTE.fromTaskEither
 );
 
 export const data: Data.Data<'pics'> = {

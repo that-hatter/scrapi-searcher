@@ -5,6 +5,7 @@ import {
   RA,
   RNEA,
   RR,
+  RTE,
   TE,
 } from '@that-hatter/scrapi-factory/fp';
 import * as fs from 'node:fs/promises';
@@ -146,10 +147,11 @@ const loadBanlists = (): TE.TaskEither<string, Banlists> =>
     TE.flatMapOption(RNEA.fromReadonlyArray, () => 'No valid banlists found.')
   );
 
-const update: TE.TaskEither<string, Banlists> = pipe(
+const update = pipe(
   Github.pullOrClone('LFLists', GITHUB_URL),
   TE.flatMap(loadBanlists),
-  TE.mapError(utils.stringify)
+  TE.mapError(utils.stringify),
+  RTE.fromTaskEither
 );
 
 export const data: Data.Data<'banlists'> = {
@@ -157,8 +159,8 @@ export const data: Data.Data<'banlists'> = {
   description: 'Banlist data from LFLists.',
   update,
   init: pipe(
-    loadBanlists(),
-    TE.orElse(() => update)
+    loadBanlists,
+    RTE.orElse(() => update)
   ),
   commitFilter: (repo, files) =>
     repo === 'LFLists' && files.some((f) => f.endsWith('.lflist.conf')),

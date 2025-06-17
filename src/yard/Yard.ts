@@ -1,5 +1,5 @@
 import * as sf from '@that-hatter/scrapi-factory';
-import { pipe, TE } from '@that-hatter/scrapi-factory/fp';
+import { pipe, RTE, TE } from '@that-hatter/scrapi-factory/fp';
 import * as path from 'node:path';
 import { PATHS } from '../lib/constants';
 import type { Data } from '../lib/modules';
@@ -11,13 +11,14 @@ const YARD_OPTIONS: sf.YardOptions = {
   directory: path.join(PATHS.DATA, 'scrapiyard', 'api'),
 };
 
-const update: TE.TaskEither<string, sf.Yard> = pipe(
+const update = pipe(
   Github.pullOrClone(
     'scrapiyard',
     'https://github.com/ProjectIgnis/scrapiyard'
   ),
   TE.flatMap(() => sf.loadYard(YARD_OPTIONS)),
-  TE.mapError(utils.stringify)
+  TE.mapError(utils.stringify),
+  RTE.fromTaskEither
 );
 
 export const data: Data.Data<'yard'> = {
@@ -26,7 +27,8 @@ export const data: Data.Data<'yard'> = {
   update,
   init: pipe(
     sf.loadYard(YARD_OPTIONS),
-    TE.orElse(() => update)
+    RTE.fromTaskEither,
+    RTE.orElse(() => update)
   ),
   commitFilter: (repo, files) => {
     if (repo === 'scrapiyard')

@@ -1,4 +1,4 @@
-import { O, pipe, RA, RNEA, RR, TE } from '@that-hatter/scrapi-factory/fp';
+import { O, pipe, RA, RNEA, RR, RTE, TE } from '@that-hatter/scrapi-factory/fp';
 import Database from 'better-sqlite3';
 import { ioEither } from 'fp-ts';
 import MiniSearch, { SearchResult } from 'minisearch';
@@ -261,10 +261,11 @@ const loadBabel: TE.TaskEither<string, Babel> = pipe(
   })
 );
 
-const update: TE.TaskEither<string, Babel> = pipe(
+const update = pipe(
   Github.pullOrClone('BabelCDB', 'https://github.com/ProjectIgnis/BabelCDB'),
   TE.flatMap(() => loadBabel),
-  TE.mapError(utils.stringify)
+  TE.mapError(utils.stringify),
+  RTE.fromTaskEither
 );
 
 export const data: Data.Data<'babel'> = {
@@ -273,7 +274,8 @@ export const data: Data.Data<'babel'> = {
   update,
   init: pipe(
     loadBabel,
-    TE.orElse(() => update)
+    RTE.fromTaskEither,
+    RTE.orElse(() => update)
   ),
   commitFilter: (repo, files) =>
     repo === 'BabelCDB' && files.some((f) => f.endsWith('.cdb')),
