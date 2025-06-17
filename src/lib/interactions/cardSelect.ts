@@ -16,38 +16,21 @@ import { Ctx } from '../../Ctx';
 import { Babel, Card, KonamiIds, Pics } from '../../ygo';
 import { Data, dd, Err, Interaction, Menu, Op, str } from '../modules';
 
+//prettier-ignore
 const MALISS: RR.ReadonlyRecord<string, string> = {
   ['86993168']: 'Why is a raven like a writing desk?',
   ['69272449']: 'Oh dear! Oh dear! I shall be too late!',
-  ['96676583']:
-    "Oh, you can't help that, we're all mad here. I'm mad. You're mad.",
-  ['32061192']:
-    'Once upon a time there were three little sisters, ' +
-    'and their names were Elsie, Lacie, and Tillie',
-  ['68059897']:
-    "You may call it 'nonsense' if you like, but I've heard nonsense " +
-    'compared with which that would be as sensible as a dictionary!',
-  ['95454996']:
-    "Why, sometimes I've believed as many as " +
-    'six impossible things before breakfast',
+  ['96676583']: "Oh, you can't help that, we're all mad here. I'm mad. You're mad.",
+  ['32061192']: 'Once upon a time there were three little sisters, and their names were Elsie, Lacie, and Tillie',
+  ['68059897']: "You may call it 'nonsense' if you like, but I've heard nonsense compared with which that would be as sensible as a dictionary!",
+  ['95454996']: "Why, sometimes I've believed as many as six impossible things before breakfast",
   ['21848500']: 'Off with her head!',
   ['68337209']: 'Down, down, down. Would the fall never come to an end!',
-  ['94722358']:
-    "The Hatter's remark seemed to have no sort of meaning in it, " +
-    'and yet it was certainly English.',
-  ['20726052']:
-    'and this time it vanished quite slowly, ' +
-    'beginning with the end of the tail, and ending with the grin, ' +
-    'which remained some time after the rest of it had gone.',
-  ['57111661']:
-    'Imagine her surprise, when the White Rabbit read out, ' +
-    "at the top of his shrill little voice, the name 'Alice!'",
-  ['20938824']:
-    'Suppose we change the subject, ' +
-    "I'm getting tired of this. I vote the young lady tells us a story.",
-  ['93453053']:
-    'And certainly the glass was beginning to melt away, ' +
-    'just like a bright silvery mist.',
+  ['94722358']: "The Hatter's remark seemed to have no sort of meaning in it, and yet it was certainly English.",
+  ['20726052']: 'and this time it vanished quite slowly, beginning with the end of the tail, and ending with the grin, which remained some time after the rest of it had gone.',
+  ['57111661']: "Imagine her surprise, when the White Rabbit read out, at the top of his shrill little voice, the name 'Alice!'",
+  ['20938824']: "Suppose we change the subject, I'm getting tired of this. I vote the young lady tells us a story.",
+  ['93453053']: 'And certainly the glass was beginning to melt away, just like a bright silvery mist.',
 };
 
 const extraContent = (id: number) =>

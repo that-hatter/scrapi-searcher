@@ -61,7 +61,7 @@ const fetchAndParse = (repo: string) => {
   );
 };
 
-const update: TE.TaskEither<string, Systrings> = pipe(
+const update = pipe(
   fetchAndParse('DeltaBagooska'),
   TE.flatMap((delta) =>
     pipe(
@@ -74,7 +74,8 @@ const update: TE.TaskEither<string, Systrings> = pipe(
       ),
       TE.map(RA.concat(delta))
     )
-  )
+  ),
+  RTE.fromTaskEither
 );
 
 export const data: Data.Data<'systrings'> = {

@@ -1,4 +1,4 @@
-import { pipe, RA, RNEA, RR, TE } from '@that-hatter/scrapi-factory/fp';
+import { pipe, RA, RNEA, RR, RTE, TE } from '@that-hatter/scrapi-factory/fp';
 import fetch from 'node-fetch';
 import { Ctx } from '../Ctx';
 import type { Data } from '../lib/modules';
@@ -22,7 +22,8 @@ const URL =
 
 const update = pipe(
   utils.taskify(() => fetch(URL).then((response) => response.json())),
-  TE.flatMapEither(Decoder.parse(decoder))
+  TE.flatMapEither(Decoder.parse(decoder)),
+  RTE.fromTaskEither
 );
 
 export const data: Data.Data<'shortcuts'> = {

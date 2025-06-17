@@ -1,14 +1,14 @@
 import type { Octokit } from '@octokit/rest' with { "resolution-mode": "import" };
 import type { Webhooks } from '@octokit/webhooks' with { "resolution-mode": "import" };
 
-import { pipe, TE } from '@that-hatter/scrapi-factory/fp';
+import { O, pipe, RA, TE } from '@that-hatter/scrapi-factory/fp';
 import * as buffer from 'node:buffer';
 import * as fs from 'node:fs/promises';
 import * as http from 'node:http';
 import * as path from 'node:path';
 import simpleGit from 'simple-git';
 import { str } from '.';
-import { Ctx } from '../../Ctx';
+import { CtxWithoutData } from '../../Ctx';
 import { utils } from '../utils';
 
 export type Github = {
@@ -75,7 +75,7 @@ export const updateFile =
     content: string,
     message: string
   ) =>
-  (ctx: Ctx) =>
+  (ctx: CtxWithoutData) =>
     pipe(
       utils.taskify(() => ctx.github.repos.getContent({ owner, repo, path })),
       TE.flatMapNullable(
@@ -96,3 +96,32 @@ export const updateFile =
         )
       )
     );
+
+export const listRepoFiles =
+  (owner: string, repo: string, branch: string) => (ctx: CtxWithoutData) => {
+    const ref = 'heads/' + branch;
+    const git = ctx.github.git;
+    return pipe(
+      utils.taskify(() => git.getRef({ owner, repo, ref })),
+      TE.map((refData) => refData.data.object.sha),
+      TE.flatMap((commitSha) =>
+        utils.taskify(() =>
+          git.getCommit({ owner, repo, commit_sha: commitSha })
+        )
+      ),
+      TE.map((commitData) => commitData.data.tree.sha),
+      TE.flatMap((treeSha) =>
+        utils.taskify(() =>
+          git.getTree({ owner, repo, tree_sha: treeSha, recursive: 'true' })
+        )
+      ),
+      TE.map((treeData) =>
+        pipe(
+          treeData.data.tree,
+          RA.filterMap((f) =>
+            f.type === 'blob' ? O.fromNullable(f.path) : O.none
+          )
+        )
+      )
+    );
+  };
