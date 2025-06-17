@@ -1,4 +1,5 @@
 import { O, pipe, RA, RR, RTE } from '@that-hatter/scrapi-factory/fp';
+import { Ctx } from '../Ctx';
 import { Data } from '../lib/modules';
 import { listRepoFiles } from '../lib/modules/Github';
 
@@ -13,7 +14,7 @@ const update = pipe(
   RTE.map(
     RA.filterMap((f) => {
       if (!f.endsWith('.lua')) return O.none;
-      const [_, id] = f.split('/c');
+      const [_, id] = f.substring(0, f.length - 4).split('/c');
       if (!id) return O.none;
       return O.some([
         id,
@@ -33,3 +34,6 @@ export const data: Data.Data<'scripts'> = {
     repo === 'CardScripts' &&
     files.some((f) => f.endsWith('.lua') && f.includes('/c')),
 };
+
+export const getUrl = (id: number) => (ctx: Ctx) =>
+  O.fromNullable(ctx.scripts[id.toString()]);

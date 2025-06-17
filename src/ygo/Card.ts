@@ -9,7 +9,15 @@ import {
   TE,
 } from '@that-hatter/scrapi-factory/fp';
 import { sequenceT } from 'fp-ts/lib/Apply';
-import { Babel, Banlists, BetaIds, KonamiIds, Pics, Shortcuts } from '.';
+import {
+  Babel,
+  Banlists,
+  BetaIds,
+  KonamiIds,
+  Pics,
+  Scripts,
+  Shortcuts,
+} from '.';
 import { Ctx } from '../Ctx';
 import { COLORS, LIMITS, URLS } from '../lib/constants';
 import { dd, Err, Nav, Op, str } from '../lib/modules';
@@ -26,6 +34,7 @@ type PreFormatted = {
   readonly aliases: ReadonlyArray<Card>;
   readonly konamiId: O.Option<number>;
   readonly pic: O.Option<string>;
+  readonly script: O.Option<string>;
 };
 
 const mainType = flow(
@@ -54,12 +63,14 @@ const preformatWithExisting = (card: Card): Op.SubOp<PreFormatted> =>
       KonamiIds.getExisting(card, rush ? 'rush' : 'master')
     ),
     R.bind('pic', () => Pics.getExisting(card.id)),
+    R.bind('script', () => Scripts.getUrl(card.id)),
     RTE.fromReader
   );
 
 const preformatWithFetch = (card: Card): Op.SubOp<PreFormatted> =>
   pipe(
     preformatCommon(card),
+    R.bind('script', () => Scripts.getUrl(card.id)),
     RTE.fromReader,
     RTE.bind('konamiId', ({ scopes, types }) =>
       KonamiIds.getOrFetchMissing(card, scopes, types)
@@ -198,30 +209,6 @@ const frameColor_ = (ctypes: ReadonlyArray<string>) => {
 export const frameColor = (c: Card) =>
   pipe(BitNames.types(c.type), R.map(frameColor_));
 
-const scriptFolder = (pf: PreFormatted) => {
-  if (pf.rush) return 'rush';
-  if (pf.mainType === 'Skill') return 'skill';
-  if (pf.card.name.endsWith(' (Pre-Errata)')) return 'pre-errata';
-  if (pf.card.name.endsWith(' (Goat)')) return 'goat';
-  if (pf.scopes.includes('Pre-release')) return 'pre-release';
-  if (pf.scopes.includes('OCG') || pf.scopes.includes('TCG')) return 'official';
-  return 'unofficial';
-};
-
-const _scriptURL = (pf: PreFormatted): O.Option<string> => {
-  if (
-    (pf.types.includes('Normal') || pf.types.includes('Token')) &&
-    !pf.types.includes('Pendulum')
-  )
-    return O.none;
-  const folder = scriptFolder(pf);
-  const main =
-    pf.aliases.find((a) => a.alias === 0 && pf.card.ot === a.ot) ?? pf.card;
-  return O.some(
-    URLS.CARDSCRIPTS + 'blob/master/' + folder + '/c' + main.id + '.lua'
-  );
-};
-
 const pediaURL = ({ card, konamiId }: PreFormatted) => {
   if (O.isSome(konamiId)) return O.some(URLS.YUGIPEDIA_WIKI + konamiId.value);
 
@@ -248,7 +235,7 @@ const pediaURL = ({ card, konamiId }: PreFormatted) => {
 
 const urlsSection = (pf: PreFormatted) => {
   const script = pipe(
-    _scriptURL(pf),
+    pf.script,
     O.map((s) => str.link('Script', s, 'EDOPro card script'))
   );
 
@@ -623,14 +610,6 @@ export const bestMatch =
 export const isNonCard = (c: Card) => c.type < 1n || c.ot >= 0x800n;
 
 export const isRush = (c: Card) => (c.ot & 0x200n) === 0x200n;
-
-export const scriptURL: (c: Card) => Op.Op<string> = flow(
-  preformatWithExisting,
-  RTE.mapError(Err.forDev),
-  RTE.flatMapOption(_scriptURL, (pf) =>
-    Err.forUser('There is no script for ' + str.bold(pf.card.name))
-  )
-);
 
 export const getCdbStrings = (c: Card) =>
   pipe(
