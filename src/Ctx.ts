@@ -2,7 +2,7 @@ import type { O, RR } from '@that-hatter/scrapi-factory/fp';
 import type { Command, Data, Github, Interaction, dd } from './lib/modules';
 import type { BitNames } from './ygo';
 
-export type Ctx = {
+export type CtxWithoutData = {
   readonly bot: dd.Bot;
   readonly commands: Command.Collection;
   readonly componentInteractions: Interaction.ComponentCollection;
@@ -19,4 +19,6 @@ export type Ctx = {
   readonly picsChannel: O.Option<bigint>;
   readonly emojis: RR.ReadonlyRecord<string, string>;
   readonly gitRef: O.Option<string>;
-} & Data.Loaded;
+};
+
+export type Ctx = CtxWithoutData & Data.Loaded;
