@@ -1,7 +1,8 @@
 import * as sy from '@that-hatter/scrapi-factory';
-import { E, pipe, RA, RNEA, RTE, TE } from '@that-hatter/scrapi-factory/fp';
+import { E, pipe, RA, RNEA, RTE } from '@that-hatter/scrapi-factory/fp';
 import { sequenceS } from 'fp-ts/lib/Apply';
 import { Decoder, Err, Interaction, Op, str } from '.';
+import { Ctx, CtxWithoutData } from '../../Ctx';
 import { Yard } from '../../yard';
 import {
   Babel,
@@ -9,11 +10,12 @@ import {
   BetaIds,
   KonamiIds,
   Pics,
+  Scripts,
   Shortcuts,
   Systrings,
 } from '../../ygo';
 
-export const init = sequenceS(TE.ApplyPar)({
+export const init = sequenceS(RTE.ApplyPar)({
   babel: Babel.data.init,
   yard: Yard.data.init,
   systrings: Systrings.data.init,
@@ -22,6 +24,7 @@ export const init = sequenceS(TE.ApplyPar)({
   konamiIds: KonamiIds.data.init,
   shortcuts: Shortcuts.data.init,
   pics: Pics.data.init,
+  scripts: Scripts.data.init,
 });
 
 export type Loaded = {
@@ -33,13 +36,14 @@ export type Loaded = {
   readonly konamiIds: KonamiIds.KonamiIds;
   readonly shortcuts: Shortcuts.Shortcuts;
   readonly pics: Pics.Pics;
+  readonly scripts: Scripts.Scripts;
 };
 
 export type Data<K extends keyof Loaded> = {
   readonly key: K;
   readonly description: string;
-  readonly update: TE.TaskEither<string, Loaded[K]>;
-  readonly init: TE.TaskEither<string, Loaded[K]>;
+  readonly update: RTE.ReaderTaskEither<Ctx, string, Loaded[K]>;
+  readonly init: RTE.ReaderTaskEither<CtxWithoutData, string, Loaded[K]>;
   readonly commitFilter: (
     repo: string,
     files: ReadonlyArray<string>
@@ -89,7 +93,6 @@ const getIndividualUpdate = <K extends keyof Loaded>(
     RTE.flatMap((msg) =>
       pipe(
         data.update,
-        RTE.fromTaskEither,
         RTE.mapError(Err.forDev),
         RTE.tap(() =>
           Op.editMessage(msg.channelId)(msg.id)(
