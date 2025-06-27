@@ -8,6 +8,7 @@ import * as Comp from './Component';
 // also used as the heading for each return section
 const partialSignature = (ret: sf.Return) =>
   Comp.fullType(ret.type) +
+  ' ' +
   (O.isSome(ret.name) ? str.inlineCode(ret.name.value) : '');
 
 export const combinedPartialSignatures = (rets: ReadonlyArray<sf.Return>) =>
