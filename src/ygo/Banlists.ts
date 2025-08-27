@@ -13,7 +13,7 @@ import * as path from 'node:path';
 import { Babel, BitNames } from '.';
 import { Ctx } from '../Ctx';
 import { PATHS } from '../lib/constants';
-import type { Data } from '../lib/modules';
+import type { Resource } from '../lib/modules';
 import { Github, str } from '../lib/modules';
 import { utils } from '../lib/utils';
 
@@ -154,7 +154,7 @@ const update = pipe(
   RTE.fromTaskEither
 );
 
-export const data: Data.Data<'banlists'> = {
+export const resource: Resource.Resource<'banlists'> = {
   key: 'banlists',
   description: 'Banlist data from LFLists.',
   update,

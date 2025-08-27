@@ -6,7 +6,7 @@ import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import { Ctx } from '../Ctx';
 import { PATHS } from '../lib/constants';
-import type { Data } from '../lib/modules';
+import type { Resource } from '../lib/modules';
 import { Collection, Decoder, Github, str } from '../lib/modules';
 import { utils } from '../lib/utils';
 
@@ -268,7 +268,7 @@ const update = pipe(
   RTE.fromTaskEither
 );
 
-export const data: Data.Data<'babel'> = {
+export const resource: Resource.Resource<'babel'> = {
   key: 'babel',
   description: 'Card databases from BabelCDB.',
   update,

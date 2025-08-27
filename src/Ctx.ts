@@ -1,8 +1,8 @@
 import type { O, RR } from '@that-hatter/scrapi-factory/fp';
-import type { Command, Data, Github, Interaction, dd } from './lib/modules';
+import type { Command, Github, Interaction, Resource, dd } from './lib/modules';
 import type { BitNames } from './ygo';
 
-export type CtxWithoutData = {
+export type CtxWithoutResources = {
   readonly bot: dd.Bot;
   readonly commands: Command.Collection;
   readonly componentInteractions: Interaction.ComponentCollection;
@@ -22,5 +22,5 @@ export type CtxWithoutData = {
 
 export type Ctx = {
   readonly bitNames: BitNames.BitNames;
-} & CtxWithoutData &
-  Data.Loaded;
+} & CtxWithoutResources &
+  Resource.Loaded;

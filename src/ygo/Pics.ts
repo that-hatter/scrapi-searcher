@@ -13,7 +13,7 @@ import * as buffer from 'node:buffer';
 import { Babel, Card } from '.';
 import { Ctx } from '../Ctx';
 import { URLS } from '../lib/constants';
-import { Data, dd, Decoder, Err, Github, Op, str } from '../lib/modules';
+import { dd, Decoder, Err, Github, Op, Resource, str } from '../lib/modules';
 import { utils } from '../lib/utils';
 
 const OWNER = 'that-hatter';
@@ -32,7 +32,7 @@ const update = pipe(
   RTE.fromTaskEither
 );
 
-export const data: Data.Data<'pics'> = {
+export const resource: Resource.Resource<'pics'> = {
   key: 'pics',
   description: 'Reuploaded card pic urls saved in pics.json.',
   update,
@@ -219,5 +219,5 @@ export const remove = (ids: ReadonlyArray<number>) => (ctx: Ctx) =>
     RR.filterWithIndex((key) => !ids.includes(+key)),
     TE.right,
     TE.tap((pics) => updateGithubFile(pics, 'remove card pic(s)')(ctx)),
-    TE.map((pics) => Data.asUpdate({ pics }))
+    TE.map((pics) => Resource.asUpdate({ pics }))
   );

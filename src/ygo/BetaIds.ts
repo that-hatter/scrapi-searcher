@@ -2,7 +2,7 @@ import { O, pipe, RA, RR, RTE, TE } from '@that-hatter/scrapi-factory/fp';
 import fetch from 'node-fetch';
 import { Babel } from '.';
 import { Ctx } from '../Ctx';
-import type { Data } from '../lib/modules';
+import type { Resource } from '../lib/modules';
 import { Decoder } from '../lib/modules';
 import { DeepReadonly, utils } from '../lib/utils';
 
@@ -27,7 +27,7 @@ const update = pipe(
   RTE.fromTaskEither
 );
 
-export const data: Data.Data<'betaIds'> = {
+export const resource: Resource.Resource<'betaIds'> = {
   key: 'betaIds',
   description: 'Beta passcode mappings.',
   update,

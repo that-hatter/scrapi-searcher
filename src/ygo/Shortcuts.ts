@@ -1,7 +1,7 @@
 import { pipe, RA, RNEA, RR, RTE, TE } from '@that-hatter/scrapi-factory/fp';
 import fetch from 'node-fetch';
 import { Ctx } from '../Ctx';
-import type { Data } from '../lib/modules';
+import type { Resource } from '../lib/modules';
 import { Decoder, str } from '../lib/modules';
 import { DeepReadonly, utils } from '../lib/utils';
 
@@ -26,7 +26,7 @@ const update = pipe(
   RTE.fromTaskEither
 );
 
-export const data: Data.Data<'shortcuts'> = {
+export const resource: Resource.Resource<'shortcuts'> = {
   key: 'shortcuts',
   description: 'Card search shortcuts.',
   update,

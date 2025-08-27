@@ -23,6 +23,6 @@ export * as Nav from './Nav';
 export * as Op from './Operation';
 export * as SearchCommand from './SearchCommand';
 
-export * as Data from './Data';
+export * as Resource from './Resource';
 
 export { Decoder };

@@ -9,7 +9,7 @@ import {
 } from '@that-hatter/scrapi-factory/fp';
 import fetch from 'node-fetch';
 import { Ctx } from '../Ctx';
-import type { Data } from '../lib/modules';
+import type { Resource } from '../lib/modules';
 import { Nav, str } from '../lib/modules';
 import { utils } from '../lib/utils';
 
@@ -78,7 +78,7 @@ const update = pipe(
   RTE.fromTaskEither
 );
 
-export const data: Data.Data<'systrings'> = {
+export const resource: Resource.Resource<'systrings'> = {
   key: 'systrings',
   description: 'Strings from strings.conf files from Distribution and Delta.',
   update,

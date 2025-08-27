@@ -1,7 +1,7 @@
 import { E, pipe, RNEA, RTE, TE } from '@that-hatter/scrapi-factory/fp';
 import { readerTask as RT } from 'fp-ts';
 import { Ctx } from '../../Ctx';
-import { Data, Interaction, Menu, Op, str } from '../modules';
+import { Interaction, Menu, Op, Resource, str } from '../modules';
 
 const statusEdit =
   (keys: RNEA.ReadonlyNonEmptyArray<string>) =>
@@ -25,7 +25,7 @@ export const update = Menu.interaction({
       'Manually updating',
       statusEdit(keys),
       RTE.flatMap(Interaction.sendUpdate(interaction)),
-      RTE.flatMap(() => Data.manualUpdate(interaction, keys)),
+      RTE.flatMap(() => Resource.manualUpdate(interaction, keys)),
       RT.tap((res) =>
         pipe(
           E.isRight(res) ? 'Successfully updated' : 'Failed to update',

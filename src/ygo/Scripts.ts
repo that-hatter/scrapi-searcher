@@ -1,6 +1,6 @@
 import { O, pipe, RA, RR, RTE } from '@that-hatter/scrapi-factory/fp';
 import { Ctx } from '../Ctx';
-import { Data } from '../lib/modules';
+import { Resource } from '../lib/modules';
 import { listRepoFiles } from '../lib/modules/Github';
 
 const OWNER = 'ProjectIgnis';
@@ -25,7 +25,7 @@ const update = pipe(
   RTE.map(RR.fromEntries)
 );
 
-export const data: Data.Data<'scripts'> = {
+export const resource: Resource.Resource<'scripts'> = {
   key: 'scripts',
   description: 'Card script filepaths from the CardScript repo.',
   update,

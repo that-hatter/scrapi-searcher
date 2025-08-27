@@ -2,7 +2,7 @@ import * as sy from '@that-hatter/scrapi-factory';
 import { E, pipe, RA, RNEA, RTE } from '@that-hatter/scrapi-factory/fp';
 import { sequenceS } from 'fp-ts/lib/Apply';
 import { Decoder, Err, Interaction, Op, str } from '.';
-import { Ctx, CtxWithoutData } from '../../Ctx';
+import { Ctx, CtxWithoutResources } from '../../Ctx';
 import { Yard } from '../../yard';
 import {
   Babel,
@@ -16,15 +16,15 @@ import {
 } from '../../ygo';
 
 export const init = sequenceS(RTE.ApplyPar)({
-  babel: Babel.data.init,
-  yard: Yard.data.init,
-  systrings: Systrings.data.init,
-  banlists: Banlists.data.init,
-  betaIds: BetaIds.data.init,
-  konamiIds: KonamiIds.data.init,
-  shortcuts: Shortcuts.data.init,
-  pics: Pics.data.init,
-  scripts: Scripts.data.init,
+  babel: Babel.resource.init,
+  yard: Yard.resource.init,
+  systrings: Systrings.resource.init,
+  banlists: Banlists.resource.init,
+  betaIds: BetaIds.resource.init,
+  konamiIds: KonamiIds.resource.init,
+  shortcuts: Shortcuts.resource.init,
+  pics: Pics.resource.init,
+  scripts: Scripts.resource.init,
 });
 
 export type Loaded = {
@@ -39,11 +39,11 @@ export type Loaded = {
   readonly scripts: Scripts.Scripts;
 };
 
-export type Data<K extends keyof Loaded> = {
+export type Resource<K extends keyof Loaded> = {
   readonly key: K;
   readonly description: string;
   readonly update: RTE.ReaderTaskEither<Ctx, string, Loaded[K]>;
-  readonly init: RTE.ReaderTaskEither<CtxWithoutData, string, Loaded[K]>;
+  readonly init: RTE.ReaderTaskEither<CtxWithoutResources, string, Loaded[K]>;
   readonly commitFilter: (
     repo: string,
     files: ReadonlyArray<string>
@@ -65,35 +65,35 @@ const updateDecoder = Decoder.struct({
 export const isUpdate = (val: unknown): val is Update =>
   E.isRight(updateDecoder.decode(val));
 
-export const asUpdate = (data: Partial<Loaded>): Update => ({
+export const asUpdate = (resource: Partial<Loaded>): Update => ({
   _tag: UPDATE_SYMBOL,
-  ...data,
+  ...resource,
 });
 
 export const array = [
-  Babel.data,
-  Yard.data,
-  Systrings.data,
-  Banlists.data,
-  BetaIds.data,
-  KonamiIds.data,
-  Shortcuts.data,
-  Pics.data,
-  Scripts.data,
+  Babel.resource,
+  Yard.resource,
+  Systrings.resource,
+  Banlists.resource,
+  BetaIds.resource,
+  KonamiIds.resource,
+  Shortcuts.resource,
+  Pics.resource,
+  Scripts.resource,
 ] as const;
 
 const getIndividualUpdate = <K extends keyof Loaded>(
   trigger: string,
-  data: Data<K>
+  resource: Resource<K>
 ) => {
   const statusMessage = str.append(' Trigger: ' + trigger + '.');
-  const name = str.inlineCode(data.key);
+  const name = str.inlineCode(resource.key);
   return pipe(
     statusMessage('Updating ' + name + '.'),
     Op.sendLog,
     RTE.flatMap((msg) =>
       pipe(
-        data.update,
+        resource.update,
         RTE.mapError(Err.forDev),
         RTE.tap(() =>
           Op.editMessage(msg.channelId)(msg.id)(
@@ -107,15 +107,15 @@ const getIndividualUpdate = <K extends keyof Loaded>(
         )
       )
     ),
-    RTE.map((d) => ({ [data.key]: d }))
+    RTE.map((d) => ({ [resource.key]: d }))
   );
 };
 
 const performUpdates =
   (trigger: string) =>
-  (data: ReadonlyArray<Data<keyof Loaded>>): Op.Op<Update> =>
+  (resource: ReadonlyArray<Resource<keyof Loaded>>): Op.Op<Update> =>
     pipe(
-      data,
+      resource,
       RNEA.fromReadonlyArray,
       RTE.fromOption(Err.ignore),
       RTE.map(RNEA.map((d) => getIndividualUpdate(trigger, d))),
@@ -148,6 +148,6 @@ export const autoUpdate = (
 ) =>
   pipe(
     array,
-    RA.filter((data) => data.commitFilter(repo, files)),
+    RA.filter((resource) => resource.commitFilter(repo, files)),
     performUpdates(str.link('Github Push', triggerUrl))
   );

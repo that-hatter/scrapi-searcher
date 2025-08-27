@@ -1,8 +1,8 @@
 import { pipe, RA } from '@that-hatter/scrapi-factory/fp';
-import { Command, Data, Menu, Op } from '../../modules';
+import { Command, Menu, Op, Resource } from '../../modules';
 
 const menu = pipe(
-  Data.array,
+  Resource.array,
   RA.map((data) => ({
     value: data.key,
     label: data.key,
@@ -12,7 +12,7 @@ const menu = pipe(
     Menu.row({
       customId: 'update',
       placeholder: 'Select data to update',
-      maxValues: Data.array.length,
+      maxValues: Resource.array.length,
       options,
     })
 );

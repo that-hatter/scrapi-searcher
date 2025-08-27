@@ -2,7 +2,16 @@ import { E, O, pipe, RA, RNEA, RR, TE } from '@that-hatter/scrapi-factory/fp';
 import { collection as commands } from './lib/commands';
 import { list as events } from './lib/events';
 import { collection as componentInteractions } from './lib/interactions';
-import { Data, dd, Decoder, Err, Event, Github, Op, str } from './lib/modules';
+import {
+  dd,
+  Decoder,
+  Err,
+  Event,
+  Github,
+  Op,
+  Resource,
+  str,
+} from './lib/modules';
 import { utils } from './lib/utils';
 import { BitNames } from './ygo';
 
@@ -96,7 +105,7 @@ const program = pipe(
   TE.flatMap((preCtx) =>
     pipe(
       preCtx,
-      Data.init,
+      Resource.init,
       TE.map((data) => ({ ...preCtx, ...data }))
     )
   ),
@@ -114,7 +123,7 @@ const program = pipe(
       const res = await handler(ctx)();
       if (E.isLeft(res)) return Err.sendAlerts(res.left)(ctx)();
 
-      if (!Data.isUpdate(res.right)) return;
+      if (!Resource.isUpdate(res.right)) return;
       const update = res.right;
       ctx.babel = update.babel ?? ctx.babel;
       ctx.yard = update.yard ?? ctx.yard;
@@ -156,7 +165,7 @@ const program = pipe(
           ...(c.removed ?? []),
         ]),
         (files) =>
-          Data.autoUpdate(payload.compare, payload.repository.name, files),
+          Resource.autoUpdate(payload.compare, payload.repository.name, files),
         runHandler
       );
     });

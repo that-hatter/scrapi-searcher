@@ -14,7 +14,7 @@ import {
 import { readerTask as RT } from 'fp-ts';
 import { Ctx } from '../../Ctx';
 import { Babel, Card, KonamiIds, Pics } from '../../ygo';
-import { Data, dd, Err, Interaction, Menu, Op, str } from '../modules';
+import { dd, Err, Interaction, Menu, Op, Resource, str } from '../modules';
 
 //prettier-ignore
 const MALISS: RR.ReadonlyRecord<string, string> = {
@@ -118,7 +118,7 @@ const updateMissingInfo = (msg: dd.Message) => {
         ? KonamiIds.addToFile(card, +newKid)
         : KonamiIds.current;
     }),
-    RTE.map(({ pics, konamiIds }) => Data.asUpdate({ pics, konamiIds })),
+    RTE.map(({ pics, konamiIds }) => Resource.asUpdate({ pics, konamiIds })),
     RTE.mapError((e) => (typeof e === 'string' ? Err.forDev(e) : e))
   );
 };

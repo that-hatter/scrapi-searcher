@@ -8,7 +8,7 @@ import * as http from 'node:http';
 import * as path from 'node:path';
 import simpleGit from 'simple-git';
 import { str } from '.';
-import { CtxWithoutData } from '../../Ctx';
+import { CtxWithoutResources } from '../../Ctx';
 import { utils } from '../utils';
 
 export type Github = {
@@ -75,7 +75,7 @@ export const updateFile =
     content: string,
     message: string
   ) =>
-  (ctx: CtxWithoutData) =>
+  (ctx: CtxWithoutResources) =>
     pipe(
       utils.taskify(() => ctx.github.repos.getContent({ owner, repo, path })),
       TE.flatMapNullable(
@@ -98,7 +98,7 @@ export const updateFile =
     );
 
 export const listRepoFiles =
-  (owner: string, repo: string, branch: string) => (ctx: CtxWithoutData) => {
+  (owner: string, repo: string, branch: string) => (ctx: CtxWithoutResources) => {
     const ref = 'heads/' + branch;
     const git = ctx.github.git;
     return pipe(

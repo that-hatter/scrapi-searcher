@@ -2,7 +2,7 @@ import { O, pipe, RA, RR, RTE, TE } from '@that-hatter/scrapi-factory/fp';
 import fetch from 'node-fetch';
 import { Babel, Card, Pedia } from '.';
 import { Ctx } from '../Ctx';
-import type { Data } from '../lib/modules';
+import type { Resource } from '../lib/modules';
 import { Decoder, Github, str } from '../lib/modules';
 import { DeepReadonly, utils } from '../lib/utils';
 import { isAltArt } from './Babel';
@@ -26,7 +26,7 @@ const update = pipe(
   RTE.fromTaskEither
 );
 
-export const data: Data.Data<'konamiIds'> = {
+export const resource: Resource.Resource<'konamiIds'> = {
   key: 'konamiIds',
   description: 'Konami ID mappings.',
   update,

@@ -2,7 +2,7 @@ import * as sf from '@that-hatter/scrapi-factory';
 import { pipe, RTE, TE } from '@that-hatter/scrapi-factory/fp';
 import * as path from 'node:path';
 import { PATHS } from '../lib/constants';
-import type { Data } from '../lib/modules';
+import type { Resource } from '../lib/modules';
 import { Github } from '../lib/modules';
 import { utils } from '../lib/utils';
 
@@ -21,7 +21,7 @@ const update = pipe(
   RTE.fromTaskEither
 );
 
-export const data: Data.Data<'yard'> = {
+export const resource: Resource.Resource<'yard'> = {
   key: 'yard',
   description: 'API documentation from scrapiyard.',
   update,
