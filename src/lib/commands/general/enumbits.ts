@@ -23,13 +23,7 @@ const itemEmbedFn =
   (value: bigint): Nav.Nav<sf.Enum>['itemEmbed'] =>
   (en) =>
   (ctx) => {
-    const bits = value
-      .toString(2)
-      .split('')
-      .filter((d) => d === '0' || d === '1')
-      .map((b, i, arr) => '0b' + b + '0'.repeat(arr.length - i - 1))
-      .map(utils.safeBigInt)
-      .filter((b) => b > 0n);
+    const bits = utils.bigBits(value);
 
     const decStr = pipe(
       bits,
@@ -58,7 +52,7 @@ const itemEmbedFn =
       )
     );
 
-    const constantNameStr = pipe(
+    const paddedConstantName = pipe(
       constants,
       RA.reduce(0, (b, c) =>
         Math.max(b, O.isSome(c) ? c.value.name.length : 0)
@@ -74,10 +68,18 @@ const itemEmbedFn =
           constants[idx],
           O.fromNullable,
           O.flatten,
-          O.map((c) => str.link(constantNameStr(c.name), Topic.url(c))),
-          O.getOrElse(() => constantNameStr('???'))
+          O.map((c) => str.link(paddedConstantName(c.name), Topic.url(c))),
+          O.getOrElse(() => paddedConstantName('???'))
         ),
       ]);
+
+    const codeSample = pipe(
+      constants,
+      RA.compact,
+      RA.map((c) => c.name),
+      str.join('|'),
+      str.luaBlock
+    );
 
     const title =
       'Component ' +
@@ -89,6 +91,7 @@ const itemEmbedFn =
       bits,
       RA.mapWithIndex(bitStr),
       str.joinParagraphs,
+      str.append('\n' + codeSample),
       (desc) => ({
         title,
         description:

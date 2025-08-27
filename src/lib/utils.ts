@@ -66,6 +66,17 @@ const safeBigInt = (v: bigint | boolean | number | string) => {
   }
 };
 
+const bigBits = (n: number | bigint): ReadonlyArray<bigint> => {
+  const bigN = BigInt(n);
+  const bits: Array<bigint> = [];
+  for (let i = 1n; i <= bigN; i <<= 1n) {
+    if ((i & bigN) === i) bits.unshift(i);
+  }
+  return bits;
+};
+
+const bits = (n: number): ReadonlyArray<number> => bigBits(n).map(Number);
+
 export const utils = {
   stringify,
   tapLog,
@@ -74,4 +85,6 @@ export const utils = {
   fallibleIO,
   taskifyIO,
   safeBigInt,
+  bigBits,
+  bits,
 };

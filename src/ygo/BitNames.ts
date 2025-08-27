@@ -17,14 +17,6 @@ export type BitNames = {
   readonly skillCharacters: BitNameMap;
 };
 
-const bitSplit = (n: bigint) =>
-  n
-    .toString(2)
-    .split('')
-    .filter((d) => d === '0' || d === '1')
-    .map((b, i, arr) => '0b' + b + '0'.repeat(arr.length - i - 1))
-    .map(utils.safeBigInt);
-
 const ascendingBitsMap = flow(
   RA.mapWithIndex((i, s: string) => [0x1n << utils.safeBigInt(i), s] as const),
   (entries): BitNameMap => new Map(entries)
@@ -46,7 +38,7 @@ const toNames =
   ({ bitNames }: Ctx) =>
     pipe(
       int,
-      bitSplit,
+      utils.bigBits,
       RA.filter((b) => b !== 0n),
       RA.map((b) => bitNames[key].get(b) ?? '???')
     );
