@@ -218,29 +218,32 @@ const toBabelData =
     const type = BitNames.toInt('types')(typeStrs)(ctx);
     const race = BitNames.toInt('races')([c['Types string'][0]])(ctx);
     const atk = c['ATK string'];
+    const arrows = pipe(
+      c['Link Arrows'],
+      RA.filterMap((n) => O.fromNullable(arrowNames[n]))
+    );
     const def = pipe(
       c['DEF string'],
-      O.getOrElse(() =>
-        pipe(
-          c['Link Arrows'],
-          RA.filterMap((n) => O.fromNullable(arrowNames[n])),
-          (arrows) => BitNames.toInt('linkArrows')(arrows)(ctx)
-        )
-      )
+      O.getOrElse(() => BitNames.toInt('linkArrows')(arrows)(ctx))
     );
-    const level = pipe(
-      c.Level,
-      O.orElse(() => c.Rank),
-      O.map(utils.safeBigInt),
-      O.getOrElse(() => 0n),
-      (lvl) =>
-        pipe(
-          c['Pendulum Scale'],
-          O.map(utils.safeBigInt),
-          O.map((sc) => (sc << 24n) | (sc << 16n) | lvl),
-          O.getOrElse(() => lvl)
-        )
-    );
+
+    const level =
+      arrows.length > 0
+        ? BigInt(arrows.length)
+        : pipe(
+            c.Level,
+            O.orElse(() => c.Rank),
+            O.map(utils.safeBigInt),
+            O.getOrElse(() => 0n),
+            (lvl) =>
+              pipe(
+                c['Pendulum Scale'],
+                O.map(utils.safeBigInt),
+                O.map((sc) => (sc << 24n) | (sc << 16n) | lvl),
+                O.getOrElse(() => lvl)
+              )
+          );
+
     const attribute = BitNames.toInt('attributes')([c.Attribute])(ctx);
     const desc = O.isSome(c['Pendulum Effect'])
       ? str.joinParagraphs([
