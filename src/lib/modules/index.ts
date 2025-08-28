@@ -4,6 +4,7 @@ import { string } from '@that-hatter/scrapi-factory/fp';
 import * as str_ from './str';
 export const str = { ...string, ...str_ };
 
+export * as Fetch from './Fetch';
 export * as Github from './Github';
 
 export type * as dd from './Discord';
