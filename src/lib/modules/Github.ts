@@ -60,7 +60,7 @@ export type Source = {
 export const sourceDecoder = pipe(
   Decoder.string,
   Decoder.parse((s) => {
-    const [url, branch] = str.split('#')(s);
+    const [url, branch] = str.split(' ')(s);
     const [fst, snd] = str.split('github.com/')(url);
 
     const ownerAndRepo = snd || fst;
