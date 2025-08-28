@@ -1,7 +1,6 @@
 import {
   E,
   flow,
-  identity,
   O,
   pipe,
   R,
@@ -11,13 +10,12 @@ import {
   TE,
 } from '@that-hatter/scrapi-factory/fp';
 import { array as A, readerTask as RT } from 'fp-ts';
-import fetch from 'node-fetch';
 import * as buffer from 'node:buffer';
 import sharp from 'sharp';
 import { Babel, Pics } from '.';
 import { Ctx } from '../Ctx';
 import { LIMITS } from '../lib/constants';
-import { Attachment, Button, dd, Err, Op, str } from '../lib/modules';
+import { Attachment, Button, dd, Err, Fetch, Op, str } from '../lib/modules';
 import { utils } from '../lib/utils';
 
 export type Deck = {
@@ -317,13 +315,12 @@ const parseFromMessageFiles = (msg: dd.Message) =>
     msg.attachments ?? [],
     RA.filter((file) => file.filename.endsWith('.ydk')),
     RA.map((file) =>
-      utils.taskify(() =>
-        fetch(file.url)
-          .then((resp) => resp.text())
-          .then((contents) => fromYdkFile(contents, file.filename))
+      pipe(
+        file.url,
+        Fetch.text,
+        TE.flatMapEither((contents) => fromYdkFile(contents, file.filename))
       )
     ),
-    RA.map(TE.flatMapEither(identity)),
     TE.sequenceArray,
     RTE.fromTaskEither
   );
@@ -386,7 +383,7 @@ export const breakdown = (msg: dd.Message) => (ctx: Ctx) =>
     RTE.flatMap((decks) => {
       if (decks.length === 0) return Op.noopReader;
       const sendBreakdown =
-        O.isSome(ctx.picsSource) && O.isSome(ctx.picsChannel)
+        O.isSome(ctx.sources.picsUrl) && O.isSome(ctx.sources.picsChannel)
           ? sendImageBreakdown
           : sendTextualBreakdown;
 

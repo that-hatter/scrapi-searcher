@@ -1,9 +1,8 @@
-import { pipe, RA, RNEA, RR, RTE, TE } from '@that-hatter/scrapi-factory/fp';
-import fetch from 'node-fetch';
-import { Ctx } from '../Ctx';
+import { pipe, RA, RNEA, RR, RTE } from '@that-hatter/scrapi-factory/fp';
+import { Ctx, CtxWithoutResources } from '../Ctx';
 import type { Resource } from '../lib/modules';
-import { Decoder, str } from '../lib/modules';
-import { DeepReadonly, utils } from '../lib/utils';
+import { Decoder, Fetch, Github, str } from '../lib/modules';
+import { DeepReadonly } from '../lib/utils';
 
 const decoder = pipe(
   Decoder.record(Decoder.array(Decoder.string)),
@@ -16,14 +15,13 @@ const decoder = pipe(
 
 export type Shortcuts = DeepReadonly<Decoder.TypeOf<typeof decoder>>;
 
-const URL =
-  'https://raw.githubusercontent.com/that-hatter/' +
-  'scrapi-searcher-data/main/data/shortcuts.json';
+const RESOURCE_PATH = 'data/shortcuts.json';
 
 const update = pipe(
-  utils.taskify(() => fetch(URL).then((response) => response.json())),
-  TE.flatMapEither(Decoder.parse(decoder)),
-  RTE.fromTaskEither
+  RTE.ask<CtxWithoutResources>(),
+  RTE.map(({ sources }) => Github.rawURL(sources.misc, RESOURCE_PATH)),
+  RTE.flatMapTaskEither(Fetch.json),
+  RTE.flatMapEither(Decoder.decode(decoder))
 );
 
 export const resource: Resource.Resource<'shortcuts'> = {
@@ -31,8 +29,8 @@ export const resource: Resource.Resource<'shortcuts'> = {
   description: 'Card search shortcuts.',
   update,
   init: update,
-  commitFilter: (repo, files) =>
-    repo === 'scrapi-searcher' && files.includes('data/shortcuts.json'),
+  commitFilter: (ctx) => (src, files) =>
+    Github.isSource(src, ctx.sources.misc) && files.includes(RESOURCE_PATH),
 };
 
 export const resolveShortcuts = (query: string) => (ctx: Ctx) =>

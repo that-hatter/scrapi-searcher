@@ -34,7 +34,7 @@ const singleArchEmbed = (s: Systrings.Systring) =>
     ),
     RTE.map((constant) => ({
       title: 'archetype string',
-      url: Systrings.url(s),
+      url: s.source,
       description: str.joinParagraphs([
         s.name,
         str.bold('DEC:') + ' ' + str.inlineCode(s.value.toString()),
@@ -107,7 +107,7 @@ const hexBreakDownEmbed =
         pipe(
           ctx.systrings,
           RA.findFirst((s) => s.kind === 'setname' && s.value === Number(c)),
-          O.map((s) => str.link(s.name, Systrings.url(s)))
+          O.map((s) => str.link(s.name, s.source))
         ),
       ]);
 

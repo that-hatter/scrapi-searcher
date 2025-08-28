@@ -3,7 +3,7 @@ import { nonEmptyArray } from 'fp-ts';
 import * as Decoder from 'io-ts/Decoder';
 import { utils } from '../utils';
 
-export const parse = <I, A>(dc: Decoder.Decoder<I, A>) =>
+export const decode = <I, A>(dc: Decoder.Decoder<I, A>) =>
   flow(dc.decode, E.mapLeft(Decoder.draw));
 
 export const option = <A>(

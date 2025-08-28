@@ -14,10 +14,21 @@ export type CtxWithoutResources = {
     readonly logs: string;
     readonly users: RR.ReadonlyRecord<string, string>;
   };
-  readonly picsSource: O.Option<string>;
-  readonly picsChannel: O.Option<bigint>;
   readonly emojis: RR.ReadonlyRecord<string, string>;
   readonly gitRef: O.Option<string>;
+
+  readonly sources: {
+    readonly yard: Github.Source;
+    readonly babel: Github.Source;
+    readonly scripts: Github.Source;
+    readonly core: Github.Source;
+    readonly banlists: Github.Source;
+    readonly delta: Github.Source;
+    readonly distribution: Github.Source;
+    readonly misc: Github.Source;
+    readonly picsUrl: O.Option<string>;
+    readonly picsChannel: O.Option<bigint>;
+  };
 };
 
 export type Ctx = {

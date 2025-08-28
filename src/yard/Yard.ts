@@ -1,42 +1,43 @@
 import * as sf from '@that-hatter/scrapi-factory';
 import { pipe, RTE, TE } from '@that-hatter/scrapi-factory/fp';
 import * as path from 'node:path';
+import { CtxWithoutResources } from '../Ctx';
 import { PATHS } from '../lib/constants';
 import type { Resource } from '../lib/modules';
 import { Github } from '../lib/modules';
 import { utils } from '../lib/utils';
 
-const YARD_OPTIONS: sf.YardOptions = {
-  ...sf.DEFAULT_OPTIONS,
-  directory: path.join(PATHS.DATA, 'scrapiyard', 'api'),
-};
+const LOCAL_PATH = path.join(PATHS.DATA, 'scrapiyard', 'api');
 
 const update = pipe(
-  Github.pullOrClone(
-    'scrapiyard',
-    'https://github.com/ProjectIgnis/scrapiyard'
+  RTE.ask<CtxWithoutResources>(),
+  RTE.flatMapTaskEither(({ sources }) =>
+    pipe(
+      Github.pullOrClone('scrapiyard', sources.yard),
+      TE.flatMap(() =>
+        sf.loadYard({
+          core: sources.babel,
+          extended: sources.scripts,
+          directory: LOCAL_PATH,
+        })
+      )
+    )
   ),
-  TE.flatMap(() => sf.loadYard(YARD_OPTIONS)),
-  TE.mapError(utils.stringify),
-  RTE.fromTaskEither
+  RTE.mapError(utils.stringify)
 );
 
 export const resource: Resource.Resource<'yard'> = {
   key: 'yard',
   description: 'API documentation from scrapiyard.',
   update,
-  init: pipe(
-    sf.loadYard(YARD_OPTIONS),
-    RTE.fromTaskEither,
-    RTE.orElse(() => update)
-  ),
-  commitFilter: (repo, files) => {
-    if (repo === 'scrapiyard')
+  init: update,
+  commitFilter: (ctx) => (src, files) => {
+    if (Github.isSource(src, ctx.sources.yard))
       return files.some((f) => f.startsWith('api/') && f.endsWith('.yml'));
-    if (repo === 'CardScripts')
+    if (Github.isSource(src, ctx.sources.scripts))
       return files.some((f) => f.endsWith('.lua') && !f.includes('/'));
     return (
-      repo === 'ygopro-core' &&
+      Github.isSource(src, ctx.sources.core) &&
       files.some((f) => f.startsWith('lib') && f.endsWith('.cpp'))
     );
   },

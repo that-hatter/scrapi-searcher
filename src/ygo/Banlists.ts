@@ -11,13 +11,12 @@ import {
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import { Babel, BitNames } from '.';
-import { Ctx } from '../Ctx';
+import { Ctx, CtxWithoutResources } from '../Ctx';
 import { PATHS } from '../lib/constants';
 import type { Resource } from '../lib/modules';
 import { Github, str } from '../lib/modules';
 import { utils } from '../lib/utils';
 
-const GITHUB_URL = 'https://github.com/ProjectIgnis/LFLists';
 const REPO_PATH = path.join(PATHS.DATA, 'LFLists');
 
 export type Banlist = {
@@ -109,7 +108,10 @@ export const limitsBreakdown = (c: Babel.Card) => (ctx: Ctx) => {
         O.map((lmt) =>
           str.joinWords([
             str.inlineCode(lmt),
-            str.link(list.name, GITHUB_URL + '/blob/master/' + list.filename),
+            str.link(
+              list.name,
+              Github.blobURL(ctx.sources.banlists) + list.filename
+            ),
             dateString(list),
           ])
         )
@@ -148,20 +150,21 @@ const loadBanlists = (): TE.TaskEither<string, Banlists> =>
   );
 
 const update = pipe(
-  Github.pullOrClone('LFLists', GITHUB_URL),
-  TE.flatMap(loadBanlists),
-  TE.mapError(utils.stringify),
-  RTE.fromTaskEither
+  RTE.ask<CtxWithoutResources>(),
+  RTE.map(({ sources }) => Github.pullOrClone('LFLists', sources.banlists)),
+  RTE.flatMapTaskEither(loadBanlists),
+  RTE.mapError(utils.stringify)
 );
 
 export const resource: Resource.Resource<'banlists'> = {
   key: 'banlists',
-  description: 'Banlist data from LFLists.',
+  description: 'Banlist data.',
   update,
   init: pipe(
     loadBanlists,
     RTE.orElse(() => update)
   ),
-  commitFilter: (repo, files) =>
-    repo === 'LFLists' && files.some((f) => f.endsWith('.lflist.conf')),
+  commitFilter: (ctx) => (src, files) =>
+    Github.isSource(src, ctx.sources.banlists) &&
+    files.some((f) => f.endsWith('.lflist.conf')),
 };

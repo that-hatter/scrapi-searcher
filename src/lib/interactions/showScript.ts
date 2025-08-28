@@ -1,8 +1,14 @@
 import { pipe, RTE } from '@that-hatter/scrapi-factory/fp';
-import fetch from 'node-fetch';
 import { LIMITS } from '../constants';
-import { Attachment, Button, Err, Interaction, Op, str } from '../modules';
-import { utils } from '../utils';
+import {
+  Attachment,
+  Button,
+  Err,
+  Fetch,
+  Interaction,
+  Op,
+  str,
+} from '../modules';
 
 const toRawUrl = (folder: string, file: string) =>
   `https://raw.githubusercontent.com/ProjectIgnis/CardScripts/refs/heads/master/${folder}/${file}`;
@@ -29,7 +35,7 @@ export const showScript = Button.interaction({
         const [folder, filename] = folderAndFile;
         return pipe(
           toRawUrl(folder, filename),
-          (url) => utils.taskify(() => fetch(url).then((resp) => resp.text())),
+          Fetch.text,
           RTE.fromTaskEither,
           RTE.mapError(Err.forDev)
         );

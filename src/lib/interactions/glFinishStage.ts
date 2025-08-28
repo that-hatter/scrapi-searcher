@@ -363,7 +363,7 @@ const parameters = pipe(
 const fetchAndValidate = (idx: number, pages: ReadonlyArray<string>) =>
   pipe(
     Pedia.fetchCards(idx, Pedia.url(10, 0)(pages)(parameters)),
-    TE.flatMapEither(Decoder.parse(decoder)),
+    TE.flatMapEither(Decoder.decode(decoder)),
     TE.mapError(Err.forDev),
     TE.map(RR.values)
   );

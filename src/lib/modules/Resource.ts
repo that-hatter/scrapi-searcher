@@ -1,7 +1,7 @@
 import * as sy from '@that-hatter/scrapi-factory';
 import { E, pipe, RA, RNEA, RTE } from '@that-hatter/scrapi-factory/fp';
 import { sequenceS } from 'fp-ts/lib/Apply';
-import { Decoder, Err, Interaction, Op, str } from '.';
+import { Decoder, Err, Github, Interaction, Op, str } from '.';
 import { Ctx, CtxWithoutResources } from '../../Ctx';
 import { Yard } from '../../yard';
 import {
@@ -45,9 +45,8 @@ export type Resource<K extends keyof Loaded> = {
   readonly update: RTE.ReaderTaskEither<Ctx, string, Loaded[K]>;
   readonly init: RTE.ReaderTaskEither<CtxWithoutResources, string, Loaded[K]>;
   readonly commitFilter: (
-    repo: string,
-    files: ReadonlyArray<string>
-  ) => boolean;
+    ctx: CtxWithoutResources
+  ) => (src: Github.Source, files: ReadonlyArray<string>) => boolean;
 };
 
 const UPDATE_SYMBOL = Symbol();
@@ -143,11 +142,13 @@ export const manualUpdate = (
 
 export const autoUpdate = (
   triggerUrl: string,
-  repo: string,
+  source: Github.Source,
   files: ReadonlyArray<string>
 ) =>
   pipe(
-    array,
-    RA.filter((resource) => resource.commitFilter(repo, files)),
-    performUpdates(str.link('Github Push', triggerUrl))
+    RTE.ask<Ctx>(),
+    RTE.map((ctx) =>
+      array.filter((resource) => resource.commitFilter(ctx)(source, files))
+    ),
+    RTE.flatMap(performUpdates(str.link('Github Push', triggerUrl)))
   );

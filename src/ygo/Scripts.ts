@@ -1,37 +1,39 @@
 import { O, pipe, RA, RR, RTE } from '@that-hatter/scrapi-factory/fp';
-import { Ctx } from '../Ctx';
-import { Resource } from '../lib/modules';
-import { listRepoFiles } from '../lib/modules/Github';
-
-const OWNER = 'ProjectIgnis';
-const REPO = 'CardScripts';
-const BRANCH = 'master';
+import { Ctx, CtxWithoutResources } from '../Ctx';
+import { Github, Resource } from '../lib/modules';
 
 export type Scripts = RR.ReadonlyRecord<string, string>;
 
 const update = pipe(
-  listRepoFiles(OWNER, REPO, BRANCH),
-  RTE.map(
-    RA.filterMap((f) => {
-      if (!f.endsWith('.lua')) return O.none;
-      const [_, id] = f.substring(0, f.length - 4).split('/c');
-      if (!id) return O.none;
-      return O.some([
-        id,
-        `https://github.com/${OWNER}/${REPO}/blob/${BRANCH}/${f}`,
-      ] as const);
-    })
-  ),
-  RTE.map(RR.fromEntries)
+  RTE.ask<CtxWithoutResources>(),
+  RTE.flatMap(({ sources }) =>
+    pipe(
+      Github.listRepoFiles(sources.scripts),
+      RTE.map(
+        RA.filterMap((filename) => {
+          if (!filename.endsWith('.lua')) return O.none;
+          const [_, id] = filename
+            .substring(0, filename.length - 4)
+            .split('/c');
+          if (!id) return O.none;
+          return O.some([
+            id,
+            Github.blobURL(sources.scripts) + '/' + filename,
+          ] as const);
+        })
+      ),
+      RTE.map(RR.fromEntries)
+    )
+  )
 );
 
 export const resource: Resource.Resource<'scripts'> = {
   key: 'scripts',
-  description: 'Card script filepaths from the CardScript repo.',
+  description: 'Card script filepaths',
   update,
   init: update,
-  commitFilter: (repo, files) =>
-    repo === 'CardScripts' &&
+  commitFilter: (ctx) => (src, files) =>
+    Github.isSource(src, ctx.sources.scripts) &&
     files.some((f) => f.endsWith('.lua') && f.includes('/c')),
 };
 

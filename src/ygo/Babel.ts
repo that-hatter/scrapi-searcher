@@ -4,7 +4,7 @@ import { ioEither } from 'fp-ts';
 import MiniSearch, { SearchResult } from 'minisearch';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
-import { Ctx } from '../Ctx';
+import { Ctx, CtxWithoutResources } from '../Ctx';
 import { PATHS } from '../lib/constants';
 import type { Resource } from '../lib/modules';
 import { Collection, Decoder, Github, str } from '../lib/modules';
@@ -122,7 +122,7 @@ const loadCdb = (name: string) =>
           data: db.prepare(`SELECT * FROM datas`).all(),
           texts: db.prepare(`SELECT * FROM texts`).all(),
         })),
-        ioEither.flatMapEither(Decoder.parse(cdbDecoder(name))),
+        ioEither.flatMapEither(Decoder.decode(cdbDecoder(name))),
         ioEither.tap(() => utils.fallibleIO(() => db.close()))
       )
     ),
@@ -262,23 +262,24 @@ const loadBabel: TE.TaskEither<string, Babel> = pipe(
 );
 
 const update = pipe(
-  Github.pullOrClone('BabelCDB', 'https://github.com/ProjectIgnis/BabelCDB'),
-  TE.flatMap(() => loadBabel),
-  TE.mapError(utils.stringify),
-  RTE.fromTaskEither
+  RTE.ask<CtxWithoutResources>(),
+  RTE.map(({ sources }) => Github.pullOrClone('BabelCDB', sources.babel)),
+  RTE.flatMapTaskEither(() => loadBabel),
+  RTE.mapError(utils.stringify)
 );
 
 export const resource: Resource.Resource<'babel'> = {
   key: 'babel',
-  description: 'Card databases from BabelCDB.',
+  description: 'Card databases.',
   update,
   init: pipe(
     loadBabel,
     RTE.fromTaskEither,
     RTE.orElse(() => update)
   ),
-  commitFilter: (repo, files) =>
-    repo === 'BabelCDB' && files.some((f) => f.endsWith('.cdb')),
+  commitFilter: (ctx) => (src, files) =>
+    Github.isSource(src, ctx.sources.babel) &&
+    files.some((f) => f.endsWith('.cdb')),
 };
 
 export const getCard = (id: number | string) => (ctx: Ctx) =>

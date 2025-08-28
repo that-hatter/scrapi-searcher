@@ -28,6 +28,15 @@ const envDecoder = pipe(
     GITHUB_ACCESS_TOKEN: Decoder.string,
     GITHUB_WEBHOOK_PORT: Decoder.numString,
     GITHUB_WEBHOOK_SECRET: Decoder.string,
+
+    REPO_YARD: Github.sourceDecoder,
+    REPO_BABEL: Github.sourceDecoder,
+    REPO_SCRIPTS: Github.sourceDecoder,
+    REPO_CORE: Github.sourceDecoder,
+    REPO_BANLISTS: Github.sourceDecoder,
+    REPO_DELTA: Github.sourceDecoder,
+    REPO_DISTRIBUTION: Github.sourceDecoder,
+    REPO_MISC: Github.sourceDecoder,
   }),
   Decoder.intersect(
     Decoder.partial({
@@ -42,7 +51,7 @@ const envDecoder = pipe(
 const program = pipe(
   TE.Do,
   TE.bind('env', () =>
-    pipe(process.env, Decoder.parse(envDecoder), TE.fromEither)
+    pipe(process.env, Decoder.decode(envDecoder), TE.fromEither)
   ),
   TE.bind('github', ({ env }) =>
     Github.init(
@@ -90,8 +99,18 @@ const program = pipe(
     webhook: github.webhook,
     webhookServer: github.webhookServer,
 
-    picsSource: O.fromNullable(env.PICS_DEFAULT_SOURCE),
-    picsChannel: O.fromNullable(env.PICS_UPLOAD_CHANNEL),
+    sources: {
+      yard: env.REPO_YARD,
+      babel: env.REPO_BABEL,
+      scripts: env.REPO_SCRIPTS,
+      core: env.REPO_CORE,
+      banlists: env.REPO_BANLISTS,
+      delta: env.REPO_DELTA,
+      distribution: env.REPO_DISTRIBUTION,
+      misc: env.REPO_MISC,
+      picsUrl: O.fromNullable(env.PICS_DEFAULT_SOURCE),
+      picsChannel: O.fromNullable(env.PICS_UPLOAD_CHANNEL),
+    },
 
     emojis: pipe(
       emojis,
@@ -153,9 +172,14 @@ const program = pipe(
 
     preCtx.webhook.on('push', ({ payload }) => {
       const { ref, commits } = payload;
-      if (ref !== 'refs/heads/master' && ref !== 'refs/heads/main') return;
       if (commits.length === 1 && commits[0]?.message.startsWith('[auto] '))
         return;
+
+      const source: Github.Source = {
+        owner: payload.repository.owner?.name ?? '',
+        repo: payload.repository.name,
+        branch: pipe(ref, str.split('/'), RNEA.last),
+      };
 
       pipe(
         commits,
@@ -164,8 +188,7 @@ const program = pipe(
           ...(c.modified ?? []),
           ...(c.removed ?? []),
         ]),
-        (files) =>
-          Resource.autoUpdate(payload.compare, payload.repository.name, files),
+        (files) => Resource.autoUpdate(payload.compare, source, files),
         runHandler
       );
     });

@@ -1,10 +1,9 @@
-import { O, pipe, RA, RR, RTE, TE } from '@that-hatter/scrapi-factory/fp';
-import fetch from 'node-fetch';
+import { O, pipe, RA, RR, RTE } from '@that-hatter/scrapi-factory/fp';
 import { Babel } from '.';
-import { Ctx } from '../Ctx';
+import { Ctx, CtxWithoutResources } from '../Ctx';
 import type { Resource } from '../lib/modules';
-import { Decoder } from '../lib/modules';
-import { DeepReadonly, utils } from '../lib/utils';
+import { Decoder, Fetch, Github } from '../lib/modules';
+import { DeepReadonly } from '../lib/utils';
 
 const decoder = pipe(
   Decoder.struct({
@@ -17,14 +16,13 @@ const decoder = pipe(
 
 export type BetaIds = DeepReadonly<Decoder.TypeOf<typeof decoder>>;
 
-const URL =
-  'https://raw.githubusercontent.com/ProjectIgnis/' +
-  'DeltaBagooska/master/mappings.json';
+const RESOURCE_PATH = 'mappings.json';
 
 const update = pipe(
-  utils.taskify(() => fetch(URL).then((response) => response.json())),
-  TE.flatMapEither(Decoder.parse(decoder)),
-  RTE.fromTaskEither
+  RTE.ask<CtxWithoutResources>(),
+  RTE.map(({ sources }) => Github.rawURL(sources.delta, RESOURCE_PATH)),
+  RTE.flatMapTaskEither(Fetch.json),
+  RTE.flatMapEither(Decoder.decode(decoder))
 );
 
 export const resource: Resource.Resource<'betaIds'> = {
@@ -32,8 +30,8 @@ export const resource: Resource.Resource<'betaIds'> = {
   description: 'Beta passcode mappings.',
   update,
   init: update,
-  commitFilter: (repo, files) =>
-    repo === 'DeltaBagooska' && files.includes('mappings.json'),
+  commitFilter: (ctx) => (src, files) =>
+    Github.isSource(src, ctx.sources.delta) && files.includes(RESOURCE_PATH),
 };
 
 export const toBabelCard =

@@ -1,9 +1,8 @@
 import { O, pipe, RA, RR, RTE, TE } from '@that-hatter/scrapi-factory/fp';
-import fetch from 'node-fetch';
 import { Babel, Card, Pedia } from '.';
-import { Ctx } from '../Ctx';
+import { Ctx, CtxWithoutResources } from '../Ctx';
 import type { Resource } from '../lib/modules';
-import { Decoder, Github, str } from '../lib/modules';
+import { Decoder, Fetch, Github, str } from '../lib/modules';
 import { DeepReadonly, utils } from '../lib/utils';
 import { isAltArt } from './Babel';
 
@@ -14,16 +13,13 @@ const decoder = Decoder.struct({
 
 export type KonamiIds = DeepReadonly<Decoder.TypeOf<typeof decoder>>;
 
-const OWNER = 'that-hatter';
-const REPO = 'scrapi-searcher-data';
-const PATH = 'data/konamiIds.json';
-const BRANCH = 'main';
-const URL = `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/${PATH}`;
+const RESOURCE_PATH = 'data/konamiIds.json';
 
 const update = pipe(
-  utils.taskify(() => fetch(URL).then((response) => response.json())),
-  TE.flatMapEither(Decoder.parse(decoder)),
-  RTE.fromTaskEither
+  RTE.ask<CtxWithoutResources>(),
+  RTE.map(({ sources }) => Github.rawURL(sources.misc, RESOURCE_PATH)),
+  RTE.flatMapTaskEither(Fetch.json),
+  RTE.flatMapEither(Decoder.decode(decoder))
 );
 
 export const resource: Resource.Resource<'konamiIds'> = {
@@ -31,8 +27,8 @@ export const resource: Resource.Resource<'konamiIds'> = {
   description: 'Konami ID mappings.',
   update,
   init: update,
-  commitFilter: (repo, files) =>
-    repo === 'scrapi-searcher-data' && files.includes('data/konamiIds.json'),
+  commitFilter: (ctx) => (src, files) =>
+    Github.isSource(src, ctx.sources.misc) && files.includes(RESOURCE_PATH),
 };
 
 type Key = 'master' | 'rush';
@@ -69,7 +65,7 @@ const fetchFromPedia = (key: Key, name: string) => {
   const url = Pedia.url(1, 0)([pname])(['Database ID']);
   return pipe(
     Pedia.fetchCards(0, url),
-    TE.flatMapEither(Decoder.parse(fetchedIdDecoder)),
+    TE.flatMapEither(Decoder.decode(fetchedIdDecoder)),
     TE.map(RR.values),
     TE.flatMapOption(RA.head, () => 'Failed to fetch card from yugipedia'),
     TE.mapError(
@@ -91,10 +87,8 @@ export const addToFile = (card: Babel.Card, kid: number) => {
       TE.right,
       TE.tap((content) =>
         Github.updateFile(
-          OWNER,
-          REPO,
-          BRANCH,
-          PATH,
+          ctx.sources.misc,
+          RESOURCE_PATH,
           utils.stringify(content),
           'add konami id for ' + card.id
         )(ctx)

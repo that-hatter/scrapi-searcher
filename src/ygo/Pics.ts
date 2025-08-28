@@ -8,28 +8,33 @@ import {
   RTE,
   TE,
 } from '@that-hatter/scrapi-factory/fp';
-import fetch from 'node-fetch';
 import * as buffer from 'node:buffer';
 import { Babel, Card } from '.';
-import { Ctx } from '../Ctx';
+import { Ctx, CtxWithoutResources } from '../Ctx';
 import { URLS } from '../lib/constants';
-import { dd, Decoder, Err, Github, Op, Resource, str } from '../lib/modules';
+import {
+  dd,
+  Decoder,
+  Err,
+  Fetch,
+  Github,
+  Op,
+  Resource,
+  str,
+} from '../lib/modules';
 import { utils } from '../lib/utils';
 
-const OWNER = 'that-hatter';
-const REPO = 'scrapi-searcher-data';
-const PATH = 'data/pics.json';
-const BRANCH = 'main';
-const URL = `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/${PATH}`;
+const RESOURCE_PATH = 'data/pics.json';
 
 export type Pics = RR.ReadonlyRecord<string, string>;
 
 const decoder = Decoder.record(Decoder.string);
 
 const update = pipe(
-  utils.taskify(() => fetch(URL).then((resp) => resp.json())),
-  TE.flatMapEither(Decoder.parse(decoder)),
-  RTE.fromTaskEither
+  RTE.ask<CtxWithoutResources>(),
+  RTE.map(({ sources }) => Github.rawURL(sources.misc, RESOURCE_PATH)),
+  RTE.flatMapTaskEither(Fetch.json),
+  RTE.flatMapEither(Decoder.decode(decoder))
 );
 
 export const resource: Resource.Resource<'pics'> = {
@@ -37,8 +42,8 @@ export const resource: Resource.Resource<'pics'> = {
   description: 'Reuploaded card pic urls saved in pics.json.',
   update,
   init: update,
-  commitFilter: (repo, files) =>
-    repo === 'scrapi-searcher-data' && files.includes('data/pics.json'),
+  commitFilter: (ctx) => (repo, files) =>
+    repo === ctx.sources.misc && files.includes('data/pics.json'),
 };
 
 export const getExisting = (id: number) => (ctx: Ctx) =>
@@ -50,15 +55,12 @@ export const getExisting = (id: number) => (ctx: Ctx) =>
   );
 
 const fetchFromSourceAndReupload = (id: number) => (ctx: Ctx) => {
-  const source = ctx.picsSource;
-  const channel = ctx.picsChannel;
+  const source = ctx.sources.picsUrl;
+  const channel = ctx.sources.picsChannel;
   if (O.isNone(source) || O.isNone(channel)) return TE.right(O.none);
   return pipe(
-    utils.taskify(() =>
-      fetch(source.value.replace('%id%', id.toString())).then((resp) =>
-        resp.arrayBuffer()
-      )
-    ),
+    source.value.replace('%id%', id.toString()),
+    Fetch.arrayBuffer,
     TE.map(
       (arrayBuf): dd.FileContent => ({
         name: id + '.jpg',
@@ -79,18 +81,15 @@ const fetchFromSourceAndReupload = (id: number) => (ctx: Ctx) => {
   );
 };
 
-const updateGithubFile = (
-  newRecord: RR.ReadonlyRecord<string, string>,
-  message: string
-) =>
-  Github.updateFile(
-    OWNER,
-    REPO,
-    BRANCH,
-    PATH,
-    utils.stringify(newRecord),
-    message
-  );
+const updateGithubFile =
+  (newRecord: RR.ReadonlyRecord<string, string>, message: string) =>
+  (ctx: Ctx) =>
+    Github.updateFile(
+      ctx.sources.misc,
+      RESOURCE_PATH,
+      utils.stringify(newRecord),
+      message
+    )(ctx);
 
 export const addToFile = (url: string) => (ctx: Ctx) => {
   const [_, __, ___, ____, ch, att, _id] = url.split('/');
@@ -159,7 +158,8 @@ const fetchReuploadedPics = (
     RTE.map(
       RA.map((url) =>
         pipe(
-          utils.taskify(() => fetch(url).then((resp) => resp.buffer())),
+          url,
+          Fetch.buffer,
           TE.map((buf) => {
             const id = pipe(url, str.before('.jpg'), str.afterLast('/'));
             return [id, buf] as const;
@@ -176,11 +176,8 @@ const fetchMultipleFromSource = (ids: ReadonlyArray<number>, source: string) =>
     ids,
     RA.map((id) =>
       pipe(
-        utils.taskify(() =>
-          fetch(source.replace('%id%', id.toString())).then((resp) =>
-            resp.buffer()
-          )
-        ),
+        source.replace('%id%', id.toString()),
+        Fetch.buffer,
         TE.map((buf) => [id.toString(), buf] as const)
       )
     ),
@@ -190,8 +187,8 @@ const fetchMultipleFromSource = (ids: ReadonlyArray<number>, source: string) =>
   );
 
 export const getMultipleRaws = (ids: ReadonlyArray<number>) => (ctx: Ctx) => {
-  const source = ctx.picsSource;
-  const channel = ctx.picsChannel;
+  const source = ctx.sources.picsUrl;
+  const channel = ctx.sources.picsChannel;
   if (O.isNone(source) || O.isNone(channel)) return TE.left(Err.ignore());
   return pipe(
     [...new Set(ids)],
