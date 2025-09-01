@@ -30,7 +30,10 @@ const enumLink = (ct: sf.Constant, ctx: Ctx): O.Option<string> =>
 const usageExamplesLink = (ct: sf.Constant, ctx: Ctx) =>
   str.link(
     'Usage Examples',
-    Github.searchURL(ctx.sources.scripts, encodeURIComponent(ct.name))
+    Github.searchURL(
+      ctx.sources.scripts,
+      encodeURIComponent('/(?-i)' + ct.name + '/')
+    )
   );
 
 const quickLinksSection = (ct: sf.Constant, ctx: Ctx) =>

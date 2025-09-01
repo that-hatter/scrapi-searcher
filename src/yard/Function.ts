@@ -58,11 +58,26 @@ const namespaceLink = (fn: sf.Function, ctx: Ctx) =>
     )
   );
 
-const usageExamplesLink = (fn: sf.Function, ctx: Ctx) =>
-  str.link(
-    'Usage Examples',
-    Github.searchURL(ctx.sources.scripts, encodeURIComponent(fn.partialName))
+const usageExamplesLink = (fn: sf.Function, ctx: Ctx) => {
+  const dotSyntax = '/(?-i)' + fn.name + '/';
+  const searchTerm = pipe(
+    fn.namespace,
+    O.flatMap((ns) => {
+      if (ns === 'Card') return O.some('c');
+      if (ns === 'Group') return O.some('g');
+      if (ns === 'Effect') return O.some('e\\d+');
+      return O.none;
+    }),
+    O.map((pre) => ' OR /(?-i)' + pre + ':' + fn.partialName + '%2F'),
+    O.getOrElse(() => ''),
+    str.prepend(dotSyntax),
+    str.clamped('%28', '%29')
   );
+  return str.link(
+    'Usage Examples',
+    Github.searchURL(ctx.sources.scripts, encodeURIComponent(searchTerm))
+  );
+};
 
 const quickLinksSection = (fn: sf.Function, ctx: Ctx) =>
   pipe(
