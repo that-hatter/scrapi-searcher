@@ -16,7 +16,7 @@ const update = pipe(
       Github.pullOrClone('scrapiyard', sources.yard),
       TE.flatMap(() =>
         sf.loadYard({
-          core: sources.babel,
+          core: sources.core,
           extended: sources.scripts,
           directory: LOCAL_PATH,
         })
