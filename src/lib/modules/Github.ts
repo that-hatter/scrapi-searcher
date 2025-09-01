@@ -87,6 +87,9 @@ export const blobURL = (src: Source, path = '') =>
 export const rawURL = (src: Source, path: string) =>
   `https://raw.githubusercontent.com/${src.owner}/${src.repo}/${src.branch}/${path}`;
 
+export const searchURL = (src: Source, searchTerm: string) =>
+  `https://github.com/search?q=repo%3A${src.owner}%2F${src.repo}+${searchTerm}&type=code`
+
 export const isSource = (src1: Source, src2: Source) =>
   treeURL(src1) === treeURL(src2);
 
