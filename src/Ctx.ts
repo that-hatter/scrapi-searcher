@@ -22,9 +22,9 @@ export type CtxWithoutResources = {
     readonly babel: Github.Source;
     readonly scripts: Github.Source;
     readonly core: Github.Source;
-    readonly banlists: Github.Source;
-    readonly delta: Github.Source;
-    readonly distribution: Github.Source;
+    readonly banlists: O.Option<Github.Source>;
+    readonly delta: O.Option<Github.Source>;
+    readonly distribution: O.Option<Github.Source>;
     readonly misc: O.Option<{
       readonly repo: Github.Source;
       readonly pics: O.Option<{

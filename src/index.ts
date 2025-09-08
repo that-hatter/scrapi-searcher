@@ -33,12 +33,12 @@ const envDecoder = pipe(
     REPO_BABEL: Github.sourceDecoder,
     REPO_SCRIPTS: Github.sourceDecoder,
     REPO_CORE: Github.sourceDecoder,
-    REPO_BANLISTS: Github.sourceDecoder,
-    REPO_DELTA: Github.sourceDecoder,
-    REPO_DISTRIBUTION: Github.sourceDecoder,
   }),
   Decoder.intersect(
     Decoder.partial({
+      REPO_BANLISTS: Github.sourceDecoder,
+      REPO_DELTA: Github.sourceDecoder,
+      REPO_DISTRIBUTION: Github.sourceDecoder,
       REPO_MISC: Github.sourceDecoder,
 
       PICS_DEFAULT_SOURCE: Decoder.string,
@@ -121,19 +121,18 @@ const program = pipe(
       babel: env.REPO_BABEL,
       scripts: env.REPO_SCRIPTS,
       core: env.REPO_CORE,
-      banlists: env.REPO_BANLISTS,
-      delta: env.REPO_DELTA,
-      distribution: env.REPO_DISTRIBUTION,
+      banlists: O.fromNullable(env.REPO_BANLISTS),
+      delta: O.fromNullable(env.REPO_DELTA),
+      distribution: O.fromNullable(env.REPO_DISTRIBUTION),
       misc: env.REPO_MISC
         ? O.some({
             repo: env.REPO_MISC,
-            pics:
-              env.PICS_DEFAULT_SOURCE && env.PICS_UPLOAD_CHANNEL
-                ? O.some({
-                    url: env.PICS_DEFAULT_SOURCE,
-                    channel: env.PICS_UPLOAD_CHANNEL,
-                  })
-                : O.none,
+            pics: env.PICS_DEFAULT_SOURCE
+              ? O.some({
+                  url: env.PICS_DEFAULT_SOURCE,
+                  channel: env.PICS_UPLOAD_CHANNEL!,
+                })
+              : O.none,
           })
         : O.none,
     },

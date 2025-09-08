@@ -30,9 +30,9 @@ export type Pics = RR.ReadonlyRecord<string, string>;
 
 const decoder = Decoder.record(Decoder.string);
 
-const update = ({ sources }: CtxWithoutResources) =>
+const update = (ctx: CtxWithoutResources): TE.TaskEither<string, Pics> =>
   pipe(
-    sources.misc,
+    ctx.sources.misc,
     O.map(({ repo }) =>
       pipe(
         Github.rawURL(repo, RESOURCE_PATH),
@@ -40,7 +40,7 @@ const update = ({ sources }: CtxWithoutResources) =>
         TE.flatMapEither(Decoder.decode(decoder))
       )
     ),
-    O.getOrElse(() => TE.right(<Pics>{}))
+    O.getOrElse(() => TE.right({}))
   );
 
 export const resource: Resource.Resource<'pics'> = {

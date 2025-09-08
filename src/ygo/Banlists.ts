@@ -76,6 +76,9 @@ const dateString = (b: Banlist) => {
 };
 
 export const limitsBreakdown = (c: Babel.Card) => (ctx: Ctx) => {
+  if (O.isNone(ctx.sources.banlists)) return O.none;
+  const banlists = ctx.sources.banlists.value;
+
   const scopes = BitNames.scopes(c.ot)(ctx);
 
   const rush = scopes.includes('Rush');
@@ -108,10 +111,7 @@ export const limitsBreakdown = (c: Babel.Card) => (ctx: Ctx) => {
         O.map((lmt) =>
           str.joinWords([
             str.inlineCode(lmt),
-            str.link(
-              list.name,
-              Github.blobURL(ctx.sources.banlists) + list.filename
-            ),
+            str.link(list.name, Github.blobURL(banlists) + list.filename),
             dateString(list),
           ])
         )
@@ -149,12 +149,18 @@ const loadBanlists = (): TE.TaskEither<string, Banlists> =>
     TE.flatMapOption(RNEA.fromReadonlyArray, () => 'No valid banlists found.')
   );
 
-const update = pipe(
-  RTE.ask<CtxWithoutResources>(),
-  RTE.map(({ sources }) => Github.pullOrClone('LFLists', sources.banlists)),
-  RTE.flatMapTaskEither(loadBanlists),
-  RTE.mapError(utils.stringify)
-);
+const update = (ctx: CtxWithoutResources): TE.TaskEither<string, Banlists> =>
+  pipe(
+    ctx.sources.banlists,
+    O.map((repo) =>
+      pipe(
+        Github.pullOrClone('LFLists', repo),
+        TE.flatMap(loadBanlists),
+        TE.mapError(utils.stringify)
+      )
+    ),
+    O.getOrElseW(() => TE.right([]))
+  );
 
 export const resource: Resource.Resource<'banlists'> = {
   key: 'banlists',
@@ -165,6 +171,7 @@ export const resource: Resource.Resource<'banlists'> = {
     RTE.orElse(() => update)
   ),
   commitFilter: (ctx) => (src, files) =>
-    Github.isSource(src, ctx.sources.banlists) &&
+    O.isSome(ctx.sources.banlists) &&
+    Github.isSource(src, ctx.sources.banlists.value) &&
     files.some((f) => f.endsWith('.lflist.conf')),
 };

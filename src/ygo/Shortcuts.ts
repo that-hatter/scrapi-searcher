@@ -17,9 +17,9 @@ export type Shortcuts = DeepReadonly<Decoder.TypeOf<typeof decoder>>;
 
 const RESOURCE_PATH = 'data/shortcuts.json';
 
-const update = ({ sources }: CtxWithoutResources) =>
+const update = (ctx: CtxWithoutResources): TE.TaskEither<string, Shortcuts> =>
   pipe(
-    sources.misc,
+    ctx.sources.misc,
     O.map(({ repo }) =>
       pipe(
         Github.rawURL(repo, RESOURCE_PATH),
@@ -27,7 +27,7 @@ const update = ({ sources }: CtxWithoutResources) =>
         TE.flatMapEither(Decoder.decode(decoder))
       )
     ),
-    O.getOrElse(() => TE.right(<Shortcuts>{}))
+    O.getOrElse(() => TE.right({}))
   );
 
 export const resource: Resource.Resource<'shortcuts'> = {

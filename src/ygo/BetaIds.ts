@@ -1,4 +1,4 @@
-import { O, pipe, RA, RR, RTE } from '@that-hatter/scrapi-factory/fp';
+import { O, pipe, RA, RR, TE } from '@that-hatter/scrapi-factory/fp';
 import { Babel } from '.';
 import { Ctx, CtxWithoutResources } from '../Ctx';
 import type { Resource } from '../lib/modules';
@@ -18,12 +18,18 @@ export type BetaIds = DeepReadonly<Decoder.TypeOf<typeof decoder>>;
 
 const RESOURCE_PATH = 'mappings.json';
 
-const update = pipe(
-  RTE.ask<CtxWithoutResources>(),
-  RTE.map(({ sources }) => Github.rawURL(sources.delta, RESOURCE_PATH)),
-  RTE.flatMapTaskEither(Fetch.json),
-  RTE.flatMapEither(Decoder.decode(decoder))
-);
+const update = (ctx: CtxWithoutResources): TE.TaskEither<string, BetaIds> =>
+  pipe(
+    ctx.sources.delta,
+    O.map((repo) =>
+      pipe(
+        Github.rawURL(repo, RESOURCE_PATH),
+        Fetch.json,
+        TE.flatMapEither(Decoder.decode(decoder))
+      )
+    ),
+    O.getOrElse(() => TE.right({}))
+  );
 
 export const resource: Resource.Resource<'betaIds'> = {
   key: 'betaIds',
@@ -31,7 +37,9 @@ export const resource: Resource.Resource<'betaIds'> = {
   update,
   init: update,
   commitFilter: (ctx) => (src, files) =>
-    Github.isSource(src, ctx.sources.delta) && files.includes(RESOURCE_PATH),
+    O.isSome(ctx.sources.delta) &&
+    Github.isSource(src, ctx.sources.delta.value) &&
+    files.includes(RESOURCE_PATH),
 };
 
 export const toBabelCard =

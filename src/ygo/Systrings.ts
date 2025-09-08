@@ -48,36 +48,34 @@ const parse = (url: string) =>
     })
   );
 
-const fetchAndParse = (src: Github.Source, path: string) =>
-  pipe(
-    Github.rawURL(src, path),
-    Fetch.text,
-    TE.map(parse(Github.blobURL(src, path)))
-  );
+const fetchAndParse = (src: O.Option<Github.Source>, path: string) =>
+  O.isSome(src)
+    ? pipe(
+        Github.rawURL(src.value, path),
+        Fetch.text,
+        TE.map(parse(Github.blobURL(src.value, path)))
+      )
+    : TE.right([]);
 
 const DELTA_PATH = 'strings.conf';
 const DIST_PATH = 'config/strings.conf';
 
-const update = pipe(
-  RTE.ask<CtxWithoutResources>(),
-  RTE.flatMapTaskEither(({ sources }) =>
-    pipe(
-      fetchAndParse(sources.delta, DELTA_PATH),
-      TE.flatMap((delta) =>
-        pipe(
-          fetchAndParse(sources.distribution, DIST_PATH),
-          TE.map(
-            RA.filter(
-              ({ kind, value }) =>
-                !delta.some((d) => d.kind === kind && d.value === value)
-            )
-          ),
-          TE.map(RA.concat(delta))
-        )
+const update = ({ sources }: CtxWithoutResources) =>
+  pipe(
+    fetchAndParse(sources.delta, DELTA_PATH),
+    TE.flatMap((delta) =>
+      pipe(
+        fetchAndParse(sources.distribution, DIST_PATH),
+        TE.map(
+          RA.filter(
+            ({ kind, value }) =>
+              !delta.some((d) => d.kind === kind && d.value === value)
+          )
+        ),
+        TE.map(RA.concat(delta))
       )
     )
-  )
-);
+  );
 
 export const resource: Resource.Resource<'systrings'> = {
   key: 'systrings',
@@ -85,8 +83,11 @@ export const resource: Resource.Resource<'systrings'> = {
   update,
   init: update,
   commitFilter: (ctx) => (src, files) =>
-    (Github.isSource(src, ctx.sources.delta) && files.includes(DELTA_PATH)) ||
-    (Github.isSource(src, ctx.sources.distribution) &&
+    (O.isSome(ctx.sources.delta) &&
+      Github.isSource(src, ctx.sources.delta.value) &&
+      files.includes(DELTA_PATH)) ||
+    (O.isSome(ctx.sources.distribution) &&
+      Github.isSource(src, ctx.sources.distribution.value) &&
       files.includes(DIST_PATH)),
 };
 

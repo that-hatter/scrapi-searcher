@@ -15,9 +15,9 @@ export type KonamiIds = DeepReadonly<Decoder.TypeOf<typeof decoder>>;
 
 const RESOURCE_PATH = 'data/konamiIds.json';
 
-const update = ({ sources }: CtxWithoutResources) =>
+const update = (ctx: CtxWithoutResources): TE.TaskEither<string, KonamiIds> =>
   pipe(
-    sources.misc,
+    ctx.sources.misc,
     O.map(({ repo }) =>
       pipe(
         Github.rawURL(repo, RESOURCE_PATH),
@@ -25,7 +25,7 @@ const update = ({ sources }: CtxWithoutResources) =>
         TE.flatMapEither(Decoder.decode(decoder))
       )
     ),
-    O.getOrElse(() => TE.right(<KonamiIds>{}))
+    O.getOrElse(() => TE.right({ master: {}, rush: {} }))
   );
 
 export const resource: Resource.Resource<'konamiIds'> = {
