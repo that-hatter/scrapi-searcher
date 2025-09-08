@@ -25,9 +25,13 @@ export type CtxWithoutResources = {
     readonly banlists: Github.Source;
     readonly delta: Github.Source;
     readonly distribution: Github.Source;
-    readonly misc: Github.Source;
-    readonly picsUrl: O.Option<string>;
-    readonly picsChannel: O.Option<bigint>;
+    readonly misc: O.Option<{
+      readonly repo: Github.Source;
+      readonly pics: O.Option<{
+        readonly url: string;
+        readonly channel: bigint;
+      }>;
+    }>;
   };
 };
 

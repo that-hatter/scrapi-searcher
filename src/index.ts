@@ -36,16 +36,33 @@ const envDecoder = pipe(
     REPO_BANLISTS: Github.sourceDecoder,
     REPO_DELTA: Github.sourceDecoder,
     REPO_DISTRIBUTION: Github.sourceDecoder,
-    REPO_MISC: Github.sourceDecoder,
   }),
   Decoder.intersect(
     Decoder.partial({
+      REPO_MISC: Github.sourceDecoder,
+
       PICS_DEFAULT_SOURCE: Decoder.string,
       PICS_UPLOAD_CHANNEL: Decoder.bigintString,
 
       GIT_REF: Decoder.string,
     })
-  )
+  ),
+  Decoder.parse((env) => {
+    const error = (msg: string) => Decoder.failure(env, msg);
+
+    if (!!env.PICS_DEFAULT_SOURCE !== !!env.PICS_UPLOAD_CHANNEL) {
+      return error(
+        'PICS_DEFAULT_SOURCE and PICS_UPLOAD_CHANNEL must be provided together'
+      );
+    }
+
+    if (env.PICS_DEFAULT_SOURCE && !env.REPO_MISC) {
+      return error(
+        'REPO_MISC must be provided if PICS_DEFAULT_SOURCE and PICS_UPLOAD_CHANNEL are provided'
+      );
+    }
+    return Decoder.success(env);
+  })
 );
 
 const program = pipe(
@@ -107,9 +124,18 @@ const program = pipe(
       banlists: env.REPO_BANLISTS,
       delta: env.REPO_DELTA,
       distribution: env.REPO_DISTRIBUTION,
-      misc: env.REPO_MISC,
-      picsUrl: O.fromNullable(env.PICS_DEFAULT_SOURCE),
-      picsChannel: O.fromNullable(env.PICS_UPLOAD_CHANNEL),
+      misc: env.REPO_MISC
+        ? O.some({
+            repo: env.REPO_MISC,
+            pics:
+              env.PICS_DEFAULT_SOURCE && env.PICS_UPLOAD_CHANNEL
+                ? O.some({
+                    url: env.PICS_DEFAULT_SOURCE,
+                    channel: env.PICS_UPLOAD_CHANNEL,
+                  })
+                : O.none,
+          })
+        : O.none,
     },
 
     emojis: pipe(

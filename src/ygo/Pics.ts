@@ -30,20 +30,28 @@ export type Pics = RR.ReadonlyRecord<string, string>;
 
 const decoder = Decoder.record(Decoder.string);
 
-const update = pipe(
-  RTE.ask<CtxWithoutResources>(),
-  RTE.map(({ sources }) => Github.rawURL(sources.misc, RESOURCE_PATH)),
-  RTE.flatMapTaskEither(Fetch.json),
-  RTE.flatMapEither(Decoder.decode(decoder))
-);
+const update = ({ sources }: CtxWithoutResources) =>
+  pipe(
+    sources.misc,
+    O.map(({ repo }) =>
+      pipe(
+        Github.rawURL(repo, RESOURCE_PATH),
+        Fetch.json,
+        TE.flatMapEither(Decoder.decode(decoder))
+      )
+    ),
+    O.getOrElse(() => TE.right(<Pics>{}))
+  );
 
 export const resource: Resource.Resource<'pics'> = {
   key: 'pics',
   description: 'Reuploaded card pic urls saved in pics.json.',
   update,
   init: update,
-  commitFilter: (ctx) => (repo, files) =>
-    repo === ctx.sources.misc && files.includes('data/pics.json'),
+  commitFilter: (ctx) => (src, files) =>
+    O.isSome(ctx.sources.misc) &&
+    src === ctx.sources.misc.value.repo &&
+    files.includes('data/pics.json'),
 };
 
 export const getExisting = (id: number) => (ctx: Ctx) =>
@@ -54,42 +62,53 @@ export const getExisting = (id: number) => (ctx: Ctx) =>
     O.map((pid) => `${URLS.DISCORD_MEDIA}/${pid}/${id}.jpg`)
   );
 
-const fetchFromSourceAndReupload = (id: number) => (ctx: Ctx) => {
-  const source = ctx.sources.picsUrl;
-  const channel = ctx.sources.picsChannel;
-  if (O.isNone(source) || O.isNone(channel)) return TE.right(O.none);
-  return pipe(
-    source.value.replace('%id%', id.toString()),
-    Fetch.arrayBuffer,
-    TE.map(
-      (arrayBuf): dd.FileContent => ({
-        name: id + '.jpg',
-        blob: new buffer.Blob([new Uint8Array(arrayBuf)]),
-      })
-    ),
-    TE.flatMap((file) =>
-      pipe(
-        Op.sendMessage(channel.value)({ files: [file] })(ctx),
-        TE.mapError(Err.toAlertString)
-      )
-    ),
-    TE.flatMapNullable(
-      (msg) => msg.attachments?.at(0)?.url.split('?ex')[0],
-      () => 'Failed to upload pic'
-    ),
-    TE.map(O.some)
-  );
-};
+const fetchFromSourceAndReupload =
+  (id: number) =>
+  (ctx: Ctx): TE.TaskEither<string, O.Option<string>> =>
+    pipe(
+      ctx.sources.misc,
+      O.flatMap(({ pics }) => pics),
+      O.map(({ url, channel }) =>
+        pipe(
+          url.replace('%id%', id.toString()),
+          Fetch.arrayBuffer,
+          TE.map(
+            (arrayBuf): dd.FileContent => ({
+              name: id + '.jpg',
+              blob: new buffer.Blob([new Uint8Array(arrayBuf)]),
+            })
+          ),
+          TE.flatMap((file) =>
+            pipe(
+              Op.sendMessage(channel)({ files: [file] })(ctx),
+              TE.mapError(Err.toAlertString)
+            )
+          ),
+          TE.flatMapNullable(
+            (msg) => msg.attachments?.at(0)?.url.split('?ex')[0],
+            () => 'Failed to upload pic'
+          ),
+          TE.map(O.some)
+        )
+      ),
+      O.getOrElseW(() => TE.right(O.none))
+    );
 
 const updateGithubFile =
   (newRecord: RR.ReadonlyRecord<string, string>, message: string) =>
   (ctx: Ctx) =>
-    Github.updateFile(
+    pipe(
       ctx.sources.misc,
-      RESOURCE_PATH,
-      utils.stringify(newRecord),
-      message
-    )(ctx);
+      O.map(({ repo }) =>
+        Github.updateFile(
+          repo,
+          RESOURCE_PATH,
+          utils.stringify(newRecord),
+          message
+        )(ctx)
+      ),
+      O.getOrElseW(() => Op.noop)
+    );
 
 export const addToFile = (url: string) => (ctx: Ctx) => {
   const [_, __, ___, ____, ch, att, _id] = url.split('/');
@@ -186,29 +205,32 @@ const fetchMultipleFromSource = (ids: ReadonlyArray<number>, source: string) =>
     RTE.fromTaskEither
   );
 
-export const getMultipleRaws = (ids: ReadonlyArray<number>) => (ctx: Ctx) => {
-  const source = ctx.sources.picsUrl;
-  const channel = ctx.sources.picsChannel;
-  if (O.isNone(source) || O.isNone(channel)) return TE.left(Err.ignore());
-  return pipe(
-    [...new Set(ids)],
-    RA.map((id) => (O.isSome(Babel.getCard(id)(ctx)) ? id : 0)),
-    RA.map((id) =>
+export const getMultipleRaws = (ids: ReadonlyArray<number>) => (ctx: Ctx) =>
+  pipe(
+    ctx.sources.misc,
+    O.flatMap(({ pics }) => pics),
+    O.map(({ url, channel }) =>
       pipe(
-        getExisting(id)(ctx),
-        E.fromOption(() => id)
+        [...new Set(ids)],
+        RA.map((id) => (O.isSome(Babel.getCard(id)(ctx)) ? id : 0)),
+        RA.map((id) =>
+          pipe(
+            getExisting(id)(ctx),
+            E.fromOption(() => id)
+          )
+        ),
+        RA.separate,
+        ({ left, right }) =>
+          RTE.sequenceSeqArray([
+            fetchMultipleFromSource(left, url),
+            fetchReuploadedPics(right, channel.toString(), url),
+          ])(ctx),
+        TE.map(RA.flatten),
+        TE.map(RR.fromEntries)
       )
     ),
-    RA.separate,
-    ({ left, right }) =>
-      RTE.sequenceSeqArray([
-        fetchMultipleFromSource(left, source.value),
-        fetchReuploadedPics(right, channel.value.toString(), source.value),
-      ])(ctx),
-    TE.map(RA.flatten),
-    TE.map(RR.fromEntries)
+    O.getOrElse(() => TE.left(Err.ignore()))
   );
-};
 
 export const remove = (ids: ReadonlyArray<number>) => (ctx: Ctx) =>
   pipe(

@@ -1,4 +1,4 @@
-import { O, pipe, RA, RR, RTE, TE } from '@that-hatter/scrapi-factory/fp';
+import { O, pipe, RA, RR, TE } from '@that-hatter/scrapi-factory/fp';
 import { Babel, Card, Pedia } from '.';
 import { Ctx, CtxWithoutResources } from '../Ctx';
 import type { Resource } from '../lib/modules';
@@ -15,12 +15,18 @@ export type KonamiIds = DeepReadonly<Decoder.TypeOf<typeof decoder>>;
 
 const RESOURCE_PATH = 'data/konamiIds.json';
 
-const update = pipe(
-  RTE.ask<CtxWithoutResources>(),
-  RTE.map(({ sources }) => Github.rawURL(sources.misc, RESOURCE_PATH)),
-  RTE.flatMapTaskEither(Fetch.json),
-  RTE.flatMapEither(Decoder.decode(decoder))
-);
+const update = ({ sources }: CtxWithoutResources) =>
+  pipe(
+    sources.misc,
+    O.map(({ repo }) =>
+      pipe(
+        Github.rawURL(repo, RESOURCE_PATH),
+        Fetch.json,
+        TE.flatMapEither(Decoder.decode(decoder))
+      )
+    ),
+    O.getOrElse(() => TE.right(<KonamiIds>{}))
+  );
 
 export const resource: Resource.Resource<'konamiIds'> = {
   key: 'konamiIds',
@@ -28,7 +34,9 @@ export const resource: Resource.Resource<'konamiIds'> = {
   update,
   init: update,
   commitFilter: (ctx) => (src, files) =>
-    Github.isSource(src, ctx.sources.misc) && files.includes(RESOURCE_PATH),
+    O.isSome(ctx.sources.misc) &&
+    src === ctx.sources.misc.value.repo &&
+    files.includes(RESOURCE_PATH),
 };
 
 type Key = 'master' | 'rush';
@@ -75,26 +83,33 @@ const fetchFromPedia = (key: Key, name: string) => {
   );
 };
 
-export const addToFile = (card: Babel.Card, kid: number) => {
-  return (ctx: Ctx) =>
-    pipe(
-      ctx.konamiIds,
-      RR.mapWithIndex((k, v) =>
-        (Card.isRush(card) ? k === 'rush' : k === 'master')
-          ? { ...v, [card.id.toString()]: kid }
-          : v
-      ),
-      TE.right,
-      TE.tap((content) =>
-        Github.updateFile(
-          ctx.sources.misc,
-          RESOURCE_PATH,
-          utils.stringify(content),
-          'add konami id for ' + card.id
-        )(ctx)
+const addId =
+  (scope: 'rush' | 'master', id: number, kid: number) =>
+  (current: KonamiIds): KonamiIds => ({
+    ...current,
+    [scope]: { ...current[scope], [id.toString()]: kid },
+  });
+
+export const addToFile = (card: Babel.Card, kid: number) => (ctx: Ctx) =>
+  pipe(
+    ctx.sources.misc,
+    O.map(({ repo }) =>
+      pipe(
+        ctx.konamiIds,
+        addId(Card.isRush(card) ? 'rush' : 'master', card.id, kid),
+        TE.right,
+        TE.tap((content) =>
+          Github.updateFile(
+            repo,
+            RESOURCE_PATH,
+            utils.stringify(content),
+            'add konami id for ' + card.id
+          )(ctx)
+        )
       )
-    );
-};
+    ),
+    O.getOrElseW(() => TE.right(ctx.konamiIds))
+  );
 
 export const getOrFetchMissing =
   (

@@ -383,7 +383,7 @@ export const breakdown = (msg: dd.Message) => (ctx: Ctx) =>
     RTE.flatMap((decks) => {
       if (decks.length === 0) return Op.noopReader;
       const sendBreakdown =
-        O.isSome(ctx.sources.picsUrl) && O.isSome(ctx.sources.picsChannel)
+        O.isSome(ctx.sources.misc) && O.isSome(ctx.sources.misc.value.pics)
           ? sendImageBreakdown
           : sendTextualBreakdown;
 

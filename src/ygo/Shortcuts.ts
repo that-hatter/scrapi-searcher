@@ -1,4 +1,4 @@
-import { pipe, RA, RNEA, RR, RTE } from '@that-hatter/scrapi-factory/fp';
+import { O, pipe, RA, RNEA, RR, TE } from '@that-hatter/scrapi-factory/fp';
 import { Ctx, CtxWithoutResources } from '../Ctx';
 import type { Resource } from '../lib/modules';
 import { Decoder, Fetch, Github, str } from '../lib/modules';
@@ -17,12 +17,18 @@ export type Shortcuts = DeepReadonly<Decoder.TypeOf<typeof decoder>>;
 
 const RESOURCE_PATH = 'data/shortcuts.json';
 
-const update = pipe(
-  RTE.ask<CtxWithoutResources>(),
-  RTE.map(({ sources }) => Github.rawURL(sources.misc, RESOURCE_PATH)),
-  RTE.flatMapTaskEither(Fetch.json),
-  RTE.flatMapEither(Decoder.decode(decoder))
-);
+const update = ({ sources }: CtxWithoutResources) =>
+  pipe(
+    sources.misc,
+    O.map(({ repo }) =>
+      pipe(
+        Github.rawURL(repo, RESOURCE_PATH),
+        Fetch.json,
+        TE.flatMapEither(Decoder.decode(decoder))
+      )
+    ),
+    O.getOrElse(() => TE.right(<Shortcuts>{}))
+  );
 
 export const resource: Resource.Resource<'shortcuts'> = {
   key: 'shortcuts',
@@ -30,7 +36,9 @@ export const resource: Resource.Resource<'shortcuts'> = {
   update,
   init: update,
   commitFilter: (ctx) => (src, files) =>
-    Github.isSource(src, ctx.sources.misc) && files.includes(RESOURCE_PATH),
+    O.isSome(ctx.sources.misc) &&
+    src === ctx.sources.misc.value.repo &&
+    files.includes(RESOURCE_PATH),
 };
 
 export const resolveShortcuts = (query: string) => (ctx: Ctx) =>
