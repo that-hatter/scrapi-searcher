@@ -1,4 +1,13 @@
-import { E, O, pipe, RA, RNEA, RR, TE } from '@that-hatter/scrapi-factory/fp';
+import {
+  E,
+  flow,
+  O,
+  pipe,
+  RA,
+  RNEA,
+  RR,
+  TE,
+} from '@that-hatter/scrapi-factory/fp';
 import { collection as commands } from './lib/commands';
 import { list as events } from './lib/events';
 import { collection as componentInteractions } from './lib/interactions';
@@ -15,6 +24,16 @@ import {
 import { utils } from './lib/utils';
 import { BitNames } from './ygo';
 
+const secretError = (msg: string) =>
+  Decoder.error('[Value redacted, may contain secrets]', msg);
+
+const secretDecoder = (msg: string) =>
+  flow(Decoder.mapLeftWithInput(() => secretError(msg)));
+
+const stringSecret = secretDecoder('string')(Decoder.string);
+const numberSecret = secretDecoder('number')(Decoder.numString);
+const integerSecret = secretDecoder('integer')(Decoder.bigintString);
+
 const envDecoder = pipe(
   Decoder.struct({
     DEV_ADMIN: Decoder.string,
@@ -23,11 +42,11 @@ const envDecoder = pipe(
     DEV_LOGS_CHANNEL: Decoder.string,
 
     BOT_PREFIX: Decoder.string,
-    BOT_TOKEN: Decoder.string,
+    BOT_TOKEN: stringSecret,
 
-    GITHUB_ACCESS_TOKEN: Decoder.string,
-    GITHUB_WEBHOOK_PORT: Decoder.numString,
-    GITHUB_WEBHOOK_SECRET: Decoder.string,
+    GITHUB_ACCESS_TOKEN: stringSecret,
+    GITHUB_WEBHOOK_PORT: numberSecret,
+    GITHUB_WEBHOOK_SECRET: stringSecret,
 
     REPO_YARD: Github.sourceDecoder,
     REPO_BABEL: Github.sourceDecoder,
@@ -41,24 +60,24 @@ const envDecoder = pipe(
       REPO_DISTRIBUTION: Github.sourceDecoder,
       REPO_MISC: Github.sourceDecoder,
 
-      PICS_DEFAULT_SOURCE: Decoder.string,
-      PICS_UPLOAD_CHANNEL: Decoder.bigintString,
+      PICS_DEFAULT_SOURCE: stringSecret,
+      PICS_UPLOAD_CHANNEL: integerSecret,
 
       GIT_REF: Decoder.string,
     })
   ),
   Decoder.parse((env) => {
-    const error = (msg: string) => Decoder.failure(env, msg);
+    const failure = flow(secretError, E.left);
 
     if (!!env.PICS_DEFAULT_SOURCE !== !!env.PICS_UPLOAD_CHANNEL) {
-      return error(
-        'PICS_DEFAULT_SOURCE and PICS_UPLOAD_CHANNEL must be provided together'
+      return failure(
+        'either both provided or both omitted: PICS_DEFAULT_SOURCE and PICS_UPLOAD_CHANNEL'
       );
     }
 
     if (env.PICS_DEFAULT_SOURCE && !env.REPO_MISC) {
-      return error(
-        'REPO_MISC must be provided if PICS_DEFAULT_SOURCE and PICS_UPLOAD_CHANNEL are provided'
+      return failure(
+        'provided if PICS_DEFAULT_SOURCE and PICS_UPLOAD_CHANNEL are provided: REPO_MISC'
       );
     }
     return Decoder.success(env);
