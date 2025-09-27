@@ -3,19 +3,23 @@ import { Ctx } from '../Ctx';
 import { dd, Err, Menu, Op, str } from '../lib/modules';
 import { utils } from '../lib/utils';
 
+export const NO_REPO_ERROR =
+  'No Greenlight repository specified. ' +
+  'Relaunch the bot with a Greenlight repository to use this feature.';
+export const NO_ISSUE_ERROR =
+  'There are currently no applicable Greenlight issues.';
+
 // -----------------------------------------------------------------------------
 // github requests
 // -----------------------------------------------------------------------------
 
-const REPO = {
-  owner: 'ProjectIgnis',
-  repo: 'Greenlight',
-  state: 'open',
-} as const;
-
 export const fetchRawIssues = (ctx: Ctx) =>
   pipe(
-    utils.taskify(() => ctx.github.rest.issues.listForRepo(REPO)),
+    ctx.sources.greenlight,
+    TE.fromOption(() => NO_REPO_ERROR),
+    TE.flatMap((repo) =>
+      utils.taskify(() => ctx.github.rest.issues.listForRepo(repo))
+    ),
     TE.map(({ data }) => data),
     TE.mapError(Err.forDev)
   );
@@ -34,14 +38,18 @@ export const getIssues: Op.Op<RNEA.ReadonlyNonEmptyArray<Issue>> = flow(
       );
     })
   ),
-  TE.flatMapOption(RNEA.fromReadonlyArray, () =>
-    Err.forUser('There are currently no applicable Greenlight issues.')
-  )
+  TE.flatMapOption(RNEA.fromReadonlyArray, () => Err.forUser(NO_ISSUE_ERROR))
 );
 
 export const editIssue = (num: number, body: string) => (ctx: Ctx) =>
-  utils.taskify(() =>
-    ctx.github.rest.issues.update({ ...REPO, issue_number: num, body })
+  pipe(
+    ctx.sources.greenlight,
+    TE.fromOption(() => NO_REPO_ERROR),
+    TE.flatMap((repo) =>
+      utils.taskify(() =>
+        ctx.github.rest.issues.update({ ...repo, issue_number: num, body })
+      )
+    )
   );
 
 // -----------------------------------------------------------------------------

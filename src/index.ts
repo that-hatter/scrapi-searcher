@@ -59,6 +59,7 @@ const envDecoder = pipe(
       REPO_DELTA: Github.sourceDecoder,
       REPO_DISTRIBUTION: Github.sourceDecoder,
       REPO_MISC: Github.sourceDecoder,
+      REPO_GREENLIGHT: Github.sourceDecoder,
 
       PICS_DEFAULT_SOURCE: stringSecret,
       PICS_UPLOAD_CHANNEL: integerSecret,
@@ -143,6 +144,7 @@ const program = pipe(
       banlists: O.fromNullable(env.REPO_BANLISTS),
       delta: O.fromNullable(env.REPO_DELTA),
       distribution: O.fromNullable(env.REPO_DISTRIBUTION),
+      greenlight: O.fromNullable(env.REPO_GREENLIGHT),
       misc: env.REPO_MISC
         ? O.some({
             repo: env.REPO_MISC,

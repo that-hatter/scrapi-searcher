@@ -1,4 +1,4 @@
-import { O, pipe, RA, RNEA, RTE } from '@that-hatter/scrapi-factory/fp';
+import { O, pipe, RA, RNEA, RTE, TE } from '@that-hatter/scrapi-factory/fp';
 import { Greenlight } from '../../../ygo';
 import { COLORS } from '../../constants';
 import {
@@ -129,15 +129,18 @@ export const stage: Command.Command = {
   syntax: 'stage <cdb-name>',
   aliases: ['prepdb'],
   devOnly: true,
-  execute: (parameters, message) => {
+  execute: (parameters, message) => (ctx) => {
     const name = parameters.join(' ').trim();
     if (name.length === 0)
-      return RTE.left(Err.forUser('You must specify a name for the cdb file.'));
+      return TE.left(Err.forUser('You must specify a name for the cdb file.'));
 
     return pipe(
-      Greenlight.getIssues,
+      ctx.sources.greenlight,
+      TE.fromOption(() => Err.forUser(Greenlight.NO_REPO_ERROR)),
+      RTE.fromTaskEither,
+      RTE.flatMap(() => Greenlight.getIssues),
       RTE.flatMapOption(RNEA.fromReadonlyArray, () =>
-        Err.forUser('There are currently no applicable Greenlight issues.')
+        Err.forUser(Greenlight.NO_ISSUE_ERROR)
       ),
       RTE.map(
         page({
@@ -147,6 +150,6 @@ export const stage: Command.Command = {
         })
       ),
       RTE.flatMap(Op.sendReply(message))
-    );
+    )(ctx);
   },
 };
