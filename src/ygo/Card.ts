@@ -209,7 +209,8 @@ const frameColor_ = (ctypes: ReadonlyArray<string>) => {
 export const frameColor = (c: Card) =>
   pipe(BitNames.types(c.type), R.map(frameColor_));
 
-const pediaURL = ({ card, konamiId }: PreFormatted) => {
+const pediaURL = ({ card, konamiId, scopes }: PreFormatted) => {
+  if (scopes.includes('Custom')) return O.none;
   if (O.isSome(konamiId)) return O.some(URLS.YUGIPEDIA_WIKI + konamiId.value);
 
   if (
