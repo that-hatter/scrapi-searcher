@@ -49,7 +49,6 @@ export const init = (
     )
   );
 
-const git = simpleGit();
 
 export type Source = {
   readonly owner: string;
@@ -88,10 +87,12 @@ export const rawURL = (src: Source, path: string) =>
   `https://raw.githubusercontent.com/${src.owner}/${src.repo}/${src.branch}/${path}`;
 
 export const searchURL = (src: Source, searchTerm: string) =>
-  `https://github.com/search?q=repo%3A${src.owner}%2F${src.repo}+${searchTerm}&type=code`
+  `https://github.com/search?q=repo%3A${src.owner}%2F${src.repo}+${searchTerm}&type=code`;
 
 export const isSource = (src1: Source, src2: Source) =>
   treeURL(src1) === treeURL(src2);
+
+const git = simpleGit();
 
 export const pullOrClone = (name: string, src: Source) => {
   const dataPath = path.join(process.cwd(), 'data');
@@ -106,7 +107,7 @@ export const pullOrClone = (name: string, src: Source) => {
           .then(() =>
             git
               .cwd(dataPath)
-              .clone(repoURL(src), [
+              .clone(repoURL(src), name, [
                 '--depth=1',
                 '--single-branch',
                 '--branch',

@@ -5,7 +5,7 @@ import { Command, Op, str } from '../../modules';
 
 export const cdb: Command.Command = {
   name: 'cdb',
-  description: "Get a link to a card's BabelCDB database file.",
+  description: "Get a link to a card's database file.",
   syntax: 'cdb <query>',
   aliases: ['db', 'dbfind'],
   execute: (parameters, message) =>

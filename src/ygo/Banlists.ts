@@ -17,7 +17,8 @@ import type { Resource } from '../lib/modules';
 import { Github, str } from '../lib/modules';
 import { utils } from '../lib/utils';
 
-const REPO_PATH = path.join(PATHS.DATA, 'LFLists');
+const FOLDER_NAME = 'LFLists';
+const REPO_PATH = path.join(PATHS.DATA, FOLDER_NAME);
 
 export type Banlist = {
   readonly filename: string;
@@ -124,20 +125,26 @@ export const limitsBreakdown = (c: Babel.Card) => (ctx: Ctx) => {
 
 const getAllLflistPaths = (dir: string) =>
   pipe(
-    utils.taskify(() => fs.readdir(dir, { withFileTypes: true })),
+    utils.taskify(() =>
+      fs.readdir(dir, { withFileTypes: true, recursive: true })
+    ),
     TE.map(
       RA.filterMap((file) => {
         if (file.name.endsWith('.lflist.conf') && !file.isDirectory())
-          return O.some(file.name);
+          return O.some(path.join(file.path, file.name));
         return O.none;
       })
     )
   );
 
-const loadBanlist = (filename: string) =>
+const loadBanlist = (filepath: string) =>
   pipe(
-    utils.taskify(() => fs.readFile(path.join(REPO_PATH, filename))),
-    TE.map((c) => parse(filename, c.toString()))
+    utils.taskify(() => fs.readFile(filepath)),
+    TE.map((c) =>
+      pipe(filepath, str.split('\\\\'), RNEA.last, (name) =>
+        parse(name, c.toString())
+      )
+    )
   );
 
 const loadBanlists = (): TE.TaskEither<string, Banlists> =>
@@ -154,7 +161,7 @@ const update = (ctx: CtxWithoutResources): TE.TaskEither<string, Banlists> =>
     ctx.sources.banlists,
     O.map((repo) =>
       pipe(
-        Github.pullOrClone('LFLists', repo),
+        Github.pullOrClone(FOLDER_NAME, repo),
         TE.flatMap(loadBanlists),
         TE.mapError(utils.stringify)
       )

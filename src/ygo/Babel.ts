@@ -106,7 +106,8 @@ const cdbDecoder = (cdb: string) =>
 // fetching and loading
 // -----------------------------------------------------------------------------
 
-const REPO_PATH = path.join(PATHS.DATA, 'BabelCDB');
+const FOLDER_NAME = 'BabelCDB';
+const REPO_PATH = path.join(PATHS.DATA, FOLDER_NAME);
 
 const loadCdb = (name: string) =>
   pipe(
@@ -263,7 +264,9 @@ const loadBabel: TE.TaskEither<string, Babel> = pipe(
 
 const update = pipe(
   RTE.ask<CtxWithoutResources>(),
-  RTE.map(({ sources }) => Github.pullOrClone('BabelCDB', sources.babel)),
+  RTE.flatMapTaskEither(({ sources }) =>
+    Github.pullOrClone(FOLDER_NAME, sources.babel)
+  ),
   RTE.flatMapTaskEither(() => loadBabel),
   RTE.mapError(utils.stringify)
 );
