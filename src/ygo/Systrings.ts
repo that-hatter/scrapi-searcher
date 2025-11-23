@@ -8,7 +8,7 @@ import {
   TE,
 } from '@that-hatter/scrapi-factory/fp';
 import { Ctx, CtxWithoutResources } from '../Ctx';
-import { Fetch, Github, Nav, Resource, str } from '../lib/modules';
+import { FS, Github, Nav, str } from '../lib/modules';
 
 const kinds = ['system', 'victory', 'counter', 'setname'] as const;
 
@@ -48,48 +48,29 @@ const parse = (url: string) =>
     })
   );
 
-const fetchAndParse = (src: O.Option<Github.Source>, path: string) =>
-  O.isSome(src)
-    ? pipe(
-        Github.rawURL(src.value, path),
-        Fetch.text,
-        TE.map(parse(Github.blobURL(src.value, path)))
-      )
-    : TE.right([]);
-
-const DELTA_PATH = 'strings.conf';
-const DIST_PATH = 'config/strings.conf';
-
-const update = ({ sources }: CtxWithoutResources) =>
+const loadSingleFile = (source: Github.Source, relPath: string) =>
   pipe(
-    fetchAndParse(sources.delta, DELTA_PATH),
-    TE.flatMap((delta) =>
-      pipe(
-        fetchAndParse(sources.distribution, DIST_PATH),
-        TE.map(
-          RA.filter(
-            ({ kind, value }) =>
-              !delta.some((d) => d.kind === kind && d.value === value)
-          )
-        ),
-        TE.map(RA.concat(delta))
-      )
-    )
+    Github.localPath(source, relPath),
+    FS.readTextFile,
+    TE.map(parse(Github.blobURL(source, relPath)))
   );
 
-export const resource: Resource.Resource<'systrings'> = {
-  key: 'systrings',
-  description: 'Strings from strings.conf files.',
-  update,
-  init: update,
-  commitFilter: (ctx) => (src, files) =>
-    (O.isSome(ctx.sources.delta) &&
-      Github.isSource(src, ctx.sources.delta.value) &&
-      files.includes(DELTA_PATH)) ||
-    (O.isSome(ctx.sources.distribution) &&
-      Github.isSource(src, ctx.sources.distribution.value) &&
-      files.includes(DIST_PATH)),
-};
+const BASE_PATH = 'config/strings.conf';
+const EXPANSION_PATH = 'strings.conf';
+
+export const load = ({
+  sources,
+}: CtxWithoutResources): TE.TaskEither<string, Systrings> =>
+  pipe(
+    sources.expansions,
+    RA.map((src) => loadSingleFile(src, EXPANSION_PATH)),
+    RA.prepend(loadSingleFile(sources.base, BASE_PATH)),
+    TE.sequenceArray,
+    TE.map(RA.flatten),
+    TE.map(
+      RA.uniq({ equals: (a, b) => a.kind === b.kind && a.value === b.value })
+    )
+  );
 
 const hexString = (ct: Systring): string => '0x' + ct.value.toString(16);
 

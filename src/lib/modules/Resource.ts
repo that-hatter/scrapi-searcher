@@ -1,7 +1,7 @@
 import * as sy from '@that-hatter/scrapi-factory';
-import { E, pipe, RA, RNEA, RTE } from '@that-hatter/scrapi-factory/fp';
+import { E, flow, O, pipe, RA, RTE, TE } from '@that-hatter/scrapi-factory/fp';
 import { sequenceS } from 'fp-ts/lib/Apply';
-import { Decoder, Err, Github, Interaction, Op, str } from '.';
+import { dd, Decoder, Err, Github, Op, str } from '.';
 import { Ctx, CtxWithoutResources } from '../../Ctx';
 import { Yard } from '../../yard';
 import {
@@ -15,17 +15,34 @@ import {
   Systrings,
 } from '../../ygo';
 
-export const init = sequenceS(RTE.ApplyPar)({
-  babel: Babel.resource.init,
-  yard: Yard.resource.init,
-  systrings: Systrings.resource.init,
-  banlists: Banlists.resource.init,
-  betaIds: BetaIds.resource.init,
-  konamiIds: KonamiIds.resource.init,
-  shortcuts: Shortcuts.resource.init,
-  pics: Pics.resource.init,
-  scripts: Scripts.resource.init,
+const pullRepos = ({ sources }: CtxWithoutResources) =>
+  pipe(
+    [sources.base, ...sources.expansions, sources.yard],
+    RA.map(O.some),
+    RA.concat([sources.banlists, sources.misc]),
+    RA.compact,
+    RA.map((src) => Github.pullOrClone(Github.localRelativePath(src), src)),
+    TE.sequenceSeqArray
+  );
+
+const loadAll = sequenceS(RTE.ApplyPar)({
+  yard: Yard.load,
+  babel: Babel.load,
+  systrings: Systrings.load,
+  banlists: Banlists.load,
+  betaIds: BetaIds.load,
+  konamiIds: KonamiIds.load,
+  shortcuts: Shortcuts.load,
+  pics: Pics.load,
+  scripts: Scripts.load,
 });
+
+export const init = (ctx: CtxWithoutResources) =>
+  pipe(
+    ctx,
+    pullRepos,
+    TE.flatMap(() => loadAll(ctx))
+  );
 
 export type Loaded = {
   readonly yard: sy.Yard;
@@ -39,15 +56,49 @@ export type Loaded = {
   readonly scripts: Scripts.Scripts;
 };
 
-export type Resource<K extends keyof Loaded> = {
-  readonly key: K;
-  readonly description: string;
-  readonly update: RTE.ReaderTaskEither<Ctx, string, Loaded[K]>;
-  readonly init: RTE.ReaderTaskEither<CtxWithoutResources, string, Loaded[K]>;
-  readonly commitFilter: (
-    ctx: CtxWithoutResources
-  ) => (src: Github.Source, files: ReadonlyArray<string>) => boolean;
-};
+const getApplicableUpdates =
+  (sources: ReadonlyArray<Github.Source>) =>
+  (ctx: Ctx): TE.TaskEither<Err.Err, Update> => {
+    const pulledRepos = pipe(sources, RA.map(Github.localRelativePath));
+
+    const updater = <T>(
+      repos: ReadonlyArray<Github.Source>,
+      updateFn: Op.SubOp<T>
+    ): TE.TaskEither<string, T | undefined> => {
+      const check = pipe(
+        repos,
+        RA.map(Github.localRelativePath),
+        RA.intersection(str.Eq)(pulledRepos),
+        RA.isNonEmpty
+      );
+      return check ? updateFn(ctx) : TE.right(undefined);
+    };
+
+    const optionalRepo = flow(
+      O.map(RA.of),
+      O.getOrElseW(() => [])
+    );
+
+    const baseAndExpansionRepos = [ctx.sources.base, ...ctx.sources.expansions];
+    const miscRepo = optionalRepo(ctx.sources.misc);
+
+    return pipe(
+      {
+        yard: updater([ctx.sources.yard], Yard.load),
+        babel: updater(baseAndExpansionRepos, Babel.load),
+        systrings: updater(baseAndExpansionRepos, Systrings.load),
+        banlists: updater(optionalRepo(ctx.sources.banlists), Banlists.load),
+        betaIds: updater(ctx.sources.expansions, BetaIds.load),
+        konamiIds: updater(miscRepo, KonamiIds.load),
+        shortcuts: updater(miscRepo, Shortcuts.load),
+        pics: updater(miscRepo, Pics.load),
+        scripts: updater(baseAndExpansionRepos, Scripts.load),
+      },
+      sequenceS(TE.ApplicativePar),
+      TE.map(asUpdate),
+      TE.mapError(Err.forDev)
+    );
+  };
 
 const UPDATE_SYMBOL = Symbol();
 export type Update = Partial<Loaded> & {
@@ -69,86 +120,47 @@ export const asUpdate = (resource: Partial<Loaded>): Update => ({
   ...resource,
 });
 
-export const array = [
-  Babel.resource,
-  Yard.resource,
-  Systrings.resource,
-  Banlists.resource,
-  BetaIds.resource,
-  KonamiIds.resource,
-  Shortcuts.resource,
-  Pics.resource,
-  Scripts.resource,
-] as const;
-
-const getIndividualUpdate = <K extends keyof Loaded>(
-  trigger: string,
-  resource: Resource<K>
-) => {
-  const statusMessage = str.append(' Trigger: ' + trigger + '.');
-  const name = str.inlineCode(resource.key);
+const performUpdate = (trigger: string) => (src: Github.Source) => {
+  const statusMessage = str.append('\nTrigger: ' + trigger + '.');
+  const repo = str.link(str.inlineCode(src.repo), Github.treeURL(src));
   return pipe(
-    statusMessage('Updating ' + name + '.'),
+    `Pulling ${repo}...`,
+    statusMessage,
     Op.sendLog,
-    RTE.flatMap((msg) =>
-      pipe(
-        resource.update,
+    RTE.flatMap((msg) => {
+      const editStatus = flow(
+        statusMessage,
+        Op.editMessage(msg.channelId)(msg.id)
+      );
+      return pipe(
+        Github.pullOrClone(Github.localRelativePath(src), src),
+        RTE.fromTaskEither,
         RTE.mapError(Err.forDev),
-        RTE.tap(() =>
-          Op.editMessage(msg.channelId)(msg.id)(
-            statusMessage(`✅ Successfully updated ${name}.`)
+        RTE.flatMap(() =>
+          pipe(
+            `Successfully pulled ${repo}. Updating related resources...`,
+            editStatus,
+            RTE.flatMap(() => getApplicableUpdates([src])),
+            RTE.tap(() =>
+              editStatus(`✅ Successfully updated related to ${repo}.`)
+            ),
+            RTE.tapError(() =>
+              editStatus(`❌ Failed to update resources related to ${repo}.`)
+            )
           )
         ),
-        RTE.tapError(() =>
-          Op.editMessage(msg.channelId)(msg.id)(
-            statusMessage(`❌ Failed to update ${name}. Rolled back.`)
-          )
-        )
-      )
-    ),
-    RTE.map((d) => ({ [resource.key]: d }))
+        RTE.tapError(() => editStatus(`❌ Failed to pull ${repo}.`))
+      );
+    })
   );
 };
 
-const performUpdates =
-  (trigger: string) =>
-  (resource: ReadonlyArray<Resource<keyof Loaded>>): Op.Op<Update> =>
-    pipe(
-      resource,
-      RNEA.fromReadonlyArray,
-      RTE.fromOption(Err.ignore),
-      RTE.map(RNEA.map((d) => getIndividualUpdate(trigger, d))),
-      RTE.flatMap(RTE.sequenceArray),
-      RTE.map(RA.reduce(asUpdate({}), (agg, curr) => ({ ...agg, ...curr })))
-    );
+export const autoUpdate = (commitUrl: string) =>
+  performUpdate(str.link('Github Push', commitUrl));
 
-export const manualUpdate = (
-  ixn: Interaction.WithMsg,
-  keys: ReadonlyArray<string>
-): Op.Op<Update> => {
-  const trigger = ixn.guildId
-    ? str.link(
-        'Manual Update',
-        'https://discord.com/channels/' +
-          `${ixn.guildId}/${ixn.message.channelId}/${ixn.message.id}`
-      )
-    : 'Manual Update (Direct Message)';
-  return pipe(
-    array,
-    RA.filter(({ key }) => keys.includes(key)),
-    performUpdates(trigger)
-  );
+export const manualUpdate = (msg: dd.Message) => {
+  const link = msg.guildId
+    ? `https://discord.com/channels/${msg.guildId}/${msg.channelId}/${msg.id}`
+    : '(Direct Message)';
+  return performUpdate('Manual Update: ' + link);
 };
-
-export const autoUpdate = (
-  triggerUrl: string,
-  source: Github.Source,
-  files: ReadonlyArray<string>
-) =>
-  pipe(
-    RTE.ask<Ctx>(),
-    RTE.map((ctx) =>
-      array.filter((resource) => resource.commitFilter(ctx)(source, files))
-    ),
-    RTE.flatMap(performUpdates(str.link('Github Push', triggerUrl)))
-  );

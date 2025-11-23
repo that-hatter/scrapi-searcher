@@ -282,9 +282,8 @@ const toImageFile = (deck: Deck) => {
     RTE.flatMapTaskEither((images) =>
       pipe(
         ids,
-        RA.map(RA.filterMap((id) => O.fromNullable(images[id] ?? images['0']))),
-        ([main, extra, side]) => renderImage(main!, extra!, side!),
-        TE.mapError(Err.forDev)
+        RA.map(RA.filterMap((id) => O.fromNullable(images[id]))),
+        ([main, extra, side]) => renderImage(main!, extra!, side!)
       )
     ),
     RTE.map(
@@ -336,6 +335,7 @@ const sendImageBreakdown = (deck: Deck, msg: dd.Message, index: number) =>
   pipe(
     deck,
     toImageFile,
+    RTE.mapError(Err.forDev),
     RTE.map((file) => ({
       files: [file],
       components: [
@@ -356,24 +356,24 @@ const sendImageBreakdown = (deck: Deck, msg: dd.Message, index: number) =>
     RTE.flatMap(Op.sendReply(msg))
   );
 
-const sendTextualBreakdown = (deck: Deck, msg: dd.Message, index: number) =>
-  pipe(
-    deck,
-    toEmbed,
-    RTE.map((embed) => ({
-      embeds: [embed],
-      components: [
-        Button.row([
-          {
-            style: Button.Styles.Primary,
-            label: 'Import',
-            customId: 'deckImport ' + index,
-          },
-        ]),
-      ],
-    })),
-    RTE.flatMap(Op.sendReply(msg))
-  );
+// const sendTextualBreakdown = (deck: Deck, msg: dd.Message, index: number) =>
+//   pipe(
+//     deck,
+//     toEmbed,
+//     RTE.map((embed) => ({
+//       embeds: [embed],
+//       components: [
+//         Button.row([
+//           {
+//             style: Button.Styles.Primary,
+//             label: 'Import',
+//             customId: 'deckImport ' + index,
+//           },
+//         ]),
+//       ],
+//     })),
+//     RTE.flatMap(Op.sendReply(msg))
+//   );
 
 export const breakdown = (msg: dd.Message) => (ctx: Ctx) =>
   pipe(
@@ -382,11 +382,6 @@ export const breakdown = (msg: dd.Message) => (ctx: Ctx) =>
     RTE.mapError(Err.forDev),
     RTE.flatMap((decks) => {
       if (decks.length === 0) return Op.noopReader;
-      const sendBreakdown =
-        O.isSome(ctx.sources.misc) && O.isSome(ctx.sources.misc.value.pics)
-          ? sendImageBreakdown
-          : sendTextualBreakdown;
-
       return pipe(
         RTE.right(decks),
         RTE.tap(() => Op.react('⌛')(msg)),
@@ -394,7 +389,7 @@ export const breakdown = (msg: dd.Message) => (ctx: Ctx) =>
           RA.mapWithIndex((i, deck) => {
             const size =
               deck.main.length + deck.extra.length + deck.side.length;
-            if (size <= 200) return sendBreakdown(deck, msg, i);
+            if (size <= 200) return sendImageBreakdown(deck, msg, i);
             return Op.sendReply(msg)(
               'Deck contains too many cards (' + size + ' / 200)'
             );

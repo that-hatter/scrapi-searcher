@@ -1,10 +1,9 @@
 import { O, pipe, RA, RNEA, RR, TE } from '@that-hatter/scrapi-factory/fp';
 import { Ctx, CtxWithoutResources } from '../Ctx';
-import type { Resource } from '../lib/modules';
-import { Decoder, Fetch, Github, str } from '../lib/modules';
+import { Decoder, FS, Github, str } from '../lib/modules';
 import { DeepReadonly } from '../lib/utils';
 
-const decoder = pipe(
+const jsonDecoder = pipe(
   Decoder.record(Decoder.array(Decoder.string)),
   Decoder.map(RR.toEntries),
   Decoder.map(
@@ -13,33 +12,24 @@ const decoder = pipe(
   Decoder.map(RR.fromEntries)
 );
 
-export type Shortcuts = DeepReadonly<Decoder.TypeOf<typeof decoder>>;
+export type Shortcuts = DeepReadonly<Decoder.TypeOf<typeof jsonDecoder>>;
 
 const RESOURCE_PATH = 'data/shortcuts.json';
 
-const update = (ctx: CtxWithoutResources): TE.TaskEither<string, Shortcuts> =>
+export const load = (
+  ctx: CtxWithoutResources
+): TE.TaskEither<string, Shortcuts> =>
   pipe(
     ctx.sources.misc,
-    O.map(({ repo }) =>
+    O.map((repo) =>
       pipe(
-        Github.rawURL(repo, RESOURCE_PATH),
-        Fetch.json,
-        TE.flatMapEither(Decoder.decode(decoder))
+        Github.localPath(repo, RESOURCE_PATH),
+        FS.readJsonFile,
+        TE.flatMapEither(Decoder.decode(jsonDecoder))
       )
     ),
     O.getOrElse(() => TE.right({}))
   );
-
-export const resource: Resource.Resource<'shortcuts'> = {
-  key: 'shortcuts',
-  description: 'Card search shortcuts.',
-  update,
-  init: update,
-  commitFilter: (ctx) => (src, files) =>
-    O.isSome(ctx.sources.misc) &&
-    src === ctx.sources.misc.value.repo &&
-    files.includes(RESOURCE_PATH),
-};
 
 export const resolveShortcuts = (query: string) => (ctx: Ctx) =>
   pipe(

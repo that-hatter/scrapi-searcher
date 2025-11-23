@@ -48,41 +48,24 @@ const envDecoder = pipe(
     GITHUB_WEBHOOK_PORT: numberSecret,
     GITHUB_WEBHOOK_SECRET: stringSecret,
 
+    REPO_BASE: Github.sourceDecoder,
+    REPO_EXPANSIONS: Github.multiSourceDecoder,
     REPO_YARD: Github.sourceDecoder,
-    REPO_BABEL: Github.sourceDecoder,
-    REPO_SCRIPTS: Github.sourceDecoder,
-    REPO_CORE: Github.sourceDecoder,
   }),
   Decoder.intersect(
     Decoder.partial({
+      REPO_CDBS: Github.sourceDecoder,
+      REPO_SCRIPTS: Github.sourceDecoder,
       REPO_BANLISTS: Github.sourceDecoder,
-      REPO_DELTA: Github.sourceDecoder,
-      REPO_DISTRIBUTION: Github.sourceDecoder,
-      REPO_MISC: Github.sourceDecoder,
       REPO_GREENLIGHT: Github.sourceDecoder,
+      REPO_MISC: Github.sourceDecoder,
 
       PICS_DEFAULT_SOURCE: stringSecret,
       PICS_UPLOAD_CHANNEL: integerSecret,
 
       GIT_REF: Decoder.string,
     })
-  ),
-  Decoder.parse((env) => {
-    const failure = flow(secretError, E.left);
-
-    if (!!env.PICS_DEFAULT_SOURCE !== !!env.PICS_UPLOAD_CHANNEL) {
-      return failure(
-        'either both provided or both omitted: PICS_DEFAULT_SOURCE and PICS_UPLOAD_CHANNEL'
-      );
-    }
-
-    if (env.PICS_DEFAULT_SOURCE && !env.REPO_MISC) {
-      return failure(
-        'provided if PICS_DEFAULT_SOURCE and PICS_UPLOAD_CHANNEL are provided: REPO_MISC'
-      );
-    }
-    return Decoder.success(env);
-  })
+  )
 );
 
 const program = pipe(
@@ -138,24 +121,17 @@ const program = pipe(
 
     sources: {
       yard: env.REPO_YARD,
-      babel: env.REPO_BABEL,
-      scripts: env.REPO_SCRIPTS,
-      core: env.REPO_CORE,
+      base: env.REPO_BASE,
+      expansions: env.REPO_EXPANSIONS,
+
+      cdbs: O.fromNullable(env.REPO_CDBS),
+      scripts: O.fromNullable(env.REPO_SCRIPTS),
       banlists: O.fromNullable(env.REPO_BANLISTS),
-      delta: O.fromNullable(env.REPO_DELTA),
-      distribution: O.fromNullable(env.REPO_DISTRIBUTION),
       greenlight: O.fromNullable(env.REPO_GREENLIGHT),
-      misc: env.REPO_MISC
-        ? O.some({
-            repo: env.REPO_MISC,
-            pics: env.PICS_DEFAULT_SOURCE
-              ? O.some({
-                  url: env.PICS_DEFAULT_SOURCE,
-                  channel: env.PICS_UPLOAD_CHANNEL!,
-                })
-              : O.none,
-          })
-        : O.none,
+      misc: O.fromNullable(env.REPO_MISC),
+
+      picsUrl: O.fromNullable(env.PICS_DEFAULT_SOURCE),
+      picsChannel: O.fromNullable(env.PICS_UPLOAD_CHANNEL),
     },
 
     emojis: pipe(
@@ -175,7 +151,7 @@ const program = pipe(
     )
   ),
   TE.flatMap((preCtx) => {
-    // TODO: clean up unused properties such (webhook, webhookServer)
+    // TODO: clean up unused properties (webhook, webhookServer)
     const ctx = {
       ...preCtx,
       bitNames: BitNames.load(
@@ -227,16 +203,7 @@ const program = pipe(
         branch: pipe(ref, str.split('/'), RNEA.last),
       };
 
-      pipe(
-        commits,
-        RA.flatMap((c) => [
-          ...(c.added ?? []),
-          ...(c.modified ?? []),
-          ...(c.removed ?? []),
-        ]),
-        (files) => Resource.autoUpdate(payload.compare, source, files),
-        runHandler
-      );
+      runHandler(Resource.autoUpdate(payload.compare)(source));
     });
 
     process.on('SIGINT', () => {

@@ -1,41 +1,63 @@
-import { O, pipe, RA, RR, RTE } from '@that-hatter/scrapi-factory/fp';
+import { O, pipe, RA, RR, TE } from '@that-hatter/scrapi-factory/fp';
 import { Ctx, CtxWithoutResources } from '../Ctx';
-import { Github, Resource } from '../lib/modules';
+import { FS, Github, str } from '../lib/modules';
+import { utils } from '../lib/utils';
 
 export type Scripts = RR.ReadonlyRecord<string, string>;
 
-const update = pipe(
-  RTE.ask<CtxWithoutResources>(),
-  RTE.flatMap(({ sources }) =>
-    pipe(
-      Github.listRepoFiles(sources.scripts),
-      RTE.map(
-        RA.filterMap((filename) => {
-          if (!filename.endsWith('.lua')) return O.none;
-          const [_, id] = filename
-            .substring(0, filename.length - 4)
-            .split('/c');
-          if (!id) return O.none;
-          return O.some([
-            id,
-            Github.blobURL(sources.scripts) + '/' + filename,
-          ] as const);
-        })
-      ),
-      RTE.map(RR.fromEntries)
-    )
-  )
-);
+const loadSingleSource = (
+  source: Github.Source
+): TE.TaskEither<string, Scripts> => {
+  const localPath = Github.localPath(source, 'script');
+  return pipe(
+    localPath,
+    FS.getFilepathsWithExt('.lua'),
+    TE.map(
+      RA.filterMap((filepath) => {
+        const cid = pipe(filepath, FS.filenameFromPath, O.map(FS.removeExt));
+        if (O.isNone(cid)) return O.none;
 
-export const resource: Resource.Resource<'scripts'> = {
-  key: 'scripts',
-  description: 'Card script filepaths',
-  update,
-  init: update,
-  commitFilter: (ctx) => (src, files) =>
-    Github.isSource(src, ctx.sources.scripts) &&
-    files.some((f) => f.endsWith('.lua') && f.includes('/c')),
+        const relativePath = pipe(
+          filepath.substring(localPath.length),
+          FS.splitFilepath,
+          RA.prepend('script'),
+          str.join('/')
+        );
+        return O.some([
+          cid.value.substring(1),
+          Github.blobURL(source, relativePath),
+        ] as const);
+      })
+    ),
+    TE.map(RR.fromEntries)
+  );
 };
 
+export const load = (
+  ctx: CtxWithoutResources
+): TE.TaskEither<string, Scripts> =>
+  pipe(
+    [ctx.sources.base, ...ctx.sources.expansions],
+    RA.map(loadSingleSource),
+    TE.sequenceArray,
+    TE.map(utils.mergeRecords)
+  );
+
+export const getRawUrl =
+  (id: number) =>
+  (ctx: Ctx): O.Option<string> =>
+    O.fromNullable(ctx.scripts[id.toString()]);
+
 export const getUrl = (id: number) => (ctx: Ctx) =>
-  O.fromNullable(ctx.scripts[id.toString()]);
+  pipe(
+    getRawUrl(id)(ctx),
+    O.map((url) =>
+      pipe(
+        ctx.sources.scripts,
+        O.map((src) =>
+          Github.blobURL(src, 'script/' + url.split('/script/')[1])
+        ),
+        O.getOrElse(() => url)
+      )
+    )
+  );

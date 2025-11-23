@@ -5,6 +5,7 @@ import * as str_ from './str';
 export const str = { ...string, ...str_ };
 
 export * as Fetch from './Fetch';
+export * as FS from './FileSystem';
 export * as Github from './Github';
 
 export type * as dd from './Discord';

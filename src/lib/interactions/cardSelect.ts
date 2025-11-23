@@ -107,11 +107,18 @@ const updateMissingInfo = (msg: dd.Message) => {
         ? Op.editMessage(msg.channelId)(msg.id)({ embeds: [embed] })
         : Op.noopReader
     ),
-    RTE.bindW('pics', ({ embed }) =>
-      embed.thumbnail && !currPic
-        ? Pics.addToFile(embed.thumbnail.url)
-        : Pics.current
-    ),
+    RTE.bindW('pics', ({ embed }) => {
+      if (currPic || !embed.thumbnail) return Pics.current;
+      return pipe(
+        Pics.addToReuploadsJson(embed.thumbnail.url),
+        RTE.flatMap((reuploaded) =>
+          pipe(
+            Pics.current,
+            RTE.map(({ local }) => ({ local, reuploaded }))
+          )
+        )
+      );
+    }),
     RTE.bindW('konamiIds', ({ card, embed }) => {
       const newKid = embed.footer?.text.split(' | Konami ID #')[1];
       return newKid && !currKid

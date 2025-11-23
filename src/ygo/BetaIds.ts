@@ -1,11 +1,10 @@
-import { O, pipe, RA, RR, TE } from '@that-hatter/scrapi-factory/fp';
+import { E, O, pipe, RA, RR, TE } from '@that-hatter/scrapi-factory/fp';
 import { Babel } from '.';
 import { Ctx, CtxWithoutResources } from '../Ctx';
-import type { Resource } from '../lib/modules';
-import { Decoder, Fetch, Github } from '../lib/modules';
-import { DeepReadonly } from '../lib/utils';
+import { Decoder, FS, Github } from '../lib/modules';
+import { DeepReadonly, utils } from '../lib/utils';
 
-const decoder = pipe(
+const jsonDecoder = pipe(
   Decoder.struct({
     mappings: Decoder.array(Decoder.tuple(Decoder.number, Decoder.number)),
   }),
@@ -14,33 +13,27 @@ const decoder = pipe(
   Decoder.map(RR.fromEntries)
 );
 
-export type BetaIds = DeepReadonly<Decoder.TypeOf<typeof decoder>>;
+export type BetaIds = DeepReadonly<Decoder.TypeOf<typeof jsonDecoder>>;
 
 const RESOURCE_PATH = 'mappings.json';
 
-const update = (ctx: CtxWithoutResources): TE.TaskEither<string, BetaIds> =>
+export const load = (
+  ctx: CtxWithoutResources
+): TE.TaskEither<string, BetaIds> =>
   pipe(
-    ctx.sources.delta,
-    O.map((repo) =>
+    ctx.sources.expansions,
+    RA.map((src) =>
       pipe(
-        Github.rawURL(repo, RESOURCE_PATH),
-        Fetch.json,
-        TE.flatMapEither(Decoder.decode(decoder))
+        Github.localPath(src, RESOURCE_PATH),
+        FS.readJsonFile,
+        TE.orElse(() => TE.right({ mappings: [] }))
       )
     ),
-    O.getOrElse(() => TE.right({}))
+    TE.sequenceArray,
+    TE.map(RA.map(Decoder.decode(jsonDecoder))),
+    TE.flatMapEither(E.sequenceArray),
+    TE.map(utils.mergeRecords)
   );
-
-export const resource: Resource.Resource<'betaIds'> = {
-  key: 'betaIds',
-  description: 'Beta passcode mappings.',
-  update,
-  init: update,
-  commitFilter: (ctx) => (src, files) =>
-    O.isSome(ctx.sources.delta) &&
-    Github.isSource(src, ctx.sources.delta.value) &&
-    files.includes(RESOURCE_PATH),
-};
 
 export const toBabelCard =
   (betaId: number | string) =>

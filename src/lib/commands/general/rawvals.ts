@@ -1,7 +1,7 @@
 import { flow, O, pipe, R, RA, RTE } from '@that-hatter/scrapi-factory/fp';
 import { Ctx } from '../../../Ctx';
 import { Babel, BitNames, Card } from '../../../ygo';
-import { Command, Menu, Op, str } from '../../modules';
+import { Command, FS, Menu, Op, str } from '../../modules';
 
 const plainVal = (name: string, n: number | bigint) =>
   str.joinWords([str.bold(name) + ':', str.inlineCode(n.toString())]);
@@ -15,6 +15,14 @@ const valWithHex = (name: string, n: bigint) =>
 
 const title = (c: Babel.Card) =>
   str.inlineCode(c.id.toString()) + ' ' + str.bold(c.name);
+
+const footer = ({ cdbPath }: Babel.Card) =>
+  pipe(
+    cdbPath,
+    FS.filenameFromPath,
+    O.getOrElse(() => ''),
+    (text) => ({ text })
+  );
 
 export const rawDataEmbed = (c: Babel.Card) => (ctx: Ctx) => {
   const color = Card.frameColor(c)(ctx);
@@ -39,7 +47,7 @@ export const rawDataEmbed = (c: Babel.Card) => (ctx: Ctx) => {
       valWithHex('attribute', c.attribute),
       valWithHex('category', c.category),
     ]),
-    footer: { text: c.cdb },
+    footer: footer(c),
   };
 };
 
@@ -50,7 +58,7 @@ export const rawDescEmbed = (c: Babel.Card) =>
       color,
       title: title(c),
       description: str.codeBlock(c.desc),
-      footer: { text: c.cdb },
+      footer: footer(c),
     }))
   );
 
@@ -70,7 +78,7 @@ export const rawStringsEmbed = (c: Babel.Card) =>
         str.unempty,
         O.getOrElseW(() => str.subtext('This card has no strings.'))
       ),
-      footer: { text: c.cdb },
+      footer: footer(c),
     }))
   );
 

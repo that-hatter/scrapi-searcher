@@ -18,21 +18,18 @@ export type CtxWithoutResources = {
   readonly gitRef: O.Option<string>;
 
   readonly sources: {
+    readonly base: Github.Source;
+    readonly expansions: ReadonlyArray<Github.Source>;
     readonly yard: Github.Source;
-    readonly babel: Github.Source;
-    readonly scripts: Github.Source;
-    readonly core: Github.Source;
+
+    readonly cdbs: O.Option<Github.Source>;
+    readonly scripts: O.Option<Github.Source>;
     readonly banlists: O.Option<Github.Source>;
-    readonly delta: O.Option<Github.Source>;
-    readonly distribution: O.Option<Github.Source>;
     readonly greenlight: O.Option<Github.Source>;
-    readonly misc: O.Option<{
-      readonly repo: Github.Source;
-      readonly pics: O.Option<{
-        readonly url: string;
-        readonly channel: bigint;
-      }>;
-    }>;
+    readonly misc: O.Option<Github.Source>;
+
+    readonly picsUrl: O.Option<string>;
+    readonly picsChannel: O.Option<bigint>;
   };
 };
 

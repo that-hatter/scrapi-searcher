@@ -22,7 +22,6 @@ export const URLS = {
   SCRAPI_BOOK: 'https://projectignis.github.io/scrapi-book',
   YUGIPEDIA_WIKI: 'https://yugipedia.com/wiki/',
   YUGIPEDIA_API: 'https://yugipedia.com/api.php?action=ask&query=',
-  BABEL_CDB: 'https://github.com/ProjectIgnis/BabelCDB/',
   YGORESOURCES_DB: 'https://db.ygoresources.com/',
   YGORESOURCES_DIFFS: 'https://texts.ygoresources.com/',
   KONAMI_DB_MASTER: 'https://www.db.yugioh-card.com/yugiohdb',

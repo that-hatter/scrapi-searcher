@@ -28,11 +28,13 @@ const enumLink = (ct: sf.Constant, ctx: Ctx): O.Option<string> =>
   );
 
 const usageExamplesLink = (ct: sf.Constant, ctx: Ctx) =>
-  str.link(
-    'Usage Examples',
-    Github.searchURL(
-      ctx.sources.scripts,
-      encodeURIComponent('/(?-i)' + ct.name + '/')
+  pipe(
+    ctx.sources.scripts,
+    O.map((src) =>
+      str.link(
+        'Usage Examples',
+        Github.searchURL(src, encodeURIComponent('/(?-i)' + ct.name + '/'))
+      )
     )
   );
 

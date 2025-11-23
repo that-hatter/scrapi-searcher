@@ -1,43 +1,33 @@
 import { O, pipe, RA, RR, TE } from '@that-hatter/scrapi-factory/fp';
 import { Babel, Card, Pedia } from '.';
 import { Ctx, CtxWithoutResources } from '../Ctx';
-import type { Resource } from '../lib/modules';
-import { Decoder, Fetch, Github, str } from '../lib/modules';
+import { Decoder, FS, Github, str } from '../lib/modules';
 import { DeepReadonly, utils } from '../lib/utils';
 import { isAltArt } from './Babel';
 
-const decoder = Decoder.struct({
+const jsonDecoder = Decoder.struct({
   master: Decoder.record(Decoder.number),
   rush: Decoder.record(Decoder.number),
 });
 
-export type KonamiIds = DeepReadonly<Decoder.TypeOf<typeof decoder>>;
+export type KonamiIds = DeepReadonly<Decoder.TypeOf<typeof jsonDecoder>>;
 
 const RESOURCE_PATH = 'data/konamiIds.json';
 
-const update = (ctx: CtxWithoutResources): TE.TaskEither<string, KonamiIds> =>
+export const load = (
+  ctx: CtxWithoutResources
+): TE.TaskEither<string, KonamiIds> =>
   pipe(
     ctx.sources.misc,
-    O.map(({ repo }) =>
+    O.map((repo) =>
       pipe(
-        Github.rawURL(repo, RESOURCE_PATH),
-        Fetch.json,
-        TE.flatMapEither(Decoder.decode(decoder))
+        Github.localPath(repo, RESOURCE_PATH),
+        FS.readJsonFile,
+        TE.flatMapEither(Decoder.decode(jsonDecoder))
       )
     ),
     O.getOrElse(() => TE.right({ master: {}, rush: {} }))
   );
-
-export const resource: Resource.Resource<'konamiIds'> = {
-  key: 'konamiIds',
-  description: 'Konami ID mappings.',
-  update,
-  init: update,
-  commitFilter: (ctx) => (src, files) =>
-    O.isSome(ctx.sources.misc) &&
-    src === ctx.sources.misc.value.repo &&
-    files.includes(RESOURCE_PATH),
-};
 
 type Key = 'master' | 'rush';
 
@@ -93,7 +83,7 @@ const addId =
 export const addToFile = (card: Babel.Card, kid: number) => (ctx: Ctx) =>
   pipe(
     ctx.sources.misc,
-    O.map(({ repo }) =>
+    O.map((repo) =>
       pipe(
         ctx.konamiIds,
         addId(Card.isRush(card) ? 'rush' : 'master', card.id, kid),

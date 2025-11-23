@@ -9,6 +9,7 @@ import * as path from 'node:path';
 import simpleGit from 'simple-git';
 import { Decoder, str } from '.';
 import { CtxWithoutResources } from '../../Ctx';
+import { PATHS } from '../constants';
 import { utils } from '../utils';
 
 export type Github = {
@@ -49,7 +50,6 @@ export const init = (
     )
   );
 
-
 export type Source = {
   readonly owner: string;
   readonly repo: string;
@@ -74,6 +74,12 @@ export const sourceDecoder = pipe(
   })
 );
 
+export const multiSourceDecoder = pipe(
+  Decoder.string,
+  Decoder.map(str.split(', ')),
+  Decoder.compose(Decoder.readonly(Decoder.array(sourceDecoder)))
+);
+
 export const repoURL = (src: Source) =>
   `https://github.com/${src.owner}/${src.repo}/`;
 
@@ -88,6 +94,12 @@ export const rawURL = (src: Source, path: string) =>
 
 export const searchURL = (src: Source, searchTerm: string) =>
   `https://github.com/search?q=repo%3A${src.owner}%2F${src.repo}+${searchTerm}&type=code`;
+
+export const localRelativePath = (src: Source) =>
+  `${src.owner}_${src.repo}_${src.branch}`;
+
+export const localPath = (src: Source, additionalPath = '') =>
+  path.join(PATHS.DATA, localRelativePath(src), additionalPath);
 
 export const isSource = (src1: Source, src2: Source) =>
   treeURL(src1) === treeURL(src2);
@@ -108,6 +120,8 @@ export const pullOrClone = (name: string, src: Source) => {
             git
               .cwd(dataPath)
               .clone(repoURL(src), name, [
+                '--recurse-submodules',
+                '-j8',
                 '--depth=1',
                 '--single-branch',
                 '--branch',
@@ -147,7 +161,7 @@ export const updateFile =
       )
     );
 
-export const listRepoFiles =
+export const fetchFileList =
   ({ owner, repo, branch }: Source) =>
   (ctx: CtxWithoutResources) => {
     const ref = 'heads/' + branch;
