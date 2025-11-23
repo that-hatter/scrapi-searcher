@@ -62,7 +62,7 @@ const preformatWithExisting = (card: Card): Op.SubOp<PreFormatted> =>
     R.bind('konamiId', ({ rush }) =>
       KonamiIds.getExisting(card, rush ? 'rush' : 'master')
     ),
-    R.bind('pic', () => Pics.getReuploadUrl(card.id)),
+    R.bind('pic', () => Pics.getUrl(card.id)),
     R.bind('script', () => Scripts.getUrl(card.id)),
     RTE.fromReader
   );
@@ -75,7 +75,7 @@ const preformatWithFetch = (card: Card): Op.SubOp<PreFormatted> =>
     RTE.bind('konamiId', ({ scopes, types }) =>
       KonamiIds.getOrFetchMissing(card, scopes, types)
     ),
-    RTE.bind('pic', () => Pics.getReuploadUrlOrFillIn(card))
+    RTE.bind('pic', () => Pics.getUrlAndReuploadMissing(card))
   );
 
 // -----------------------------------------------------------------------------

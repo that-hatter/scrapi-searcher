@@ -74,14 +74,6 @@ export const load = sequenceS(RTE.ApplySeq)({
   reuploaded: loadReuploadsJson,
 });
 
-export const getReuploadUrl = (id: number) => (ctx: Ctx) =>
-  pipe(
-    ctx.pics.reuploaded[id.toString()],
-    O.fromNullable,
-    O.filter((pid) => pid !== 'N/A'),
-    O.map((pid) => `${URLS.DISCORD_MEDIA}/${pid}/${id}.jpg`)
-  );
-
 const fetchFromSource =
   (id: string) =>
   (ctx: Ctx): TE.TaskEither<string, O.Option<dd.FileContent>> => {
@@ -122,14 +114,21 @@ const readFromLocal =
 
 const fetchThenReupload =
   (id: string) =>
-  (ctx: Ctx): TE.TaskEither<string, O.Option<string>> =>
-    pipe(
+  (ctx: Ctx): TE.TaskEither<string, O.Option<string>> => {
+    const channel = ctx.sources.picsChannel;
+    if (O.isNone(channel)) return TE.right(O.none);
+    return pipe(
       fetchFromSource(id)(ctx),
-      TE.orElse(() => readFromLocal(id)(ctx)),
+      TE.matchE(
+        () => readFromLocal(id)(ctx),
+        (f) => (O.isNone(f) ? readFromLocal(id)(ctx) : TE.right(f))
+      ),
       TE.flatMap((file) => {
         if (O.isNone(file)) return TE.right(O.none);
         return pipe(
-          Op.sendMessage('')({ files: [file.value] })(ctx),
+          Op.sendMessage(channel.value)({
+            files: [file.value],
+          })(ctx),
           TE.mapError(Err.toAlertString),
           TE.flatMapNullable(
             (msg) => msg.attachments?.at(0)?.url.split('?ex')[0],
@@ -139,6 +138,7 @@ const fetchThenReupload =
         );
       })
     );
+  };
 
 const updateGithubFile =
   (newRecord: RR.ReadonlyRecord<string, string>, message: string) =>
@@ -168,7 +168,30 @@ export const addToReuploadsJson = (url: string) => (ctx: Ctx) => {
   );
 };
 
-export const getReuploadUrlOrFillIn = (c: Babel.Card) => (ctx: Ctx) => {
+const reuploadedUrl = (id: number) => (ctx: Ctx) =>
+  pipe(
+    ctx.pics.reuploaded[id.toString()],
+    O.fromNullable,
+    O.filter((pid) => pid !== 'N/A'),
+    O.map((pid) => `${URLS.DISCORD_MEDIA}/${pid}/${id}.jpg`)
+  );
+
+const directUrl = (id: number) => (ctx: Ctx) =>
+  pipe(
+    ctx.sources.picsUrl,
+    O.map((url) => url.replace('%id%', id.toString())),
+    O.orElse(() => reuploadedUrl(id)(ctx))
+  );
+
+export const getUrl = (id: number) => (ctx: Ctx) => {
+  return O.isNone(ctx.sources.picsChannel)
+    ? directUrl(id)(ctx)
+    : reuploadedUrl(id)(ctx);
+};
+
+export const getUrlAndReuploadMissing = (c: Babel.Card) => (ctx: Ctx) => {
+  if (O.isNone(ctx.sources.picsChannel)) return TE.right(directUrl(c.id)(ctx));
+
   const id = c.id.toString();
   const reup = ctx.pics.reuploaded[id];
   if (reup) {
@@ -179,17 +202,21 @@ export const getReuploadUrlOrFillIn = (c: Babel.Card) => (ctx: Ctx) => {
       TE.right
     );
   }
+
   return Card.isNonCard(c) ? TE.right(O.none) : fetchThenReupload(id)(ctx);
 };
 
-export const getMultipleRaws = (ids: ReadonlyArray<number>) => (ctx: Ctx) =>
+export const fetchMultipleRaws = (ids: ReadonlyArray<number>) => (ctx: Ctx) =>
   pipe(
     [...new Set(ids)],
     RA.map(String),
     RA.map((id) =>
       pipe(
         fetchFromSource(id)(ctx),
-        TE.orElse(() => readFromLocal(id)(ctx)),
+        TE.matchE(
+          () => readFromLocal(id)(ctx),
+          (f) => (O.isNone(f) ? readFromLocal(id)(ctx) : TE.right(f))
+        ),
         TE.flatMap((f) => {
           if (O.isNone(f)) return TE.right(O.none);
           return pipe(
@@ -206,7 +233,7 @@ export const getMultipleRaws = (ids: ReadonlyArray<number>) => (ctx: Ctx) =>
     TE.map(RR.fromEntries)
   );
 
-export const remove = (ids: ReadonlyArray<number>) => (ctx: Ctx) =>
+export const forgetReupload = (ids: ReadonlyArray<number>) => (ctx: Ctx) =>
   pipe(
     ctx.pics.reuploaded,
     RR.filterWithIndex((key) => !ids.includes(+key)),

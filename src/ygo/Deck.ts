@@ -278,7 +278,7 @@ const toImageFile = (deck: Deck) => {
   return pipe(
     ids,
     RA.flatten,
-    Pics.getMultipleRaws,
+    Pics.fetchMultipleRaws,
     RTE.flatMapTaskEither((images) =>
       pipe(
         ids,

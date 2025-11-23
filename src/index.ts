@@ -61,7 +61,7 @@ const envDecoder = pipe(
       REPO_MISC: Github.sourceDecoder,
 
       PICS_DEFAULT_SOURCE: stringSecret,
-      PICS_UPLOAD_CHANNEL: integerSecret,
+      PICS_REUPLOAD_CHANNEL: integerSecret,
 
       GIT_REF: Decoder.string,
     })
@@ -131,7 +131,7 @@ const program = pipe(
       misc: O.fromNullable(env.REPO_MISC),
 
       picsUrl: O.fromNullable(env.PICS_DEFAULT_SOURCE),
-      picsChannel: O.fromNullable(env.PICS_UPLOAD_CHANNEL),
+      picsChannel: O.fromNullable(env.PICS_REUPLOAD_CHANNEL),
     },
 
     emojis: pipe(
