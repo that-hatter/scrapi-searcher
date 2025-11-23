@@ -6,10 +6,12 @@ import {
   R,
   RA,
   RNEA,
+  RR,
   RTE,
   TE,
 } from '@that-hatter/scrapi-factory/fp';
 import { array as A, readerTask as RT } from 'fp-ts';
+import { sequenceS } from 'fp-ts/lib/Apply';
 import * as buffer from 'node:buffer';
 import sharp from 'sharp';
 import { Babel, Pics } from '.';
@@ -279,6 +281,17 @@ const toImageFile = (deck: Deck) => {
     ids,
     RA.flatten,
     Pics.fetchMultipleRaws,
+    RTE.flatMapTaskEither((images) =>
+      pipe(
+        images,
+        RR.map((buf) =>
+          utils.taskify(() =>
+            sharp(buf).resize(CARD_PIC_WIDTH, CARD_PIC_HEIGHT).toBuffer()
+          )
+        ),
+        sequenceS(TE.ApplyPar)
+      )
+    ),
     RTE.flatMapTaskEither((images) =>
       pipe(
         ids,
