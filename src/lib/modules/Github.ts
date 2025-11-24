@@ -141,7 +141,9 @@ export const updateFile =
   ) =>
   (ctx: CtxWithoutResources) =>
     pipe(
-      utils.taskify(() => ctx.github.repos.getContent({ owner, repo, path })),
+      utils.taskify(() =>
+        ctx.github.repos.getContent({ owner, repo, ref: branch, path })
+      ),
       TE.flatMapNullable(
         ({ data }) => (data instanceof Array ? data[0]?.sha : data?.sha),
         () => 'Failed to get file sha: ' + str.inlineCode(path)
