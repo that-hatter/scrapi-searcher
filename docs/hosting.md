@@ -75,6 +75,13 @@ The program expects the following environment variables to run:
 
   > `owner/repo branch`, where `branch` is optional and defaults to `master`
 
+- `REPO_GREENLIGHT`
+  _(Optional)_
+  The repository containing unreleased cards and issues for coordinating scripters.
+  This is mainly used internally by the Project Ignis staff.
+
+  > `owner/repo branch`, where `branch` is optional and defaults to `master`
+
 - `REPO_CDB_LINK`
   _(Optional)_
   The repository to use when linking to cdbs, expected to have the same file and folder structure as [`ProjectIgnis/BabelCDB`](https://github.com/ProjectIgnis/BabelCDB/).
