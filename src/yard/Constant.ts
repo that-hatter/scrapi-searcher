@@ -29,7 +29,7 @@ const enumLink = (ct: sf.Constant, ctx: Ctx): O.Option<string> =>
 
 const usageExamplesLink = (ct: sf.Constant, ctx: Ctx) =>
   pipe(
-    ctx.sources.scripts,
+    ctx.sources.scriptLink,
     O.map((src) =>
       str.link(
         'Usage Examples',

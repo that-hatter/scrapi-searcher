@@ -59,7 +59,7 @@ const namespaceLink = (fn: sf.Function, ctx: Ctx) =>
   );
 
 const usageExamplesLink = (fn: sf.Function, ctx: Ctx) => {
-  if (O.isNone(ctx.sources.scripts)) return O.none;
+  if (O.isNone(ctx.sources.scriptLink)) return O.none;
 
   const dotSyntax = '/(?-i)' + fn.name + '/';
   const searchTerm = pipe(
@@ -78,7 +78,10 @@ const usageExamplesLink = (fn: sf.Function, ctx: Ctx) => {
 
   return str.link(
     'Usage Examples',
-    Github.searchURL(ctx.sources.scripts.value, encodeURIComponent(searchTerm))
+    Github.searchURL(
+      ctx.sources.scriptLink.value,
+      encodeURIComponent(searchTerm)
+    )
   );
 };
 

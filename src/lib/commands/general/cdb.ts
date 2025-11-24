@@ -25,12 +25,12 @@ const cdbUrl = (c: Babel.Card) => (ctx: Ctx) =>
       }));
       const relativePath = tail.join('/');
 
-      if (O.isNone(ctx.sources.cdbs)) {
+      if (O.isNone(ctx.sources.cdbLink)) {
         return Github.blobURL(source, relativePath);
       }
 
       return Github.blobURL(
-        ctx.sources.cdbs.value,
+        ctx.sources.cdbLink.value,
         Github.blobURL(ctx.sources.base) === Github.blobURL(source)
           ? relativePath.replace('expansions/', '')
           : relativePath

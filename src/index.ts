@@ -48,17 +48,18 @@ const envDecoder = pipe(
     GITHUB_WEBHOOK_PORT: numberSecret,
     GITHUB_WEBHOOK_SECRET: stringSecret,
 
-    REPO_BASE: Github.sourceDecoder,
-    REPO_EXPANSIONS: Github.multiSourceDecoder,
     REPO_YARD: Github.sourceDecoder,
+    REPO_BASE: Github.sourceDecoder,
   }),
   Decoder.intersect(
     Decoder.partial({
-      REPO_CDBS: Github.sourceDecoder,
-      REPO_SCRIPTS: Github.sourceDecoder,
+      REPO_EXPANSIONS: Github.multiSourceDecoder,
       REPO_BANLISTS: Github.sourceDecoder,
-      REPO_GREENLIGHT: Github.sourceDecoder,
       REPO_MISC: Github.sourceDecoder,
+      REPO_GREENLIGHT: Github.sourceDecoder,
+
+      REPO_CDB_LINK: Github.sourceDecoder,
+      REPO_SCRIPT_LINK: Github.sourceDecoder,
 
       PICS_DEFAULT_SOURCE: stringSecret,
       PICS_REUPLOAD_CHANNEL: integerSecret,
@@ -122,13 +123,14 @@ const program = pipe(
     sources: {
       yard: env.REPO_YARD,
       base: env.REPO_BASE,
-      expansions: env.REPO_EXPANSIONS,
+      expansions: env.REPO_EXPANSIONS ?? [],
 
-      cdbs: O.fromNullable(env.REPO_CDBS),
-      scripts: O.fromNullable(env.REPO_SCRIPTS),
       banlists: O.fromNullable(env.REPO_BANLISTS),
-      greenlight: O.fromNullable(env.REPO_GREENLIGHT),
       misc: O.fromNullable(env.REPO_MISC),
+      greenlight: O.fromNullable(env.REPO_GREENLIGHT),
+
+      cdbLink: O.fromNullable(env.REPO_CDB_LINK),
+      scriptLink: O.fromNullable(env.REPO_SCRIPT_LINK),
 
       picsUrl: O.fromNullable(env.PICS_DEFAULT_SOURCE),
       picsChannel: O.fromNullable(env.PICS_REUPLOAD_CHANNEL),
