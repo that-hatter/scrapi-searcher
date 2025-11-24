@@ -1,6 +1,6 @@
 import { O, pipe, RA, RR, TE } from '@that-hatter/scrapi-factory/fp';
 import { Ctx, CtxWithoutResources } from '../Ctx';
-import { FS, Github, str } from '../lib/modules';
+import { Err, FS, Github, str } from '../lib/modules';
 import { utils } from '../lib/utils';
 
 export type Scripts = RR.ReadonlyRecord<string, string>;
@@ -56,6 +56,27 @@ export const getUrl = (id: number) => (ctx: Ctx) =>
         ctx.sources.scriptLink,
         O.map((src) => Github.blobURL(src, url.split('/script/')[1])),
         O.getOrElse(() => url)
+      )
+    )
+  );
+
+export const readFile = (id: number) => (ctx: Ctx) =>
+  pipe(
+    getRawUrl(id)(ctx),
+    TE.fromOption(() => Err.forAll('Could not find script file: ' + id)),
+    TE.flatMap((url) =>
+      pipe(
+        url,
+        str.after('https://github.com/'),
+        str.replace('blob/', ''),
+        str.split('/'),
+        ([owner, repo, branch, ...path]) =>
+          Github.localPath(
+            { owner, repo: repo ?? '', branch: branch ?? '' },
+            path.join('/')
+          ),
+        FS.readTextFile,
+        TE.mapError(() => Err.forAll('Failed to read script file: ' + id))
       )
     )
   );
