@@ -54,9 +54,7 @@ export const getUrl = (id: number) => (ctx: Ctx) =>
     O.map((url) =>
       pipe(
         ctx.sources.scripts,
-        O.map((src) =>
-          Github.blobURL(src, 'script/' + url.split('/script/')[1])
-        ),
+        O.map((src) => Github.blobURL(src, url.split('/script/')[1])),
         O.getOrElse(() => url)
       )
     )
