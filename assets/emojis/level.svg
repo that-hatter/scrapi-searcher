@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+<svg id="svg3760" height="77.15" viewBox="0,0,76.852,77.1519" width="76.85" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" sodipodi:docname="STAR.svg" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd">
+ <linearGradient id="linearGradient7459" gradientUnits="userSpaceOnUse" x1="348.9436095" x2="316.09518125" y1="554.7640673" y2="554.3231488" inkscape:collect="always">
+  <stop id="stop5509-1" offset="0" stop-color="#f00"/>
+  <stop id="stop5511-9" offset="1" stop-color="#f60"/>
+ </linearGradient>
+ <radialGradient id="radialGradient3190" cx="305.48" cy="577.65" gradientTransform="matrix(1.54939 -.0163706 .0143546 1.41124 -173.75 -233.68)" gradientUnits="userSpaceOnUse" r="39.67" inkscape:collect="always">
+  <stop id="stop3194" offset="0" stop-color="#f4a406"/>
+  <stop id="stop3204" offset=".198188" stop-color="#f88108"/>
+  <stop id="stop3202" offset=".3075" stop-color="#fe5f0b"/>
+  <stop id="stop3200" offset=".535773" stop-color="#fb1e0b"/>
+  <stop id="stop3196" offset=".765387" stop-color="#9e0e0e"/>
+  <stop id="stop3198" offset="1" stop-color="#29171f"/>
+ </radialGradient>
+ <linearGradient id="linearGradient3426" gradientUnits="userSpaceOnUse" x1="310.69" x2="339.56" y1="599" y2="559.95" inkscape:collect="always">
+  <stop id="stop3422" offset="0" stop-color="#d7fc08"/>
+  <stop id="stop3430" offset=".649994" stop-color="#d6fc07"/>
+  <stop id="stop3428" offset=".784361" stop-color="#e7d609"/>
+  <stop id="stop3424" offset="1" stop-color="#f5b00a"/>
+ </linearGradient>
+ <linearGradient id="linearGradient3434" gradientUnits="userSpaceOnUse" x1="297.3" x2="353.98" y1="574.77" y2="566.7" inkscape:collect="always">
+  <stop id="stop4298-3" offset="0" stop-color="#d3fa09"/>
+  <stop id="stop3436" offset=".514678" stop-color="#f1d206"/>
+  <stop id="stop4300-1" offset=".775196" stop-color="#fb420a"/>
+  <stop id="stop4302-4" offset="1" stop-color="#fc1d0b"/>
+ </linearGradient>
+ <sodipodi:namedview bordercolor="#666666" borderopacity="1.0" fit-margin-bottom="0" fit-margin-left="0" fit-margin-right="0" fit-margin-top="0" inkscape:current-layer="g4793" inkscape:cx="139.26372" inkscape:cy="9.1927782" inkscape:document-units="px" inkscape:guide-bbox="true" inkscape:pageopacity="0.0" inkscape:pageshadow="2" inkscape:snap-global="true" inkscape:window-height="780" inkscape:window-maximized="1" inkscape:window-width="1280" inkscape:window-x="-8" inkscape:window-y="-8" inkscape:zoom="3.2096018" pagecolor="#ffffff" showgrid="false" showguides="true"/>
+ 
+ <g id="layer1" transform="translate(-288.99 -535.53)" inkscape:groupmode="layer" inkscape:label="Layer 1">
+  <g id="g4793" transform="matrix(.967666 0 0 .949444 10.18 28.77)">
+   <text id="text5503" fill="url(#linearGradient7459)" font-family="StoneSerITCStd Medium" font-size="35.274" letter-spacing="0" line-height="125%" transform="scale(.99054 1.00955)" word-spacing="0" x="305.95" xml:space="preserve" y="555.87" sodipodi:linespacing="125%"><tspan id="tspan5505" fill="url(#linearGradient7459)" font-size="5.291" x="305.95" y="555.87" sodipodi:role="line">Created by Falzar FZ</tspan></text>
+   <g id="g3021" transform="translate(.01 .03)">
+    <path id="path3048" d="m325.125 533.768c-12.0462.12786-23.8313 6.47825-30.1071 16.8382-9.98334 15.4757-9.2208 37.5796 3.10803 51.5587 7.91058 8.9416 20.1411 13.5262 31.9952 12.6853 12.9687-.25474 25.5791-7.74217 31.6697-19.2577 5.39871-9.43832 6.92244-20.8404 4.7256-31.4583-2.298-13.9914-13.5438-26.2257-27.386-29.4416-4.60618-.8471-9.33291-.96193-14.0054-.92452z" fill="url(#radialGradient3190)"/>
+    <path id="path3206" d="m358.226 564.066-23.4891-.0293-7.47443-22.0702-7.7362 22.1119-24.6959-.018 19.6892 14.9468-5.85256 23.2655 20.0032-14.1116 17.2823 14.1106-5.23124-22.774z" fill="url(#linearGradient3434)" sodipodi:nodetypes="ccccccccccc"/>
+    <path id="path3206-6" d="m319.534 564.073-24.6959-.018 19.6892 14.9468-5.85256 23.2655 20.0032-14.1116 3.58952-10.6408 9.7543-8.128-18.9507-11.6671z" fill="url(#linearGradient3426)" opacity=".5" sodipodi:nodetypes="ccccccccc"/>
+   </g>
+  </g>
+ </g>
+</svg>
