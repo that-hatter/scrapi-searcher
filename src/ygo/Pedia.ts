@@ -1,8 +1,7 @@
-import { flow, pipe, RA, RR } from '@that-hatter/scrapi-factory/fp';
-import fetch from 'node-fetch';
+import { flow, pipe, RA, RR, TE } from '@that-hatter/scrapi-factory/fp';
 import { setTimeout } from 'timers/promises';
 import { URLS } from '../lib/constants';
-import { Decoder, str } from '../lib/modules';
+import { Decoder, Fetch, str } from '../lib/modules';
 import { utils } from '../lib/utils';
 
 export const url =
@@ -29,10 +28,9 @@ export const paramsSection = flow(
 );
 
 export const fetchCards = (delaySecs: number, url: string) =>
-  utils.taskify(() =>
-    setTimeout(delaySecs * 1000)
-      .then(() => fetch(url))
-      .then((resp) => resp.json())
+  pipe(
+    utils.taskify(() => setTimeout(delaySecs * 1000)),
+    TE.flatMap(() => Fetch.json(url))
   );
 
 export const fetchedResultDecoder = <A>(dc: Decoder.Decoder<unknown, A>) =>

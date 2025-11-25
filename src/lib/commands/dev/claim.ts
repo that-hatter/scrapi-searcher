@@ -1,4 +1,4 @@
-import { O, pipe, RA, RNEA, RTE } from '@that-hatter/scrapi-factory/fp';
+import { O, pipe, RA, RNEA, RTE, TE } from '@that-hatter/scrapi-factory/fp';
 import { Greenlight } from '../../../ygo';
 import { COLORS } from '../../constants';
 import {
@@ -235,11 +235,14 @@ export const claim: Command.Command = {
   syntax: 'claim',
   aliases: [],
   devOnly: true,
-  execute: (_, message) =>
+  execute: (_, message) => (ctx) =>
     pipe(
-      Greenlight.getIssues,
+      ctx.sources.greenlight,
+      TE.fromOption(() => Err.forUser(Greenlight.NO_REPO_ERROR)),
+      RTE.fromTaskEither,
+      RTE.flatMap(() => Greenlight.getIssues),
       RTE.map(getInitialState),
       RTE.flatMap(page),
       RTE.flatMap(Op.sendReply(message))
-    ),
+    )(ctx),
 };

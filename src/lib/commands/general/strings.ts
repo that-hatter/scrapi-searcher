@@ -1,6 +1,6 @@
 import { O, pipe, R, RA, RTE } from '@that-hatter/scrapi-factory/fp';
 import { Babel, Card } from '../../../ygo';
-import { Command, Op, str } from '../../modules';
+import { Command, FS, Op, str } from '../../modules';
 
 export const stringsEmbed = (c: Babel.Card) =>
   pipe(
@@ -15,7 +15,12 @@ export const stringsEmbed = (c: Babel.Card) =>
         str.unempty,
         O.getOrElse(() => str.subtext('This card has no strings.'))
       ),
-      footer: { text: c.cdb },
+      footer: pipe(
+        c.cdbPath,
+        FS.filenameFromPath,
+        O.getOrElse(() => ''),
+        (text) => ({ text })
+      ),
     }))
   );
 

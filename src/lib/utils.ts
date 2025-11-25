@@ -1,4 +1,4 @@
-import { flow, Lazy, O, TE } from '@that-hatter/scrapi-factory/fp';
+import { flow, Lazy, O, RA, RR, TE } from '@that-hatter/scrapi-factory/fp';
 import { ioEither } from 'fp-ts';
 import { str } from './modules';
 
@@ -77,6 +77,13 @@ const bigBits = (n: number | bigint): ReadonlyArray<bigint> => {
 
 const bits = (n: number): ReadonlyArray<number> => bigBits(n).map(Number);
 
+const mergeRecords: <T>(
+  rs: ReadonlyArray<RR.ReadonlyRecord<string, T>>
+) => RR.ReadonlyRecord<string, T> = RA.reduce({}, (aggr, curr) => ({
+  ...aggr,
+  ...curr,
+}));
+
 export const utils = {
   stringify,
   tapLog,
@@ -87,4 +94,5 @@ export const utils = {
   safeBigInt,
   bigBits,
   bits,
+  mergeRecords,
 };

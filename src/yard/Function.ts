@@ -1,16 +1,8 @@
 import type * as sf from '@that-hatter/scrapi-factory';
-import {
-  O,
-  R,
-  RA,
-  RNEA,
-  RR,
-  RTE,
-  TE,
-  pipe,
-} from '@that-hatter/scrapi-factory/fp';
+import { O, RA, RNEA, RR, RTE, TE, pipe } from '@that-hatter/scrapi-factory/fp';
+import { Ctx } from '../Ctx';
 import { COLORS } from '../lib/constants';
-import { Op, SearchCommand, dd, str } from '../lib/modules';
+import { Github, Op, SearchCommand, dd, str } from '../lib/modules';
 import {
   BindingInfo,
   DescInfo,
@@ -47,51 +39,63 @@ const quickCopyField = (
     (value) => ({ name: 'Quick Copy', value })
   );
 
-const getNamespace = (fn: sf.Function) => (api: sf.API) =>
+const getNamespace = (fn: sf.Function, ctx: Ctx) =>
   pipe(
-    api.namespaces.record,
+    ctx.yard.api.namespaces.record,
     RR.lookup(O.isSome(fn.namespace) ? fn.namespace.value : '(Global)')
   );
 
-const namespaceLink = (fn: sf.Function) =>
+const namespaceLink = (fn: sf.Function, ctx: Ctx) =>
   pipe(
-    getNamespace(fn),
-    R.map(
-      O.map((ns) =>
-        str.link(
-          ns.name === '(Global)'
-            ? '(Global) Functions'
-            : str.inlineCode(ns.name) + ' Functions',
-          Topic.url(ns) + '#Functions'
-        )
+    getNamespace(fn, ctx),
+    O.map((ns) =>
+      str.link(
+        ns.name === '(Global)'
+          ? '(Global) Functions'
+          : str.inlineCode(ns.name) + ' Functions',
+        Topic.url(ns) + '#Functions'
       )
     )
   );
 
-const usageExamplesLink = (fn: sf.Function) =>
-  str.link(
+const usageExamplesLink = (fn: sf.Function, ctx: Ctx) => {
+  if (O.isNone(ctx.sources.scriptLink)) return O.none;
+
+  const dotSyntax = '/(?-i)' + fn.name + '/';
+  const searchTerm = pipe(
+    fn.namespace,
+    O.flatMap((ns) => {
+      if (ns === 'Card') return O.some('c');
+      if (ns === 'Group') return O.some('g');
+      if (ns === 'Effect') return O.some('e\\d+');
+      return O.none;
+    }),
+    O.map((pre) => ' OR /(?-i)' + pre + ':' + fn.partialName + '%2F'),
+    O.getOrElse(() => ''),
+    str.prepend(dotSyntax),
+    str.clamped('%28', '%29')
+  );
+
+  return str.link(
     'Usage Examples',
-    'https://github.com/search?q=repo%3AProjectIgnis%2FCardScripts+' +
-      encodeURIComponent(fn.partialName) +
-      '&type=code'
-  );
-
-const quickLinksSection = (fn: sf.Function) =>
-  pipe(
-    namespaceLink(fn),
-    R.map((ns) =>
-      pipe(
-        [
-          BindingInfo.sourceLink(fn),
-          usageExamplesLink(fn),
-          ns,
-          Topic.editLink(fn),
-        ],
-        str.join(' | '),
-        str.unempty,
-        O.map(str.subtext)
-      )
+    Github.searchURL(
+      ctx.sources.scriptLink.value,
+      encodeURIComponent(searchTerm)
     )
+  );
+};
+
+const quickLinksSection = (fn: sf.Function, ctx: Ctx) =>
+  pipe(
+    [
+      BindingInfo.sourceLink(fn),
+      usageExamplesLink(fn, ctx),
+      namespaceLink(fn, ctx),
+      Topic.editLink(fn),
+    ],
+    str.join(' | '),
+    str.unempty,
+    O.map(str.subtext)
   );
 
 export const embed =
@@ -104,7 +108,7 @@ export const embed =
       synopsis,
       '',
       DescInfo.nonPlaceholder(str.fromAST(variant.description)),
-      quickLinksSection(fn)(ctx.yard.api),
+      quickLinksSection(fn, ctx),
     ]);
 
     return TE.right({

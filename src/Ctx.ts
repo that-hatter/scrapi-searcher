@@ -1,8 +1,8 @@
 import type { O, RR } from '@that-hatter/scrapi-factory/fp';
-import type { Command, Data, Github, Interaction, dd } from './lib/modules';
+import type { Command, Github, Interaction, Resource, dd } from './lib/modules';
 import type { BitNames } from './ygo';
 
-export type CtxWithoutData = {
+export type CtxWithoutResources = {
   readonly bot: dd.Bot;
   readonly commands: Command.Collection;
   readonly componentInteractions: Interaction.ComponentCollection;
@@ -14,13 +14,27 @@ export type CtxWithoutData = {
     readonly logs: string;
     readonly users: RR.ReadonlyRecord<string, string>;
   };
-  readonly picsSource: O.Option<string>;
-  readonly picsChannel: O.Option<bigint>;
   readonly emojis: RR.ReadonlyRecord<string, string>;
   readonly gitRef: O.Option<string>;
+
+  readonly sources: {
+    readonly yard: Github.Source;
+    readonly base: Github.Source;
+    readonly expansions: ReadonlyArray<Github.Source>;
+
+    readonly banlists: O.Option<Github.Source>;
+    readonly greenlight: O.Option<Github.Source>;
+    readonly misc: O.Option<Github.Source>;
+
+    readonly cdbLink: O.Option<Github.Source>;
+    readonly scriptLink: O.Option<Github.Source>;
+
+    readonly picsUrl: O.Option<string>;
+    readonly picsChannel: O.Option<bigint>;
+  };
 };
 
 export type Ctx = {
   readonly bitNames: BitNames.BitNames;
-} & CtxWithoutData &
-  Data.Loaded;
+} & CtxWithoutResources &
+  Resource.Loaded;

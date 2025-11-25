@@ -1,16 +1,8 @@
 import type * as sf from '@that-hatter/scrapi-factory';
-import {
-  O,
-  R,
-  RA,
-  RNEA,
-  RR,
-  RTE,
-  TE,
-  pipe,
-} from '@that-hatter/scrapi-factory/fp';
+import { O, RA, RNEA, RR, RTE, TE, pipe } from '@that-hatter/scrapi-factory/fp';
+import { Ctx } from '../Ctx';
 import { COLORS } from '../lib/constants';
-import { Nav, Op, SearchCommand, dd, str } from '../lib/modules';
+import { Github, Nav, Op, SearchCommand, dd, str } from '../lib/modules';
 import { BindingInfo, DescInfo, Topic } from './shared';
 
 const hexString = (b: bigint): string => '0x' + b.toString(16);
@@ -28,39 +20,35 @@ const valueParagraphs = (
   return str.bold('Value:') + ' ' + str.inlineCode(value.toString());
 };
 
-const enumLink =
-  (ct: sf.Constant) =>
-  (api: sf.API): O.Option<string> =>
-    pipe(
-      api.enums.record,
-      RR.lookup(ct.enum),
-      O.map((en) => Topic.linkify(en.name + ' Constants')(en))
-    );
-
-const usageExamplesLink = (ct: sf.Constant) =>
-  str.link(
-    'Usage Examples',
-    'https://github.com/search?q=repo%3AProjectIgnis%2FCardScripts+' +
-      encodeURIComponent(ct.name) +
-      '&type=code'
+const enumLink = (ct: sf.Constant, ctx: Ctx): O.Option<string> =>
+  pipe(
+    ctx.yard.api.enums.record,
+    RR.lookup(ct.enum),
+    O.map((en) => Topic.linkify(en.name + ' Constants')(en))
   );
 
-const quickLinksSection = (ct: sf.Constant) =>
+const usageExamplesLink = (ct: sf.Constant, ctx: Ctx) =>
   pipe(
-    enumLink(ct),
-    R.map((enLink) =>
-      pipe(
-        [
-          BindingInfo.sourceLink(ct),
-          usageExamplesLink(ct),
-          enLink,
-          Topic.editLink(ct),
-        ],
-        str.join(' | '),
-        str.unempty,
-        O.map(str.subtext)
+    ctx.sources.scriptLink,
+    O.map((src) =>
+      str.link(
+        'Usage Examples',
+        Github.searchURL(src, encodeURIComponent('/(?-i)' + ct.name + '/'))
       )
     )
+  );
+
+const quickLinksSection = (ct: sf.Constant, ctx: Ctx) =>
+  pipe(
+    [
+      BindingInfo.sourceLink(ct),
+      usageExamplesLink(ct, ctx),
+      enumLink(ct, ctx),
+      Topic.editLink(ct),
+    ],
+    str.join(' | '),
+    str.unempty,
+    O.map(str.subtext)
   );
 
 const embed =
@@ -74,7 +62,7 @@ const embed =
         str.joinParagraphs([
           DescInfo.nonPlaceholder(str.fromAST(ct.description)),
           valueParagraphs(ct, en),
-          quickLinksSection(ct)(ctx.yard.api),
+          quickLinksSection(ct, ctx),
         ])
       ),
       TE.map((description) => ({

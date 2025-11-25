@@ -62,7 +62,7 @@ const preformatWithExisting = (card: Card): Op.SubOp<PreFormatted> =>
     R.bind('konamiId', ({ rush }) =>
       KonamiIds.getExisting(card, rush ? 'rush' : 'master')
     ),
-    R.bind('pic', () => Pics.getExisting(card.id)),
+    R.bind('pic', () => Pics.getUrl(card.id)),
     R.bind('script', () => Scripts.getUrl(card.id)),
     RTE.fromReader
   );
@@ -75,7 +75,7 @@ const preformatWithFetch = (card: Card): Op.SubOp<PreFormatted> =>
     RTE.bind('konamiId', ({ scopes, types }) =>
       KonamiIds.getOrFetchMissing(card, scopes, types)
     ),
-    RTE.bind('pic', () => Pics.getOrFetchMissing(card))
+    RTE.bind('pic', () => Pics.getUrlAndReuploadMissing(card))
   );
 
 // -----------------------------------------------------------------------------
@@ -209,7 +209,8 @@ const frameColor_ = (ctypes: ReadonlyArray<string>) => {
 export const frameColor = (c: Card) =>
   pipe(BitNames.types(c.type), R.map(frameColor_));
 
-const pediaURL = ({ card, konamiId }: PreFormatted) => {
+const pediaURL = ({ card, konamiId, scopes }: PreFormatted) => {
+  if (scopes.includes('Custom')) return O.none;
   if (O.isSome(konamiId)) return O.some(URLS.YUGIPEDIA_WIKI + konamiId.value);
 
   if (

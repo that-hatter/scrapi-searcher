@@ -1,7 +1,7 @@
 import { identity, O, pipe, RTE } from '@that-hatter/scrapi-factory/fp';
 import { BitNames, Card, KonamiIds } from '../../../ygo';
 import { URLS } from '../../constants';
-import { Command, Data, Err, Op, str } from '../../modules';
+import { Command, Err, Op, Resource, str } from '../../modules';
 
 export const rulings: Command.Command = {
   name: 'rulings',
@@ -54,7 +54,7 @@ export const rulings: Command.Command = {
         if (O.isSome(currKid)) return Op.noopReader;
         return pipe(
           KonamiIds.addToFile(card, konamiId),
-          RTE.map((konamiIds) => Data.asUpdate({ konamiIds })),
+          RTE.map((konamiIds) => Resource.asUpdate({ konamiIds })),
           RTE.mapError(Err.forDev)
         );
       })

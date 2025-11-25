@@ -1,10 +1,38 @@
-import { E, O, pipe, RA, RNEA, RR, TE } from '@that-hatter/scrapi-factory/fp';
+import {
+  E,
+  flow,
+  O,
+  pipe,
+  RA,
+  RNEA,
+  RR,
+  TE,
+} from '@that-hatter/scrapi-factory/fp';
 import { collection as commands } from './lib/commands';
 import { list as events } from './lib/events';
 import { collection as componentInteractions } from './lib/interactions';
-import { Data, dd, Decoder, Err, Event, Github, Op, str } from './lib/modules';
+import {
+  dd,
+  Decoder,
+  Err,
+  Event,
+  Github,
+  Op,
+  Resource,
+  str,
+} from './lib/modules';
 import { utils } from './lib/utils';
 import { BitNames } from './ygo';
+
+const secretError = (msg: string) =>
+  Decoder.error('[Value redacted, may contain secrets]', msg);
+
+const secretDecoder = (msg: string) =>
+  flow(Decoder.mapLeftWithInput(() => secretError(msg)));
+
+const stringSecret = secretDecoder('string')(Decoder.string);
+const numberSecret = secretDecoder('number')(Decoder.numString);
+const integerSecret = secretDecoder('integer')(Decoder.bigintString);
 
 const envDecoder = pipe(
   Decoder.struct({
@@ -14,16 +42,27 @@ const envDecoder = pipe(
     DEV_LOGS_CHANNEL: Decoder.string,
 
     BOT_PREFIX: Decoder.string,
-    BOT_TOKEN: Decoder.string,
+    BOT_TOKEN: stringSecret,
 
-    GITHUB_ACCESS_TOKEN: Decoder.string,
-    GITHUB_WEBHOOK_PORT: Decoder.numString,
-    GITHUB_WEBHOOK_SECRET: Decoder.string,
+    GITHUB_ACCESS_TOKEN: stringSecret,
+    GITHUB_WEBHOOK_PORT: numberSecret,
+    GITHUB_WEBHOOK_SECRET: stringSecret,
+
+    REPO_YARD: Github.sourceDecoder,
+    REPO_BASE: Github.sourceDecoder,
   }),
   Decoder.intersect(
     Decoder.partial({
-      PICS_DEFAULT_SOURCE: Decoder.string,
-      PICS_UPLOAD_CHANNEL: Decoder.bigintString,
+      REPO_EXPANSIONS: Github.multiSourceDecoder,
+      REPO_BANLISTS: Github.sourceDecoder,
+      REPO_MISC: Github.sourceDecoder,
+      REPO_GREENLIGHT: Github.sourceDecoder,
+
+      REPO_CDB_LINK: Github.sourceDecoder,
+      REPO_SCRIPT_LINK: Github.sourceDecoder,
+
+      PICS_DEFAULT_SOURCE: stringSecret,
+      PICS_REUPLOAD_CHANNEL: integerSecret,
 
       GIT_REF: Decoder.string,
     })
@@ -33,7 +72,7 @@ const envDecoder = pipe(
 const program = pipe(
   TE.Do,
   TE.bind('env', () =>
-    pipe(process.env, Decoder.parse(envDecoder), TE.fromEither)
+    pipe(process.env, Decoder.decode(envDecoder), TE.fromEither)
   ),
   TE.bind('github', ({ env }) =>
     Github.init(
@@ -81,8 +120,21 @@ const program = pipe(
     webhook: github.webhook,
     webhookServer: github.webhookServer,
 
-    picsSource: O.fromNullable(env.PICS_DEFAULT_SOURCE),
-    picsChannel: O.fromNullable(env.PICS_UPLOAD_CHANNEL),
+    sources: {
+      yard: env.REPO_YARD,
+      base: env.REPO_BASE,
+      expansions: env.REPO_EXPANSIONS ?? [],
+
+      banlists: O.fromNullable(env.REPO_BANLISTS),
+      misc: O.fromNullable(env.REPO_MISC),
+      greenlight: O.fromNullable(env.REPO_GREENLIGHT),
+
+      cdbLink: O.fromNullable(env.REPO_CDB_LINK),
+      scriptLink: O.fromNullable(env.REPO_SCRIPT_LINK),
+
+      picsUrl: O.fromNullable(env.PICS_DEFAULT_SOURCE),
+      picsChannel: O.fromNullable(env.PICS_REUPLOAD_CHANNEL),
+    },
 
     emojis: pipe(
       emojis,
@@ -96,12 +148,12 @@ const program = pipe(
   TE.flatMap((preCtx) =>
     pipe(
       preCtx,
-      Data.init,
+      Resource.init,
       TE.map((data) => ({ ...preCtx, ...data }))
     )
   ),
   TE.flatMap((preCtx) => {
-    // TODO: clean up unused properties such (webhook, webhookServer)
+    // TODO: clean up unused properties (webhook, webhookServer)
     const ctx = {
       ...preCtx,
       bitNames: BitNames.load(
@@ -114,7 +166,7 @@ const program = pipe(
       const res = await handler(ctx)();
       if (E.isLeft(res)) return Err.sendAlerts(res.left)(ctx)();
 
-      if (!Data.isUpdate(res.right)) return;
+      if (!Resource.isUpdate(res.right)) return;
       const update = res.right;
       ctx.babel = update.babel ?? ctx.babel;
       ctx.yard = update.yard ?? ctx.yard;
@@ -144,21 +196,16 @@ const program = pipe(
 
     preCtx.webhook.on('push', ({ payload }) => {
       const { ref, commits } = payload;
-      if (ref !== 'refs/heads/master' && ref !== 'refs/heads/main') return;
       if (commits.length === 1 && commits[0]?.message.startsWith('[auto] '))
         return;
 
-      pipe(
-        commits,
-        RA.flatMap((c) => [
-          ...(c.added ?? []),
-          ...(c.modified ?? []),
-          ...(c.removed ?? []),
-        ]),
-        (files) =>
-          Data.autoUpdate(payload.compare, payload.repository.name, files),
-        runHandler
-      );
+      const source: Github.Source = {
+        owner: payload.repository.owner?.name ?? '',
+        repo: payload.repository.name,
+        branch: pipe(ref, str.split('/'), RNEA.last),
+      };
+
+      runHandler(Resource.autoUpdate(payload.compare)(source));
     });
 
     process.on('SIGINT', () => {

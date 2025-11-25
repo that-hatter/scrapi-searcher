@@ -1,11 +1,9 @@
-import { pipe, RA, RNEA, RR, RTE, TE } from '@that-hatter/scrapi-factory/fp';
-import fetch from 'node-fetch';
-import { Ctx } from '../Ctx';
-import type { Data } from '../lib/modules';
-import { Decoder, str } from '../lib/modules';
-import { DeepReadonly, utils } from '../lib/utils';
+import { O, pipe, RA, RNEA, RR, TE } from '@that-hatter/scrapi-factory/fp';
+import { Ctx, CtxWithoutResources } from '../Ctx';
+import { Decoder, FS, Github, str } from '../lib/modules';
+import { DeepReadonly } from '../lib/utils';
 
-const decoder = pipe(
+const jsonDecoder = pipe(
   Decoder.record(Decoder.array(Decoder.string)),
   Decoder.map(RR.toEntries),
   Decoder.map(
@@ -14,26 +12,24 @@ const decoder = pipe(
   Decoder.map(RR.fromEntries)
 );
 
-export type Shortcuts = DeepReadonly<Decoder.TypeOf<typeof decoder>>;
+export type Shortcuts = DeepReadonly<Decoder.TypeOf<typeof jsonDecoder>>;
 
-const URL =
-  'https://raw.githubusercontent.com/that-hatter/' +
-  'scrapi-searcher-data/main/data/shortcuts.json';
+const RESOURCE_PATH = 'data/shortcuts.json';
 
-const update = pipe(
-  utils.taskify(() => fetch(URL).then((response) => response.json())),
-  TE.flatMapEither(Decoder.parse(decoder)),
-  RTE.fromTaskEither
-);
-
-export const data: Data.Data<'shortcuts'> = {
-  key: 'shortcuts',
-  description: 'Card search shortcuts.',
-  update,
-  init: update,
-  commitFilter: (repo, files) =>
-    repo === 'scrapi-searcher' && files.includes('data/shortcuts.json'),
-};
+export const load = (
+  ctx: CtxWithoutResources
+): TE.TaskEither<string, Shortcuts> =>
+  pipe(
+    ctx.sources.misc,
+    O.map((repo) =>
+      pipe(
+        Github.localPath(repo, RESOURCE_PATH),
+        FS.readJsonFile,
+        TE.flatMapEither(Decoder.decode(jsonDecoder))
+      )
+    ),
+    O.getOrElse(() => TE.right({}))
+  );
 
 export const resolveShortcuts = (query: string) => (ctx: Ctx) =>
   pipe(

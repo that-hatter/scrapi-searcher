@@ -1,18 +1,14 @@
-import { O, pipe, RA, RNEA, RR, RTE, TE } from '@that-hatter/scrapi-factory/fp';
+import { O, pipe, RA, RNEA, RR, TE } from '@that-hatter/scrapi-factory/fp';
 import Database from 'better-sqlite3';
 import { ioEither } from 'fp-ts';
 import MiniSearch, { SearchResult } from 'minisearch';
-import * as fs from 'node:fs/promises';
-import * as path from 'node:path';
-import { Ctx } from '../Ctx';
-import { PATHS } from '../lib/constants';
-import type { Data } from '../lib/modules';
-import { Collection, Decoder, Github, str } from '../lib/modules';
+import { Ctx, CtxWithoutResources } from '../Ctx';
+import { Collection, Decoder, FS, Github, str } from '../lib/modules';
 import { utils } from '../lib/utils';
 
 export type Card = Readonly<
   Decoder.TypeOf<typeof dataDecoder> &
-    Decoder.TypeOf<typeof textsDecoder> & { cdb: string }
+    Decoder.TypeOf<typeof textsDecoder> & { cdbPath: string }
 >;
 
 export type Babel = Collection.Collection<Card> & {
@@ -83,7 +79,7 @@ const textsTableDecoder = pipe(
   Decoder.map(RA.toRecord(({ id }) => id.toString()))
 );
 
-const cdbDecoder = (cdb: string) =>
+const cdbDecoder = (filepath: string) =>
   pipe(
     Decoder.struct({
       data: dataTableDecoder,
@@ -95,7 +91,7 @@ const cdbDecoder = (cdb: string) =>
         RR.filterMapWithIndex((id, d) =>
           pipe(
             O.fromNullable(texts[id]),
-            O.map((t): Card => ({ ...d, ...t, cdb }))
+            O.map((t): Card => ({ ...d, ...t, cdbPath: filepath }))
           )
         )
       )
@@ -106,12 +102,10 @@ const cdbDecoder = (cdb: string) =>
 // fetching and loading
 // -----------------------------------------------------------------------------
 
-const REPO_PATH = path.join(PATHS.DATA, 'BabelCDB');
-
-const loadCdb = (name: string) =>
+const loadCdb = (filepath: string) =>
   pipe(
     utils.fallibleIO(() =>
-      new Database(path.join(REPO_PATH, name), {
+      new Database(filepath, {
         fileMustExist: true,
         readonly: true,
       }).defaultSafeIntegers()
@@ -122,23 +116,11 @@ const loadCdb = (name: string) =>
           data: db.prepare(`SELECT * FROM datas`).all(),
           texts: db.prepare(`SELECT * FROM texts`).all(),
         })),
-        ioEither.flatMapEither(Decoder.parse(cdbDecoder(name))),
+        ioEither.flatMapEither(Decoder.decode(cdbDecoder(filepath))),
         ioEither.tap(() => utils.fallibleIO(() => db.close()))
       )
     ),
     TE.fromIOEither
-  );
-
-const getAllCdbPaths = (dir: string) =>
-  pipe(
-    utils.taskify(() => fs.readdir(dir, { withFileTypes: true })),
-    TE.map(
-      RA.filterMap((file) => {
-        if (file.name.endsWith('.cdb') && !file.isDirectory())
-          return O.some(file.name);
-        return O.none;
-      })
-    )
   );
 
 const WHITESPACE = /\s+/g;
@@ -240,46 +222,38 @@ const initSearch = (
     );
 };
 
-const loadBabel: TE.TaskEither<string, Babel> = pipe(
-  getAllCdbPaths(REPO_PATH),
-  TE.map(RA.map(loadCdb)),
-  TE.flatMap(TE.sequenceArray),
-  TE.flatMapOption(RNEA.fromReadonlyArray, () => 'No valid cdbs found.'),
-  TE.map(RNEA.unprepend),
-  TE.map(([head, tail]) =>
-    pipe(
-      tail,
-      RA.reduce(head, (a, b) => ({ ...a, ...b }))
-    )
-  ),
-  TE.map((record): Babel => {
-    const array = RR.values(record).toSorted(
-      (a, b) => Number(a.ot - b.ot) || a.alias - b.alias || a.id - b.id
-    );
-    const search = initSearch(array, record);
-    return { array, record, search };
-  })
-);
+const loadCbsFromDir = (
+  repo: string
+): TE.TaskEither<
+  string,
+  RNEA.ReadonlyNonEmptyArray<RR.ReadonlyRecord<string, Card>>
+> =>
+  pipe(
+    repo,
+    FS.getFilepathsWithExt('.cdb'),
+    TE.map(RA.map(loadCdb)),
+    TE.flatMap(TE.sequenceArray),
+    TE.flatMapOption(RNEA.fromReadonlyArray, () => 'No valid cdbs found.')
+  );
 
-const update = pipe(
-  Github.pullOrClone('BabelCDB', 'https://github.com/ProjectIgnis/BabelCDB'),
-  TE.flatMap(() => loadBabel),
-  TE.mapError(utils.stringify),
-  RTE.fromTaskEither
-);
-
-export const data: Data.Data<'babel'> = {
-  key: 'babel',
-  description: 'Card databases from BabelCDB.',
-  update,
-  init: pipe(
-    loadBabel,
-    RTE.fromTaskEither,
-    RTE.orElse(() => update)
-  ),
-  commitFilter: (repo, files) =>
-    repo === 'BabelCDB' && files.some((f) => f.endsWith('.cdb')),
-};
+export const load = (ctx: CtxWithoutResources) =>
+  pipe(
+    [
+      Github.localPath(ctx.sources.base, 'expansions'),
+      ...RA.map(Github.localPath)(ctx.sources.expansions),
+    ],
+    RA.map(loadCbsFromDir),
+    TE.sequenceArray,
+    TE.map(RA.flatten),
+    TE.map(utils.mergeRecords),
+    TE.map((record): Babel => {
+      const array = RR.values(record).toSorted(
+        (a, b) => Number(a.ot - b.ot) || a.alias - b.alias || a.id - b.id
+      );
+      const search = initSearch(array, record);
+      return { array, record, search };
+    })
+  );
 
 export const getCard = (id: number | string) => (ctx: Ctx) =>
   O.fromNullable(ctx.babel.record[id.toString()]);

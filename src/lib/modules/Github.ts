@@ -7,8 +7,9 @@ import * as fs from 'node:fs/promises';
 import * as http from 'node:http';
 import * as path from 'node:path';
 import simpleGit from 'simple-git';
-import { str } from '.';
-import { CtxWithoutData } from '../../Ctx';
+import { Decoder, str } from '.';
+import { CtxWithoutResources } from '../../Ctx';
+import { PATHS } from '../constants';
 import { utils } from '../utils';
 
 export type Github = {
@@ -49,35 +50,100 @@ export const init = (
     )
   );
 
+export type Source = {
+  readonly owner: string;
+  readonly repo: string;
+  readonly branch: string;
+};
+
+export const sourceDecoder = pipe(
+  Decoder.string,
+  Decoder.parse((s) => {
+    const [url, branch] = str.split(' ')(s);
+    const [fst, snd] = str.split('github.com/')(url);
+
+    const ownerAndRepo = snd || fst;
+    const [owner, repo] = str.split('/')(ownerAndRepo);
+
+    if (!repo) return Decoder.failure(s, 'must be a valid Github repo');
+    return Decoder.success<Source>({
+      owner,
+      repo,
+      branch: branch || 'master',
+    });
+  })
+);
+
+export const multiSourceDecoder = pipe(
+  Decoder.string,
+  Decoder.map(str.split(', ')),
+  Decoder.compose(Decoder.readonly(Decoder.array(sourceDecoder)))
+);
+
+export const repoURL = (src: Source) =>
+  `https://github.com/${src.owner}/${src.repo}/`;
+
+export const treeURL = (src: Source, path = '') =>
+  `https://github.com/${src.owner}/${src.repo}/tree/${src.branch}/${path}`;
+
+export const blobURL = (src: Source, path = '') =>
+  `https://github.com/${src.owner}/${src.repo}/blob/${src.branch}/${path}`;
+
+export const rawURL = (src: Source, path: string) =>
+  `https://raw.githubusercontent.com/${src.owner}/${src.repo}/${src.branch}/${path}`;
+
+export const searchURL = (src: Source, searchTerm: string) =>
+  `https://github.com/search?q=repo%3A${src.owner}%2F${src.repo}+${searchTerm}&type=code`;
+
+export const localRelativePath = (src: Source) =>
+  `${src.owner}_${src.repo}_${src.branch}`;
+
+export const localPath = (src: Source, additionalPath = '') =>
+  path.join(PATHS.DATA, localRelativePath(src), additionalPath);
+
+export const isSource = (src1: Source, src2: Source) =>
+  treeURL(src1) === treeURL(src2);
+
 const git = simpleGit();
 
-export const pullOrClone = (name: string, repoUrl: string) => {
+export const pullOrClone = (name: string, src: Source) => {
   const dataPath = path.join(process.cwd(), 'data');
-  const repoPath = path.join(dataPath, name);
+  const localPath = path.join(dataPath, name);
   return utils.taskify(() =>
     git
-      .cwd(repoPath)
+      .cwd(localPath)
       .pull()
       .catch(() =>
         fs
-          .rm(repoPath, { recursive: true, force: true })
-          .then(() => git.cwd(dataPath).clone(repoUrl, ['--depth=1']))
+          .rm(localPath, { recursive: true, force: true })
+          .then(() =>
+            git
+              .cwd(dataPath)
+              .clone(repoURL(src), name, [
+                '--recurse-submodules',
+                '-j8',
+                '--depth=1',
+                '--single-branch',
+                '--branch',
+                src.branch,
+              ])
+          )
       )
   );
 };
 
 export const updateFile =
   (
-    owner: string,
-    repo: string,
-    branch: string,
+    { owner, repo, branch }: Source,
     path: string,
     content: string,
     message: string
   ) =>
-  (ctx: CtxWithoutData) =>
+  (ctx: CtxWithoutResources) =>
     pipe(
-      utils.taskify(() => ctx.github.repos.getContent({ owner, repo, path })),
+      utils.taskify(() =>
+        ctx.github.repos.getContent({ owner, repo, ref: branch, path })
+      ),
       TE.flatMapNullable(
         ({ data }) => (data instanceof Array ? data[0]?.sha : data?.sha),
         () => 'Failed to get file sha: ' + str.inlineCode(path)
@@ -97,8 +163,9 @@ export const updateFile =
       )
     );
 
-export const listRepoFiles =
-  (owner: string, repo: string, branch: string) => (ctx: CtxWithoutData) => {
+export const fetchFileList =
+  ({ owner, repo, branch }: Source) =>
+  (ctx: CtxWithoutResources) => {
     const ref = 'heads/' + branch;
     const git = ctx.github.git;
     return pipe(

@@ -1,39 +1,33 @@
-import { O, pipe, RA, RR, RTE, TE } from '@that-hatter/scrapi-factory/fp';
-import fetch from 'node-fetch';
+import { O, pipe, RA, RR, TE } from '@that-hatter/scrapi-factory/fp';
 import { Babel, Card, Pedia } from '.';
-import { Ctx } from '../Ctx';
-import type { Data } from '../lib/modules';
-import { Decoder, Github, str } from '../lib/modules';
+import { Ctx, CtxWithoutResources } from '../Ctx';
+import { Decoder, FS, Github, str } from '../lib/modules';
 import { DeepReadonly, utils } from '../lib/utils';
 import { isAltArt } from './Babel';
 
-const decoder = Decoder.struct({
+const jsonDecoder = Decoder.struct({
   master: Decoder.record(Decoder.number),
   rush: Decoder.record(Decoder.number),
 });
 
-export type KonamiIds = DeepReadonly<Decoder.TypeOf<typeof decoder>>;
+export type KonamiIds = DeepReadonly<Decoder.TypeOf<typeof jsonDecoder>>;
 
-const OWNER = 'that-hatter';
-const REPO = 'scrapi-searcher-data';
-const PATH = 'data/konamiIds.json';
-const BRANCH = 'main';
-const URL = `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/${PATH}`;
+const RESOURCE_PATH = 'data/konamiIds.json';
 
-const update = pipe(
-  utils.taskify(() => fetch(URL).then((response) => response.json())),
-  TE.flatMapEither(Decoder.parse(decoder)),
-  RTE.fromTaskEither
-);
-
-export const data: Data.Data<'konamiIds'> = {
-  key: 'konamiIds',
-  description: 'Konami ID mappings.',
-  update,
-  init: update,
-  commitFilter: (repo, files) =>
-    repo === 'scrapi-searcher-data' && files.includes('data/konamiIds.json'),
-};
+export const load = (
+  ctx: CtxWithoutResources
+): TE.TaskEither<string, KonamiIds> =>
+  pipe(
+    ctx.sources.misc,
+    O.map((repo) =>
+      pipe(
+        Github.localPath(repo, RESOURCE_PATH),
+        FS.readJsonFile,
+        TE.flatMapEither(Decoder.decode(jsonDecoder))
+      )
+    ),
+    O.getOrElse(() => TE.right({ master: {}, rush: {} }))
+  );
 
 type Key = 'master' | 'rush';
 
@@ -69,7 +63,7 @@ const fetchFromPedia = (key: Key, name: string) => {
   const url = Pedia.url(1, 0)([pname])(['Database ID']);
   return pipe(
     Pedia.fetchCards(0, url),
-    TE.flatMapEither(Decoder.parse(fetchedIdDecoder)),
+    TE.flatMapEither(Decoder.decode(fetchedIdDecoder)),
     TE.map(RR.values),
     TE.flatMapOption(RA.head, () => 'Failed to fetch card from yugipedia'),
     TE.mapError(
@@ -79,28 +73,33 @@ const fetchFromPedia = (key: Key, name: string) => {
   );
 };
 
-export const addToFile = (card: Babel.Card, kid: number) => {
-  return (ctx: Ctx) =>
-    pipe(
-      ctx.konamiIds,
-      RR.mapWithIndex((k, v) =>
-        (Card.isRush(card) ? k === 'rush' : k === 'master')
-          ? { ...v, [card.id.toString()]: kid }
-          : v
-      ),
-      TE.right,
-      TE.tap((content) =>
-        Github.updateFile(
-          OWNER,
-          REPO,
-          BRANCH,
-          PATH,
-          utils.stringify(content),
-          'add konami id for ' + card.id
-        )(ctx)
+const addId =
+  (scope: 'rush' | 'master', id: number, kid: number) =>
+  (current: KonamiIds): KonamiIds => ({
+    ...current,
+    [scope]: { ...current[scope], [id.toString()]: kid },
+  });
+
+export const addToFile = (card: Babel.Card, kid: number) => (ctx: Ctx) =>
+  pipe(
+    ctx.sources.misc,
+    O.map((repo) =>
+      pipe(
+        ctx.konamiIds,
+        addId(Card.isRush(card) ? 'rush' : 'master', card.id, kid),
+        TE.right,
+        TE.tap((content) =>
+          Github.updateFile(
+            repo,
+            RESOURCE_PATH,
+            utils.stringify(content),
+            'add konami id for ' + card.id
+          )(ctx)
+        )
       )
-    );
-};
+    ),
+    O.getOrElseW(() => TE.right(ctx.konamiIds))
+  );
 
 export const getOrFetchMissing =
   (

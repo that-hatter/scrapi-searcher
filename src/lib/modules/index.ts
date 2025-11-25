@@ -4,6 +4,8 @@ import { string } from '@that-hatter/scrapi-factory/fp';
 import * as str_ from './str';
 export const str = { ...string, ...str_ };
 
+export * as Fetch from './Fetch';
+export * as FS from './FileSystem';
 export * as Github from './Github';
 
 export type * as dd from './Discord';
@@ -23,6 +25,6 @@ export * as Nav from './Nav';
 export * as Op from './Operation';
 export * as SearchCommand from './SearchCommand';
 
-export * as Data from './Data';
+export * as Resource from './Resource';
 
 export { Decoder };

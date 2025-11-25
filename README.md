@@ -24,36 +24,20 @@ The project is written in [Typescript](https://www.typescriptlang.org/) with the
 
 ### Building
 
+After cloning the repo, you can either build directly with NPM, to be ran as Node.js program:
+
 ```
-git clone https://github.com/that-hatter/scrapi-searcher/
-cd scrapi-searcher
 npm i
 npm run build
 ```
 
-### Running
-
-The process will expect the following environment variables:
-
-- `BOT_PREFIX` - the prefix to use for the bot's commands.
-- `BOT_TOKEN` - the bot's token.
-- `DEV_ADMIN` - the Discord ID of the user to set as the bot's administrator.
-- `DEV_GUILD` - the Discord ID of the guild (server) to set as the "dev server". Developer commands can be used anywhere in this server.
-- `DEV_USERS` - a list of names and Discord IDs for users to set as developers. These users can use developer commands even outside the developer server (except direct messages). Format: `name1:ID1, name2:ID2, name3:ID3`, and so on.
-- `DEV_LOGS_CHANNEL` - the Discord ID of the channel to send bot logs in.
-- `GITHUB_ACCESS_TOKEN` - the token to use for Github API requests.
-- `GITHUB_WEBHOOK_PORT` - the port to listen in for Github webhooks.
-- `GITHUB_WEBHOOK_SECRET` - the Github webhook secret.
-- `PICS_DEFAULT_SOURCE` - _(Optional)_ the url to download card pics from, with a placeholder `%id%` to replace with each card's id (e.g. `https://example/%id%.jpg`). If not provided, card pics will not be automatically fetched and reuploaded.
-- `PICS_UPLOAD_CHANNEL` - _(Optional)_ the Discord ID of the channel to reupload card pics to. If not provided, card pics will not be automatically fetched and reuploaded.
-
-It's recommended to create a `.env` file containing these variables then run the bot by pointing to that file:
+Or build an image to be ran via Docker (recommended):
 
 ```
-node --env-file=.env dist
+docker build -t NAME_OF_IMAGE .
 ```
 
-It can also be ran via Docker, either by building the image locally or pulling [pre-built images from the registry](https://github.com/that-hatter/scrapi-searcher/pkgs/container/scrapi-searcher).
+To host the bot, refer to this [guide](./docs/hosting.md).
 
 ## Acknowledgments
 

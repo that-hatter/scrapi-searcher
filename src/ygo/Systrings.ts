@@ -7,11 +7,8 @@ import {
   RTE,
   TE,
 } from '@that-hatter/scrapi-factory/fp';
-import fetch from 'node-fetch';
-import { Ctx } from '../Ctx';
-import type { Data } from '../lib/modules';
-import { Nav, str } from '../lib/modules';
-import { utils } from '../lib/utils';
+import { Ctx, CtxWithoutResources } from '../Ctx';
+import { FS, Github, Nav, str } from '../lib/modules';
 
 const kinds = ['system', 'victory', 'counter', 'setname'] as const;
 
@@ -21,13 +18,12 @@ export type Systring = {
   readonly kind: Kind;
   readonly name: string;
   readonly value: number;
-  readonly repo: string;
-  readonly line: number;
+  readonly source: string;
 };
 
 export type Systrings = ReadonlyArray<Systring>;
 
-const parse = (repo: string) =>
+const parse = (url: string) =>
   flow(
     str.split('\n'),
     RA.filterMapWithIndex((i, s): O.Option<Systring> => {
@@ -43,50 +39,38 @@ const parse = (repo: string) =>
       const value = parseInt(value_);
       if (value === null || isNaN(value)) return O.none;
 
-      const name = split.slice(2).join(' ') || '???';
-
-      return O.some({ kind, value, name, line: i + 1, repo });
+      return O.some({
+        kind,
+        value,
+        name: split.slice(2).join(' ') || '???',
+        source: url + '#L' + (i + 1),
+      });
     })
   );
 
-const fetchAndParse = (repo: string) => {
-  const url =
-    'https://raw.githubusercontent.com/ProjectIgnis/' +
-    repo +
-    '/master/' +
-    (repo === 'Distribution' ? 'config/strings.conf' : 'strings.conf');
-  return pipe(
-    utils.taskify(() => fetch(url).then((response) => response.text())),
-    TE.map(parse(repo))
+const loadSingleFile = (source: Github.Source, relPath: string) =>
+  pipe(
+    Github.localPath(source, relPath),
+    FS.readTextFile,
+    TE.map(parse(Github.blobURL(source, relPath)))
   );
-};
 
-const update = pipe(
-  fetchAndParse('DeltaBagooska'),
-  TE.flatMap((delta) =>
-    pipe(
-      fetchAndParse('Distribution'),
-      TE.map(
-        RA.filter(
-          ({ kind, value }) =>
-            !delta.some((d) => d.kind === kind && d.value === value)
-        )
-      ),
-      TE.map(RA.concat(delta))
+const BASE_PATH = 'config/strings.conf';
+const EXPANSION_PATH = 'strings.conf';
+
+export const load = ({
+  sources,
+}: CtxWithoutResources): TE.TaskEither<string, Systrings> =>
+  pipe(
+    sources.expansions,
+    RA.map((src) => loadSingleFile(src, EXPANSION_PATH)),
+    RA.prepend(loadSingleFile(sources.base, BASE_PATH)),
+    TE.sequenceArray,
+    TE.map(RA.flatten),
+    TE.map(
+      RA.uniq({ equals: (a, b) => a.kind === b.kind && a.value === b.value })
     )
-  ),
-  RTE.fromTaskEither
-);
-
-export const data: Data.Data<'systrings'> = {
-  key: 'systrings',
-  description: 'Strings from strings.conf files from Distribution and Delta.',
-  update,
-  init: update,
-  commitFilter: (repo, files) =>
-    (repo === 'DeltaBagooska' && files.includes('strings.conf')) ||
-    (repo === 'Distribution' && files.includes('config/strings.conf')),
-};
+  );
 
 const hexString = (ct: Systring): string => '0x' + ct.value.toString(16);
 
@@ -127,17 +111,10 @@ export const itemMenuDescription: Nav.Nav<Systring>['itemMenuDescription'] = (
     RTE.right
   );
 
-export const url = (s: Systring) =>
-  'https://github.com/ProjectIgnis/' +
-  s.repo +
-  '/blob/master/' +
-  (s.repo === 'Distribution' ? 'config/strings.conf#L' : 'strings.conf#L') +
-  s.line;
-
 export const itemEmbed = (s: Systring) => (ctx: Ctx) =>
   TE.right({
     title: s.kind + ' string',
-    url: url(s),
+    url: s.source,
     description: str.joinParagraphs([
       s.name,
       str.bold('DEC:') + ' ' + str.inlineCode(s.value.toString()),

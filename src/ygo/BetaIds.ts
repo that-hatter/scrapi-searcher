@@ -1,12 +1,10 @@
-import { O, pipe, RA, RR, RTE, TE } from '@that-hatter/scrapi-factory/fp';
-import fetch from 'node-fetch';
+import { E, O, pipe, RA, RR, TE } from '@that-hatter/scrapi-factory/fp';
 import { Babel } from '.';
-import { Ctx } from '../Ctx';
-import type { Data } from '../lib/modules';
-import { Decoder } from '../lib/modules';
+import { Ctx, CtxWithoutResources } from '../Ctx';
+import { Decoder, FS, Github } from '../lib/modules';
 import { DeepReadonly, utils } from '../lib/utils';
 
-const decoder = pipe(
+const jsonDecoder = pipe(
   Decoder.struct({
     mappings: Decoder.array(Decoder.tuple(Decoder.number, Decoder.number)),
   }),
@@ -15,26 +13,27 @@ const decoder = pipe(
   Decoder.map(RR.fromEntries)
 );
 
-export type BetaIds = DeepReadonly<Decoder.TypeOf<typeof decoder>>;
+export type BetaIds = DeepReadonly<Decoder.TypeOf<typeof jsonDecoder>>;
 
-const URL =
-  'https://raw.githubusercontent.com/ProjectIgnis/' +
-  'DeltaBagooska/master/mappings.json';
+const RESOURCE_PATH = 'mappings.json';
 
-const update = pipe(
-  utils.taskify(() => fetch(URL).then((response) => response.json())),
-  TE.flatMapEither(Decoder.parse(decoder)),
-  RTE.fromTaskEither
-);
-
-export const data: Data.Data<'betaIds'> = {
-  key: 'betaIds',
-  description: 'Beta passcode mappings.',
-  update,
-  init: update,
-  commitFilter: (repo, files) =>
-    repo === 'DeltaBagooska' && files.includes('mappings.json'),
-};
+export const load = (
+  ctx: CtxWithoutResources
+): TE.TaskEither<string, BetaIds> =>
+  pipe(
+    ctx.sources.expansions,
+    RA.map((src) =>
+      pipe(
+        Github.localPath(src, RESOURCE_PATH),
+        FS.readJsonFile,
+        TE.orElse(() => TE.right({ mappings: [] }))
+      )
+    ),
+    TE.sequenceArray,
+    TE.map(RA.map(Decoder.decode(jsonDecoder))),
+    TE.flatMapEither(E.sequenceArray),
+    TE.map(utils.mergeRecords)
+  );
 
 export const toBabelCard =
   (betaId: number | string) =>

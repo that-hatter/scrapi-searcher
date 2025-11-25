@@ -14,7 +14,7 @@ import {
 import { readerTask as RT } from 'fp-ts';
 import { Ctx } from '../../Ctx';
 import { Babel, Card, KonamiIds, Pics } from '../../ygo';
-import { Data, dd, Err, Interaction, Menu, Op, str } from '../modules';
+import { dd, Err, Interaction, Menu, Op, Resource, str } from '../modules';
 
 //prettier-ignore
 const MALISS: RR.ReadonlyRecord<string, string> = {
@@ -107,18 +107,25 @@ const updateMissingInfo = (msg: dd.Message) => {
         ? Op.editMessage(msg.channelId)(msg.id)({ embeds: [embed] })
         : Op.noopReader
     ),
-    RTE.bindW('pics', ({ embed }) =>
-      embed.thumbnail && !currPic
-        ? Pics.addToFile(embed.thumbnail.url)
-        : Pics.current
-    ),
+    RTE.bindW('pics', ({ embed }) => {
+      if (currPic || !embed.thumbnail) return Pics.current;
+      return pipe(
+        Pics.addToReuploadsJson(embed.thumbnail.url),
+        RTE.flatMap((reuploaded) =>
+          pipe(
+            Pics.current,
+            RTE.map(({ local }) => ({ local, reuploaded }))
+          )
+        )
+      );
+    }),
     RTE.bindW('konamiIds', ({ card, embed }) => {
       const newKid = embed.footer?.text.split(' | Konami ID #')[1];
       return newKid && !currKid
         ? KonamiIds.addToFile(card, +newKid)
         : KonamiIds.current;
     }),
-    RTE.map(({ pics, konamiIds }) => Data.asUpdate({ pics, konamiIds })),
+    RTE.map(({ pics, konamiIds }) => Resource.asUpdate({ pics, konamiIds })),
     RTE.mapError((e) => (typeof e === 'string' ? Err.forDev(e) : e))
   );
 };

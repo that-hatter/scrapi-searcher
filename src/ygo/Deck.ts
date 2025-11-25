@@ -1,23 +1,23 @@
 import {
   E,
   flow,
-  identity,
   O,
   pipe,
   R,
   RA,
   RNEA,
+  RR,
   RTE,
   TE,
 } from '@that-hatter/scrapi-factory/fp';
 import { array as A, readerTask as RT } from 'fp-ts';
-import fetch from 'node-fetch';
+import { sequenceS } from 'fp-ts/lib/Apply';
 import * as buffer from 'node:buffer';
 import sharp from 'sharp';
 import { Babel, Pics } from '.';
 import { Ctx } from '../Ctx';
 import { LIMITS } from '../lib/constants';
-import { Attachment, Button, dd, Err, Op, str } from '../lib/modules';
+import { Attachment, Button, dd, Err, Fetch, Op, str } from '../lib/modules';
 import { utils } from '../lib/utils';
 
 export type Deck = {
@@ -280,13 +280,23 @@ const toImageFile = (deck: Deck) => {
   return pipe(
     ids,
     RA.flatten,
-    Pics.getMultipleRaws,
+    Pics.fetchMultipleRaws,
+    RTE.flatMapTaskEither((images) =>
+      pipe(
+        images,
+        RR.map((buf) =>
+          utils.taskify(() =>
+            sharp(buf).resize(CARD_PIC_WIDTH, CARD_PIC_HEIGHT).toBuffer()
+          )
+        ),
+        sequenceS(TE.ApplyPar)
+      )
+    ),
     RTE.flatMapTaskEither((images) =>
       pipe(
         ids,
-        RA.map(RA.filterMap((id) => O.fromNullable(images[id] ?? images['0']))),
-        ([main, extra, side]) => renderImage(main!, extra!, side!),
-        TE.mapError(Err.forDev)
+        RA.map(RA.filterMap((id) => O.fromNullable(images[id]))),
+        ([main, extra, side]) => renderImage(main!, extra!, side!)
       )
     ),
     RTE.map(
@@ -317,13 +327,12 @@ const parseFromMessageFiles = (msg: dd.Message) =>
     msg.attachments ?? [],
     RA.filter((file) => file.filename.endsWith('.ydk')),
     RA.map((file) =>
-      utils.taskify(() =>
-        fetch(file.url)
-          .then((resp) => resp.text())
-          .then((contents) => fromYdkFile(contents, file.filename))
+      pipe(
+        file.url,
+        Fetch.text,
+        TE.flatMapEither((contents) => fromYdkFile(contents, file.filename))
       )
     ),
-    RA.map(TE.flatMapEither(identity)),
     TE.sequenceArray,
     RTE.fromTaskEither
   );
@@ -339,6 +348,7 @@ const sendImageBreakdown = (deck: Deck, msg: dd.Message, index: number) =>
   pipe(
     deck,
     toImageFile,
+    RTE.mapError(Err.forDev),
     RTE.map((file) => ({
       files: [file],
       components: [
@@ -359,24 +369,24 @@ const sendImageBreakdown = (deck: Deck, msg: dd.Message, index: number) =>
     RTE.flatMap(Op.sendReply(msg))
   );
 
-const sendTextualBreakdown = (deck: Deck, msg: dd.Message, index: number) =>
-  pipe(
-    deck,
-    toEmbed,
-    RTE.map((embed) => ({
-      embeds: [embed],
-      components: [
-        Button.row([
-          {
-            style: Button.Styles.Primary,
-            label: 'Import',
-            customId: 'deckImport ' + index,
-          },
-        ]),
-      ],
-    })),
-    RTE.flatMap(Op.sendReply(msg))
-  );
+// const sendTextualBreakdown = (deck: Deck, msg: dd.Message, index: number) =>
+//   pipe(
+//     deck,
+//     toEmbed,
+//     RTE.map((embed) => ({
+//       embeds: [embed],
+//       components: [
+//         Button.row([
+//           {
+//             style: Button.Styles.Primary,
+//             label: 'Import',
+//             customId: 'deckImport ' + index,
+//           },
+//         ]),
+//       ],
+//     })),
+//     RTE.flatMap(Op.sendReply(msg))
+//   );
 
 export const breakdown = (msg: dd.Message) => (ctx: Ctx) =>
   pipe(
@@ -385,11 +395,6 @@ export const breakdown = (msg: dd.Message) => (ctx: Ctx) =>
     RTE.mapError(Err.forDev),
     RTE.flatMap((decks) => {
       if (decks.length === 0) return Op.noopReader;
-      const sendBreakdown =
-        O.isSome(ctx.picsSource) && O.isSome(ctx.picsChannel)
-          ? sendImageBreakdown
-          : sendTextualBreakdown;
-
       return pipe(
         RTE.right(decks),
         RTE.tap(() => Op.react('⌛')(msg)),
@@ -397,7 +402,7 @@ export const breakdown = (msg: dd.Message) => (ctx: Ctx) =>
           RA.mapWithIndex((i, deck) => {
             const size =
               deck.main.length + deck.extra.length + deck.side.length;
-            if (size <= 200) return sendBreakdown(deck, msg, i);
+            if (size <= 200) return sendImageBreakdown(deck, msg, i);
             return Op.sendReply(msg)(
               'Deck contains too many cards (' + size + ' / 200)'
             );

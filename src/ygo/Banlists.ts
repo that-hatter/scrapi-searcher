@@ -5,20 +5,11 @@ import {
   RA,
   RNEA,
   RR,
-  RTE,
   TE,
 } from '@that-hatter/scrapi-factory/fp';
-import * as fs from 'node:fs/promises';
-import * as path from 'node:path';
 import { Babel, BitNames } from '.';
-import { Ctx } from '../Ctx';
-import { PATHS } from '../lib/constants';
-import type { Data } from '../lib/modules';
-import { Github, str } from '../lib/modules';
-import { utils } from '../lib/utils';
-
-const GITHUB_URL = 'https://github.com/ProjectIgnis/LFLists';
-const REPO_PATH = path.join(PATHS.DATA, 'LFLists');
+import { Ctx, CtxWithoutResources } from '../Ctx';
+import { FS, Github, str } from '../lib/modules';
 
 export type Banlist = {
   readonly filename: string;
@@ -77,6 +68,9 @@ const dateString = (b: Banlist) => {
 };
 
 export const limitsBreakdown = (c: Babel.Card) => (ctx: Ctx) => {
+  if (O.isNone(ctx.sources.banlists)) return O.none;
+  const banlists = ctx.sources.banlists.value;
+
   const scopes = BitNames.scopes(c.ot)(ctx);
 
   const rush = scopes.includes('Rush');
@@ -109,7 +103,7 @@ export const limitsBreakdown = (c: Babel.Card) => (ctx: Ctx) => {
         O.map((lmt) =>
           str.joinWords([
             str.inlineCode(lmt),
-            str.link(list.name, GITHUB_URL + '/blob/master/' + list.filename),
+            str.link(list.name, Github.blobURL(banlists) + list.filename),
             dateString(list),
           ])
         )
@@ -120,48 +114,28 @@ export const limitsBreakdown = (c: Babel.Card) => (ctx: Ctx) => {
   );
 };
 
-const getAllLflistPaths = (dir: string) =>
+const loadSingleBanlist = (src: Github.Source) => (filepath: string) =>
   pipe(
-    utils.taskify(() => fs.readdir(dir, { withFileTypes: true })),
-    TE.map(
-      RA.filterMap((file) => {
-        if (file.name.endsWith('.lflist.conf') && !file.isDirectory())
-          return O.some(file.name);
-        return O.none;
-      })
+    filepath,
+    FS.readTextFile,
+    TE.map((contents) =>
+      parse(
+        filepath.substring(Github.localPath(src).length + 1),
+        contents.toString()
+      )
     )
   );
 
-const loadBanlist = (filename: string) =>
-  pipe(
-    utils.taskify(() => fs.readFile(path.join(REPO_PATH, filename))),
-    TE.map((c) => parse(filename, c.toString()))
-  );
-
-const loadBanlists = (): TE.TaskEither<string, Banlists> =>
-  pipe(
-    getAllLflistPaths(REPO_PATH),
-    TE.map(RA.map(loadBanlist)),
+export const load = (
+  ctx: CtxWithoutResources
+): TE.TaskEither<string, Banlists> => {
+  if (O.isNone(ctx.sources.banlists)) return TE.right([]);
+  return pipe(
+    ctx.sources.banlists.value,
+    Github.localPath,
+    FS.getFilepathsWithExt('.lflist.conf'),
+    TE.map(RA.map(loadSingleBanlist(ctx.sources.banlists.value))),
     TE.flatMap(TE.sequenceArray),
-    TE.map(RA.compact),
-    TE.flatMapOption(RNEA.fromReadonlyArray, () => 'No valid banlists found.')
+    TE.map(RA.compact)
   );
-
-const update = pipe(
-  Github.pullOrClone('LFLists', GITHUB_URL),
-  TE.flatMap(loadBanlists),
-  TE.mapError(utils.stringify),
-  RTE.fromTaskEither
-);
-
-export const data: Data.Data<'banlists'> = {
-  key: 'banlists',
-  description: 'Banlist data from LFLists.',
-  update,
-  init: pipe(
-    loadBanlists,
-    RTE.orElse(() => update)
-  ),
-  commitFilter: (repo, files) =>
-    repo === 'LFLists' && files.some((f) => f.endsWith('.lflist.conf')),
 };

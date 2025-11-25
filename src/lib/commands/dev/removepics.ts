@@ -55,7 +55,7 @@ export const removepics: Command.Command = {
       RTE.flatMap((ids) =>
         pipe(
           ids,
-          Pics.remove,
+          Pics.forgetReupload,
           RTE.mapError(Err.forDev),
           RTE.tap(() => Op.sendReply(message)(successMessage(ids)))
         )
