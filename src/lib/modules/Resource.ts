@@ -1,5 +1,14 @@
 import * as sy from '@that-hatter/scrapi-factory';
-import { E, flow, O, pipe, RA, RTE, TE } from '@that-hatter/scrapi-factory/fp';
+import {
+  E,
+  flow,
+  O,
+  pipe,
+  RA,
+  RNEA,
+  RTE,
+  TE,
+} from '@that-hatter/scrapi-factory/fp';
 import { sequenceS } from 'fp-ts/lib/Apply';
 import { dd, Decoder, Err, Github, Op, str } from '.';
 import { Ctx, CtxWithoutResources } from '../../Ctx';
@@ -107,13 +116,19 @@ export type Update = Partial<Loaded> & {
 
 const updateDecoder = Decoder.struct({
   _tag: Decoder.fromRefinement(
-    (v): v is Update => v === UPDATE_SYMBOL,
+    (v): v is typeof UPDATE_SYMBOL => v === UPDATE_SYMBOL,
     'update symbol'
   ),
 });
 
-export const isUpdate = (val: unknown): val is Update =>
-  E.isRight(updateDecoder.decode(val));
+export const parseUpdate = (
+  val: unknown
+): O.Option<RNEA.ReadonlyNonEmptyArray<Update>> =>
+  pipe(
+    Array.isArray(val) ? val : [val],
+    RA.filter((v) => E.isRight(updateDecoder.decode(v))),
+    RNEA.fromReadonlyArray
+  );
 
 export const asUpdate = (resource: Partial<Loaded>): Update => ({
   _tag: UPDATE_SYMBOL,
@@ -142,7 +157,9 @@ const performUpdate = (trigger: string) => (src: Github.Source) => {
             editStatus,
             RTE.flatMap(() => getApplicableUpdates([src])),
             RTE.tap(() =>
-              editStatus(`✅ Successfully updated related to ${repo}.`)
+              editStatus(
+                `✅ Successfully updated resources related to ${repo}.`
+              )
             ),
             RTE.tapError(() =>
               editStatus(`❌ Failed to update resources related to ${repo}.`)

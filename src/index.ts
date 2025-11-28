@@ -166,20 +166,27 @@ const program = pipe(
       const res = await handler(ctx)();
       if (E.isLeft(res)) return Err.sendAlerts(res.left)(ctx)();
 
-      if (!Resource.isUpdate(res.right)) return;
-      const update = res.right;
-      ctx.babel = update.babel ?? ctx.babel;
-      ctx.yard = update.yard ?? ctx.yard;
-      ctx.systrings = update.systrings ?? ctx.systrings;
-      ctx.banlists = update.banlists ?? ctx.banlists;
-      ctx.betaIds = update.betaIds ?? ctx.betaIds;
-      ctx.konamiIds = update.konamiIds ?? ctx.konamiIds;
-      ctx.shortcuts = update.shortcuts ?? ctx.shortcuts;
-      ctx.pics = update.pics ?? ctx.pics;
-      ctx.scripts = update.scripts ?? ctx.scripts;
+      const updates = Resource.parseUpdate(res.right);
+      if (O.isNone(updates)) return;
 
-      if (!update.yard && !update.systrings) return;
-      ctx.bitNames = BitNames.load(ctx.yard.api.constants.array, ctx.systrings);
+      for (const update of updates.value) {
+        ctx.babel = update.babel ?? ctx.babel;
+        ctx.yard = update.yard ?? ctx.yard;
+        ctx.systrings = update.systrings ?? ctx.systrings;
+        ctx.banlists = update.banlists ?? ctx.banlists;
+        ctx.betaIds = update.betaIds ?? ctx.betaIds;
+        ctx.konamiIds = update.konamiIds ?? ctx.konamiIds;
+        ctx.shortcuts = update.shortcuts ?? ctx.shortcuts;
+        ctx.pics = update.pics ?? ctx.pics;
+        ctx.scripts = update.scripts ?? ctx.scripts;
+
+        if (update.yard && update.systrings) {
+          ctx.bitNames = BitNames.load(
+            ctx.yard.api.constants.array,
+            ctx.systrings
+          );
+        }
+      }
     };
 
     const toDiscordHandler = <K extends keyof dd.EventHandlers>(
