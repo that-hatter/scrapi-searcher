@@ -180,7 +180,7 @@ const program = pipe(
         ctx.pics = update.pics ?? ctx.pics;
         ctx.scripts = update.scripts ?? ctx.scripts;
 
-        if (update.yard && update.systrings) {
+        if (update.yard || update.systrings) {
           ctx.bitNames = BitNames.load(
             ctx.yard.api.constants.array,
             ctx.systrings
