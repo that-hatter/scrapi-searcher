@@ -24,7 +24,7 @@
   "devDependencies": {
     "@discordeno/types": "^21.0.0",
     "@types/better-sqlite3": "^7.6.11",
-    "@types/node": "^20.2.1",
+    "@types/node": "^24.0.0",
     "@types/node-fetch": "^2.6.11",
     "@typescript-eslint/eslint-plugin": "^5.26.0",
     "@typescript-eslint/parser": "^5.50.0",
@@ -40,7 +40,7 @@
     "@discordeno/bot": "^21.0.0",
     "@octokit/rest": "^21.1.1",
     "@octokit/webhooks": "^13.6.1",
-    "@that-hatter/scrapi-factory": "^0.4.0",
+    "@that-hatter/scrapi-factory": "^0.4.2",
     "better-sqlite3": "^11.2.1",
     "fp-ts": "^2.13.1",
     "io-ts": "^2.2.21",
