@@ -16,7 +16,7 @@ export const getAllFilepaths = (
     ),
     TE.map(
       RA.filterMap((f) =>
-        f.isDirectory() ? O.none : O.some(path.join(f.path, f.name))
+        f.isDirectory() ? O.none : O.some(path.join(f.parentPath, f.name))
       )
     )
   );
