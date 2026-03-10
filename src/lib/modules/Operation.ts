@@ -54,7 +54,7 @@ export const getReplies =
   (channelId: dd.BigString) =>
   (messageId: dd.BigString): Op<ReadonlyArray<dd.Message>> =>
     pipe(
-      getMessages(channelId)({ limit: 100 }),
+      getMessages(channelId)({ limit: 100, after: messageId }),
       RTE.map(RA.filter((msg) => messageId === msg.messageReference?.messageId))
     );
 
